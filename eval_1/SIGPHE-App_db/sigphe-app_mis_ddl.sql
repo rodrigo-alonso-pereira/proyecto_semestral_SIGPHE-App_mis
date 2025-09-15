@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- Script de Creacion de Modelo de datos para Rent a Car de Springfield
+-- Script de Creacion de Modelo de datos para la aplicacion SIGPHE-App
 -- Versión: 1.0
 -- Motor de BD: PostgreSQL 16.9
 -- Alumno: Rodrigo Pereira Yañez
@@ -101,7 +101,6 @@ create table herramienta (
     constraint herramienta_pk primary key (id_herramienta),
     constraint herramienta_valor_reposicion_check check (valor_reposicion > 0),
     constraint herramienta_valor_arriendo_check check (valor_arriendo > 0),
-    constraint herramienta_nombre_uk unique (nombre),
     constraint herramienta_categoria_herramienta_id_check check (categoria_herramienta_id > 0),
     constraint herramienta_estado_herramienta_id_check check (estado_herramienta_id > 0),
     constraint herramienta_modelo_id_check check (modelo_id > 0),
@@ -159,7 +158,7 @@ create table prestamo (
     fecha_inicio timestamp not null default current_timestamp,
     fecha_devolucion timestamp,
     fecha_limite_pactada timestamp not null,
-    monto_total int not null,
+    monto_total numeric(10,2) not null,
     estado_prestamo_id int not null,
     usuario_cliente_id int not null,
     constraint prestamo_pk primary key (id_prestamo),
@@ -173,7 +172,7 @@ create table prestamo (
 
 create table multa (
     id_multa int generated always as identity,
-    monto_multa int not null,
+    monto_multa numeric(10,2) not null,
     fecha_multa timestamp not null default current_timestamp,
     descripcion varchar(500),
     fecha_pago timestamp,
@@ -201,5 +200,4 @@ create table prestamo_herramienta (
     constraint prestamo_herramienta_valor_arriendo_momento_check check (valor_arriendo_momento > 0),
     constraint prestamo_herramienta_herramienta_id_fk foreign key (herramienta_id) references herramienta(id_herramienta),
     constraint prestamo_herramienta_prestamo_id_fk foreign key (prestamo_id) references prestamo(id_prestamo)
-)
-
+);
