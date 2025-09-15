@@ -190,14 +190,14 @@ create table multa (
     constraint multa_estado_multa_id_fk foreign key (estado_multa_id) references estado_multa(id_estado_multa)
 );
 
-create table prestamo_herramienta (
+create table detalle_prestamo (
     herramienta_id int not null,
     prestamo_id int not null,
     valor_arriendo_momento numeric(10,2) not null,
-    constraint prestamo_herramienta_pk primary key (herramienta_id, prestamo_id),
-    constraint prestamo_herramienta_herramienta_id_check check (herramienta_id > 0),
-    constraint prestamo_herramienta_prestamo_id_check check (prestamo_id > 0),
-    constraint prestamo_herramienta_valor_arriendo_momento_check check (valor_arriendo_momento > 0),
-    constraint prestamo_herramienta_herramienta_id_fk foreign key (herramienta_id) references herramienta(id_herramienta),
-    constraint prestamo_herramienta_prestamo_id_fk foreign key (prestamo_id) references prestamo(id_prestamo)
+    constraint detalle_prestamo_pk primary key (herramienta_id, prestamo_id),
+    constraint detalle_prestamo_herramienta_id_check check (herramienta_id > 0),
+    constraint detalle_prestamo_prestamo_id_check check (prestamo_id > 0),
+    constraint detalle_prestamo_valor_arriendo_momento_check check (valor_arriendo_momento > 0),
+    constraint detalle_prestamo_herramienta_id_fk foreign key (herramienta_id) references herramienta(id_herramienta),
+    constraint detalle_prestamo_prestamo_id_fk foreign key (prestamo_id) references prestamo(id_prestamo)
 );
