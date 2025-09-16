@@ -6,14 +6,14 @@
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- DB Creation: Connect to a default database (like 'postgres') before running.
--- The following commands will create the 'sigphe_app_db' if it doesn't exist
--- and then connect to it. These are psql meta-commands.
+-- Instructions for Generic SQL Clients (DBeaver, pgAdmin, etc.)
+--
+-- 1. Connect to a default database (e.g., 'postgres').
+-- 2. Manually execute the following command in a query window:
+--    CREATE DATABASE sigphe_app_db;
+-- 3. Disconnect and open a NEW connection to the 'sigphe_app_db' database.
+-- 4. Run the rest of this script in the new connection.
 --------------------------------------------------------------------------------
-SELECT 'CREATE DATABASE sigphe_app_db'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sigphe_app_db')\gexec
-
-\c sigphe_app_db
 
 --------------------------------------------------------------------------------
 -- Schema Creation
