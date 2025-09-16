@@ -1,203 +1,244 @@
 --------------------------------------------------------------------------------
--- Script de Creacion de Modelo de datos para la aplicacion SIGPHE-App
--- Versión: 1.0
--- Motor de BD: PostgreSQL 16.9
--- Alumno: Rodrigo Pereira Yañez
+-- Data Model Creation Script for the SIGPHE-App
+-- Version: 1.1
+-- DB Engine: PostgreSQL 16.9
+-- Author: Rodrigo Pereira Yañez
 --------------------------------------------------------------------------------
 
-create table tipo_multa (
-    id_tipo_multa int generated always as identity,
-    nombre varchar(200) not null,
-    factor_multa decimal(10,2) not null,
-    estado boolean default true,
-    constraint tipo_multa_pk primary key (id_tipo_multa),
-    constraint tipo_multa_nombre_uk unique (nombre)
+--------------------------------------------------------------------------------
+-- DB Creation: Connect to a default database (like 'postgres') before running.
+-- The following commands will create the 'sigphe_app_db' if it doesn't exist
+-- and then connect to it. These are psql meta-commands.
+--------------------------------------------------------------------------------
+SELECT 'CREATE DATABASE sigphe_app_db'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sigphe_app_db')\gexec
+
+\c sigphe_app_db
+
+--------------------------------------------------------------------------------
+-- Schema Creation
+--------------------------------------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS sigphe;
+SET search_path TO sigphe;
+
+--------------------------------------------------------------------------------
+-- Drop existing tables to avoid conflicts during creation.
+-- The 'CASCADE' option ensures that dependent objects are also removed.
+--------------------------------------------------------------------------------
+DROP TABLE IF EXISTS loan_details CASCADE;
+DROP TABLE IF EXISTS penalties CASCADE;
+DROP TABLE IF EXISTS loans CASCADE;
+DROP TABLE IF EXISTS kardex CASCADE;
+DROP TABLE IF EXISTS user_phones CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS tools CASCADE;
+DROP TABLE IF EXISTS models CASCADE;
+DROP TABLE IF EXISTS loan_statuses CASCADE;
+DROP TABLE IF EXISTS user_statuses CASCADE;
+DROP TABLE IF EXISTS user_types CASCADE;
+DROP TABLE IF EXISTS kardex_types CASCADE;
+DROP TABLE IF EXISTS tool_categories CASCADE;
+DROP TABLE IF EXISTS tool_statuses CASCADE;
+DROP TABLE IF EXISTS brands CASCADE;
+DROP TABLE IF EXISTS penalty_statuses CASCADE;
+DROP TABLE IF EXISTS penalty_types CASCADE; 
+
+--------------------------------------------------------------------------------
+-- Data Model Creation Script for the SIGPHE-App
+
+create table penalty_types (
+    id int generated always as identity,
+    name varchar(200) not null,
+    penalty_factor decimal(10,2) not null,
+    status boolean default true,
+    constraint penalty_types_pk primary key (id),
+    constraint penalty_types_name_uk unique (name)
 );
 
-create table estado_multa (
-    id_estado_multa int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint estado_multa_pk primary key (id_estado_multa),
-    constraint estado_multa_nombre_uk unique (nombre)
+create table penalty_statuses (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint penalty_statuses_pk primary key (id),
+    constraint penalty_statuses_name_uk unique (name)
 );
 
-create table marca (
-    id_marca int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint marca_pk primary key (id_marca),
-    constraint marca_nombre_uk unique (nombre)
+create table brands (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint brands_pk primary key (id),
+    constraint brands_name_uk unique (name)
 );
 
-create table estado_herramienta (
-    id_estado_herramienta int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint estado_herramienta_pk primary key (id_estado_herramienta),
-    constraint estado_herramienta_nombre_uk unique (nombre)
+create table tool_statuses (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint tool_statuses_pk primary key (id),
+    constraint tool_statuses_name_uk unique (name)
 );
 
-create table categoria_herramienta (
-    id_categoria_herramienta int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint categoria_herramienta_pk primary key (id_categoria_herramienta),
-    constraint categoria_herramienta_nombre_uk unique (nombre)
+create table tool_categories (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint tool_categories_pk primary key (id),
+    constraint tool_categories_name_uk unique (name)
 );
 
-create table tipo_kardex (
-    id_tipo_kardex int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint tipo_kardex_pk primary key (id_tipo_kardex),
-    constraint tipo_kardex_nombre_uk unique (nombre)
+create table kardex_types (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint kardex_types_pk primary key (id),
+    constraint kardex_types_name_uk unique (name)
 );
 
-create table tipo_usuario (
-    id_tipo_usuario int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint tipo_usuario_pk primary key (id_tipo_usuario),
-    constraint tipo_usuario_nombre_uk unique (nombre)
+create table user_types (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint user_types_pk primary key (id),
+    constraint user_types_name_uk unique (name)
 );
 
-create table estado_usuario (
-    id_estado_usuario int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint estado_usuario_pk primary key (id_estado_usuario),
-    constraint estado_usuario_nombre_uk unique (nombre)
+create table user_statuses (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint user_statuses_pk primary key (id),
+    constraint user_statuses_name_uk unique (name)
 );
 
-create table estado_prestamo (
-    id_estado_prestamo int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    constraint estado_prestamo_pk primary key (id_estado_prestamo),
-    constraint estado_prestamo_nombre_uk unique (nombre)
+create table loan_statuses (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    constraint loan_statuses_pk primary key (id),
+    constraint loan_statuses_name_uk unique (name)
 );
 
-create table modelo (
-    id_modelo int generated always as identity,
-    nombre varchar(200) not null,
-    estado boolean default true,
-    marca_id int not null,
-    constraint modelo_pk primary key (id_modelo),
-    constraint modelo_nombre_uk unique (nombre),
-    constraint modelo_marca_id_check check (marca_id > 0),
-    constraint modelo_marca_id_fk foreign key (marca_id) references marca(id_marca)
+create table models (
+    id int generated always as identity,
+    name varchar(200) not null,
+    status boolean default true,
+    brand_id int not null,
+    constraint models_pk primary key (id),
+    constraint models_name_uk unique (name),
+    constraint models_brand_id_check check (brand_id > 0),
+    constraint models_brand_id_fk foreign key (brand_id) references brands(id)
 );
 
-create table herramienta (
-    id_herramienta int generated always as identity,
-    nombre varchar(200) not null,
-    valor_reposicion numeric(10, 2) not null,
-    valor_arriendo numeric(10, 2) not null,
-    estado boolean default true,
-    categoria_herramienta_id int not null,
-    estado_herramienta_id int not null,
-    modelo_id int not null,
-    constraint herramienta_pk primary key (id_herramienta),
-    constraint herramienta_valor_reposicion_check check (valor_reposicion > 0),
-    constraint herramienta_valor_arriendo_check check (valor_arriendo > 0),
-    constraint herramienta_categoria_herramienta_id_check check (categoria_herramienta_id > 0),
-    constraint herramienta_estado_herramienta_id_check check (estado_herramienta_id > 0),
-    constraint herramienta_modelo_id_check check (modelo_id > 0),
-    constraint herramienta_categoria_herramienta_id_fk foreign key (categoria_herramienta_id) references categoria_herramienta(id_categoria_herramienta),
-    constraint herramienta_estado_herramienta_id_fk foreign key (estado_herramienta_id) references estado_herramienta(id_estado_herramienta),
-    constraint herramienta_modelo_id_fk foreign key (modelo_id) references modelo(id_modelo)   
+create table tools (
+    id int generated always as identity,
+    name varchar(200) not null,
+    replacement_value numeric(10, 2) not null,
+    rental_value numeric(10, 2) not null,
+    status boolean default true,
+    tool_category_id int not null,
+    tool_status_id int not null,
+    model_id int not null,
+    constraint tools_pk primary key (id),
+    constraint tools_replacement_value_check check (replacement_value > 0),
+    constraint tools_rental_value_check check (rental_value > 0),
+    constraint tools_tool_category_id_check check (tool_category_id > 0),
+    constraint tools_tool_status_id_check check (tool_status_id > 0),
+    constraint tools_model_id_check check (model_id > 0),
+    constraint tools_tool_category_id_fk foreign key (tool_category_id) references tool_categories(id),
+    constraint tools_tool_status_id_fk foreign key (tool_status_id) references tool_statuses(id),
+    constraint tools_model_id_fk foreign key (model_id) references models(id)   
 );
 
-create table usuario (
-    id_usuario int generated always as identity,
-    rut varchar(30) not null,
-    nombre varchar(200) not null,
+create table users (
+    id int generated always as identity,
+    national_id varchar(30) not null,
+    name varchar(200) not null,
     email varchar(200) not null,
-    fecha_registro timestamp not null default current_timestamp,
-    estado_usuario_id int not null,
-    tipo_usuario_id int not null,
-    constraint usuario_pk primary key (id_usuario),
-    constraint usuario_rut_uk unique (rut),
-    constraint usuario_email_uk unique (email),
-    constraint usuario_estado_usuario_id_check check (estado_usuario_id > 0),
-    constraint usuario_tipo_usuario_id_check check (tipo_usuario_id > 0),
-    constraint usuario_estado_usuario_id_fk foreign key (estado_usuario_id) references estado_usuario(id_estado_usuario),
-    constraint usuario_tipo_usuario_id_fk foreign key (tipo_usuario_id) references tipo_usuario(id_tipo_usuario)
+    registration_date timestamp not null default current_timestamp,
+    user_status_id int not null,
+    user_type_id int not null,
+    constraint users_pk primary key (id),
+    constraint users_national_id_uk unique (national_id),
+    constraint users_email_uk unique (email),
+    constraint users_user_status_id_check check (user_status_id > 0),
+    constraint users_user_type_id_check check (user_type_id > 0),
+    constraint users_user_status_id_fk foreign key (user_status_id) references user_statuses(id),
+    constraint users_user_type_id_fk foreign key (user_type_id) references user_types(id)
 );
 
-create table telefono_usuario (
-    id_telefono_usuario int generated always as identity,
-    telefono varchar(20) not null,
-    estado boolean default true,
-    usuario_id int not null,
-    constraint telefono_usuario_pk primary key (id_telefono_usuario),
-    constraint telefono_usuario_telefono_uk unique (telefono),
-    constraint telefono_usuario_usuario_id_check check (usuario_id > 0),
-    constraint telefono_usuario_usuario_id_fk foreign key (usuario_id) references usuario(id_usuario)
+create table user_phones (
+    id int generated always as identity,
+    phone_number varchar(20) not null,
+    status boolean default true,
+    user_id int not null,
+    constraint user_phones_pk primary key (id),
+    constraint user_phones_phone_number_uk unique (phone_number),
+    constraint user_phones_user_id_check check (user_id > 0),
+    constraint user_phones_user_id_fk foreign key (user_id) references users(id)
 );
 
 create table kardex (
-    id_kardex int generated always as identity,
-    fecha_hora timestamp not null default current_timestamp,
-    cantidad int not null,
-    herramienta_id int not null,
-    tipo_kardex_id int not null,
-    usuario_id int not null,
-    constraint kardex_pk primary key (id_kardex),
-    constraint kardex_herramienta_id_check check (herramienta_id > 0),
-    constraint kardex_tipo_kardex_id_check check (tipo_kardex_id > 0),
-    constraint kardex_usuario_id_check check (usuario_id > 0),
-    constraint kardex_herramienta_id_fk foreign key (herramienta_id) references herramienta(id_herramienta),
-    constraint kardex_tipo_kardex_id_fk foreign key (tipo_kardex_id) references tipo_kardex(id_tipo_kardex),
-    constraint kardex_usuario_id_fk foreign key (usuario_id) references usuario(id_usuario)
+    id int generated always as identity,
+    date_time timestamp not null default current_timestamp,
+    quantity int not null,
+    tool_id int not null,
+    kardex_type_id int not null,
+    user_id int not null,
+    constraint kardex_pk primary key (id),
+    constraint kardex_tool_id_check check (tool_id > 0),
+    constraint kardex_kardex_type_id_check check (kardex_type_id > 0),
+    constraint kardex_user_id_check check (user_id > 0),
+    constraint kardex_tool_id_fk foreign key (tool_id) references tools(id),
+    constraint kardex_kardex_type_id_fk foreign key (kardex_type_id) references kardex_types(id),
+    constraint kardex_user_id_fk foreign key (user_id) references users(id)
 );
 
-create table prestamo (
-    id_prestamo int generated always as identity,
-    fecha_inicio timestamp not null default current_timestamp,
-    fecha_devolucion timestamp,
-    fecha_limite_pactada timestamp not null,
-    monto_total numeric(10,2) not null,
-    estado_prestamo_id int not null,
-    usuario_cliente_id int not null,
-    constraint prestamo_pk primary key (id_prestamo),
-    constraint prestamo_fechas_check check (fecha_limite_pactada >= fecha_inicio AND (fecha_devolucion IS NULL OR fecha_devolucion >= fecha_inicio)),
-    constraint prestamo_monto_total_check check (monto_total >= 0),
-    constraint prestamo_estado_prestamo_id_check check (estado_prestamo_id > 0),
-    constraint prestamo_usuario_cliente_id_check check (usuario_cliente_id > 0),
-    constraint prestamo_estado_prestamo_id_fk foreign key (estado_prestamo_id) references estado_prestamo(id_estado_prestamo),
-    constraint prestamo_usuario_cliente_id_fk foreign key (usuario_cliente_id) references usuario(id_usuario)
+create table loans (
+    id int generated always as identity,
+    start_date timestamp not null default current_timestamp,
+    return_date timestamp,
+    due_date timestamp not null,
+    total_amount numeric(10,2) not null,
+    loan_status_id int not null,
+    customer_user_id int not null,
+    constraint loans_pk primary key (id),
+    constraint loans_dates_check check (due_date >= start_date AND (return_date IS NULL OR return_date >= start_date)),
+    constraint loans_total_amount_check check (total_amount >= 0),
+    constraint loans_loan_status_id_check check (loan_status_id > 0),
+    constraint loans_customer_user_id_check check (customer_user_id > 0),
+    constraint loans_loan_status_id_fk foreign key (loan_status_id) references loan_statuses(id),
+    constraint loans_customer_user_id_fk foreign key (customer_user_id) references users(id)
 );
 
-create table multa (
-    id_multa int generated always as identity,
-    monto_multa numeric(10,2) not null,
-    fecha_multa timestamp not null default current_timestamp,
-    descripcion varchar(500),
-    fecha_pago timestamp,
-    prestamo_id int not null,
-    tipo_multa_id int not null,
-    estado_multa_id int not null,
-    constraint multa_pk primary key (id_multa),
-    constraint multa_monto_multa_check check (monto_multa > 0),
-    constraint multa_fecha_pago_check check (fecha_pago IS NULL OR fecha_pago >= fecha_multa),
-    constraint multa_prestamo_id_check check (prestamo_id > 0),
-    constraint multa_tipo_multa_id_check check (tipo_multa_id > 0),
-    constraint multa_estado_multa_id_check check (estado_multa_id > 0),
-    constraint multa_prestamo_id_fk foreign key (prestamo_id) references prestamo(id_prestamo),
-    constraint multa_tipo_multa_id_fk foreign key (tipo_multa_id) references tipo_multa(id_tipo_multa),
-    constraint multa_estado_multa_id_fk foreign key (estado_multa_id) references estado_multa(id_estado_multa)
+create table penalties (
+    id int generated always as identity,
+    penalty_amount numeric(10,2) not null,
+    penalty_date timestamp not null default current_timestamp,
+    description varchar(500),
+    payment_date timestamp,
+    loan_id int not null,
+    penalty_type_id int not null,
+    penalty_status_id int not null,
+    constraint penalties_pk primary key (id),
+    constraint penalties_penalty_amount_check check (penalty_amount > 0),
+    constraint penalties_payment_date_check check (payment_date IS NULL OR payment_date >= penalty_date),
+    constraint penalties_loan_id_check check (loan_id > 0),
+    constraint penalties_penalty_type_id_check check (penalty_type_id > 0),
+    constraint penalties_penalty_status_id_check check (penalty_status_id > 0),
+    constraint penalties_loan_id_fk foreign key (loan_id) references loans(id),
+    constraint penalties_penalty_type_id_fk foreign key (penalty_type_id) references penalty_types(id),
+    constraint penalties_penalty_status_id_fk foreign key (penalty_status_id) references penalty_statuses(id)
 );
 
-create table detalle_prestamo (
-    herramienta_id int not null,
-    prestamo_id int not null,
-    valor_arriendo_momento numeric(10,2) not null,
-    constraint detalle_prestamo_pk primary key (herramienta_id, prestamo_id),
-    constraint detalle_prestamo_herramienta_id_check check (herramienta_id > 0),
-    constraint detalle_prestamo_prestamo_id_check check (prestamo_id > 0),
-    constraint detalle_prestamo_valor_arriendo_momento_check check (valor_arriendo_momento > 0),
-    constraint detalle_prestamo_herramienta_id_fk foreign key (herramienta_id) references herramienta(id_herramienta),
-    constraint detalle_prestamo_prestamo_id_fk foreign key (prestamo_id) references prestamo(id_prestamo)
+create table loan_details (
+    tool_id int not null,
+    loan_id int not null,
+    rental_value_at_time numeric(10,2) not null,
+    constraint loan_details_pk primary key (tool_id, loan_id),
+    constraint loan_details_tool_id_check check (tool_id > 0),
+    constraint loan_details_loan_id_check check (loan_id > 0),
+    constraint loan_details_rental_value_at_time_check check (rental_value_at_time > 0),
+    constraint loan_details_tool_id_fk foreign key (tool_id) references tools(id),
+    constraint loan_details_loan_id_fk foreign key (loan_id) references loans(id)
 );
