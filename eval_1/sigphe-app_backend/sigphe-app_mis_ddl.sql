@@ -47,7 +47,7 @@ DROP TABLE IF EXISTS penalty_types CASCADE;
 -- Data Model Creation Script for the SIGPHE-App
 
 create table penalty_types (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     penalty_factor decimal(10,2) not null,
     status boolean default true,
@@ -56,7 +56,7 @@ create table penalty_types (
 );
 
 create table penalty_statuses (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint penalty_statuses_pk primary key (id),
@@ -64,7 +64,7 @@ create table penalty_statuses (
 );
 
 create table brands (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint brands_pk primary key (id),
@@ -72,7 +72,7 @@ create table brands (
 );
 
 create table tool_statuses (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint tool_statuses_pk primary key (id),
@@ -80,7 +80,7 @@ create table tool_statuses (
 );
 
 create table tool_categories (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint tool_categories_pk primary key (id),
@@ -88,7 +88,7 @@ create table tool_categories (
 );
 
 create table kardex_types (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint kardex_types_pk primary key (id),
@@ -96,7 +96,7 @@ create table kardex_types (
 );
 
 create table user_types (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint user_types_pk primary key (id),
@@ -104,7 +104,7 @@ create table user_types (
 );
 
 create table user_statuses (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint user_statuses_pk primary key (id),
@@ -112,7 +112,7 @@ create table user_statuses (
 );
 
 create table loan_statuses (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
     constraint loan_statuses_pk primary key (id),
@@ -120,10 +120,10 @@ create table loan_statuses (
 );
 
 create table models (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     status boolean default true,
-    brand_id int not null,
+    brand_id bigint not null,
     constraint models_pk primary key (id),
     constraint models_name_uk unique (name),
     constraint models_brand_id_check check (brand_id > 0),
@@ -131,14 +131,13 @@ create table models (
 );
 
 create table tools (
-    id int generated always as identity,
+    id bigint generated always as identity,
     name varchar(200) not null,
     replacement_value numeric(10, 2) not null,
     rental_value numeric(10, 2) not null,
-    status boolean default true,
-    tool_category_id int not null,
-    tool_status_id int not null,
-    model_id int not null,
+    tool_category_id bigint not null,
+    tool_status_id bigint not null,
+    model_id bigint not null,
     constraint tools_pk primary key (id),
     constraint tools_replacement_value_check check (replacement_value > 0),
     constraint tools_rental_value_check check (rental_value > 0),
@@ -151,13 +150,13 @@ create table tools (
 );
 
 create table users (
-    id int generated always as identity,
+    id bigint generated always as identity,
     national_id varchar(30) not null,
     name varchar(200) not null,
     email varchar(200) not null,
     registration_date timestamp not null default current_timestamp,
-    user_status_id int not null,
-    user_type_id int not null,
+    user_status_id bigint not null,
+    user_type_id bigint not null,
     constraint users_pk primary key (id),
     constraint users_national_id_uk unique (national_id),
     constraint users_email_uk unique (email),
@@ -168,10 +167,10 @@ create table users (
 );
 
 create table user_phones (
-    id int generated always as identity,
+    id bigint generated always as identity,
     phone_number varchar(20) not null,
     status boolean default true,
-    user_id int not null,
+    user_id bigint not null,
     constraint user_phones_pk primary key (id),
     constraint user_phones_phone_number_uk unique (phone_number),
     constraint user_phones_user_id_check check (user_id > 0),
@@ -179,12 +178,12 @@ create table user_phones (
 );
 
 create table kardex (
-    id int generated always as identity,
+    id bigint generated always as identity,
     date_time timestamp not null default current_timestamp,
     quantity int not null,
-    tool_id int not null,
-    kardex_type_id int not null,
-    user_id int not null,
+    tool_id bigint not null,
+    kardex_type_id bigint not null,
+    user_id bigint not null,
     constraint kardex_pk primary key (id),
     constraint kardex_tool_id_check check (tool_id > 0),
     constraint kardex_kardex_type_id_check check (kardex_type_id > 0),
@@ -195,13 +194,13 @@ create table kardex (
 );
 
 create table loans (
-    id int generated always as identity,
+    id bigint generated always as identity,
     start_date timestamp not null default current_timestamp,
     return_date timestamp,
     due_date timestamp not null,
     total_amount numeric(10,2) not null,
-    loan_status_id int not null,
-    customer_user_id int not null,
+    loan_status_id bigint not null,
+    customer_user_id bigint not null,
     constraint loans_pk primary key (id),
     constraint loans_dates_check check (due_date >= start_date AND (return_date IS NULL OR return_date >= start_date)),
     constraint loans_total_amount_check check (total_amount >= 0),
@@ -212,14 +211,14 @@ create table loans (
 );
 
 create table penalties (
-    id int generated always as identity,
+    id bigint generated always as identity,
     penalty_amount numeric(10,2) not null,
     penalty_date timestamp not null default current_timestamp,
     description varchar(500),
     payment_date timestamp,
-    loan_id int not null,
-    penalty_type_id int not null,
-    penalty_status_id int not null,
+    loan_id bigint not null,
+    penalty_type_id bigint not null,
+    penalty_status_id bigint not null,
     constraint penalties_pk primary key (id),
     constraint penalties_penalty_amount_check check (penalty_amount > 0),
     constraint penalties_payment_date_check check (payment_date IS NULL OR payment_date >= penalty_date),
@@ -232,8 +231,8 @@ create table penalties (
 );
 
 create table loan_details (
-    tool_id int not null,
-    loan_id int not null,
+    tool_id bigint not null,
+    loan_id bigint not null,
     rental_value_at_time numeric(10,2) not null,
     constraint loan_details_pk primary key (tool_id, loan_id),
     constraint loan_details_tool_id_check check (tool_id > 0),
