@@ -3,37 +3,52 @@ package cl.usach.mis.sigpheapp_backend.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "tools")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ToolEntity {
     @Id
+    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, unique = true)
     private Long id;
 
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "replacement_value", nullable = false, precision = 10, scale = 2)
     private BigDecimal replacementValue;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "rental_value", nullable = false, precision = 10, scale = 2)
     private BigDecimal rentalValue;
 
-    private boolean status = true;
-
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tool_category_id", nullable = false)
     private ToolCategoryEntity toolCategory;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tool_status_id", nullable = false)
     private ToolStatusEntity toolStatus;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "model_id", nullable = false)
     private ModelEntity model;
+
+    @OneToMany(mappedBy = "tool", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<LoanDetailEntity> loanDetails;
+
+    // Helper method to add a loan detail
+    public void addLoanDetail(LoanDetailEntity loanDetail) {
+        this.loanDetails.add(loanDetail);
+        loanDetail.setTool(this);
+    }
 }
 

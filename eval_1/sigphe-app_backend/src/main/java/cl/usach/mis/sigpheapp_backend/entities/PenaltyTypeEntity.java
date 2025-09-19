@@ -3,6 +3,7 @@ package cl.usach.mis.sigpheapp_backend.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
@@ -11,17 +12,21 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PenaltyTypeEntity {
     @Id
+    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    private int id;
 
-    @Column(nullable = false, unique = true, length = 200)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "penalty_factor", nullable = false, precision = 5, scale = 2)
     private BigDecimal penaltyFactor;
 
+    @Column(nullable = false)
     private boolean status = true;
 }
 
