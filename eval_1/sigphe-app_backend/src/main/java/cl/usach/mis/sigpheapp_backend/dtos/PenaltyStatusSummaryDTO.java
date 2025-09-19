@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModelDTO {
+public class PenaltyStatusSummaryDTO {
     private String name;
     private boolean isActive;
-    private BrandDTO brand;
 }

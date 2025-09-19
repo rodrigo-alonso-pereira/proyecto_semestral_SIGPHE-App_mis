@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PenaltyDTO {
+public class PenaltySummaryDTO {
     private BigDecimal penaltyAmount;
     private LocalDateTime penaltyDate;
     private String description;
     private Long loanId;
-    private PenaltyTypeDTO penaltyType;
-    private PenaltyStatusDTO penaltyStatus;
+    private PenaltyTypeSummaryDTO penaltyType;
+    private PenaltyStatusSummaryDTO penaltyStatus;
 }

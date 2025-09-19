@@ -19,6 +19,6 @@ public class LoanFullSummaryDTO {
     private BigDecimal totalAmount;
     private String loanStatus;
     private String customerName;
-    private List<PenaltyDTO> penalties;
-    private List<LoanDetailDTO> loanDetails;
+    private List<PenaltySummaryDTO> penalties;
+    private List<LoanDetailSummaryDTO> loanDetails;
 }

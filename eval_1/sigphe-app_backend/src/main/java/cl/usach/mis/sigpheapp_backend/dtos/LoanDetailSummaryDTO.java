@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ToolCategoryDTO {
-    private String name;
-    private boolean isActive;
+public class LoanDetailSummaryDTO {
+    private ToolSummaryDTO tool;
+    private BigDecimal rentalValueAtLoanTime;
 }

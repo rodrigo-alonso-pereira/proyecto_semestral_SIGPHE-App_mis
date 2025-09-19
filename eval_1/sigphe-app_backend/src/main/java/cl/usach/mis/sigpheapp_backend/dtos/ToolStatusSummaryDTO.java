@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PenaltyStatusDTO {
+public class ToolStatusSummaryDTO {
     private String name;
     private boolean isActive;
 }

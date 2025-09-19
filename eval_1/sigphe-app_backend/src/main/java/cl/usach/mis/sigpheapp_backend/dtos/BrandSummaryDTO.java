@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BrandDTO {
+public class BrandSummaryDTO {
     private String name;
     private boolean isActive;
 }
