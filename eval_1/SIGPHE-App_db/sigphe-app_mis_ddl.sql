@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- Data Model Creation Script for the SIGPHE-App
--- Version: 1.1
+-- Version: 1.2
 -- DB Engine: PostgreSQL 16.9
 -- Author: Rodrigo Pereira Yañez
 --------------------------------------------------------------------------------
