@@ -32,8 +32,10 @@ public class BrandEntity {
 
     // Helper method to add a model
     public void addModel(ModelEntity model) {
+        if (this.models == null) {
+            this.models = new java.util.ArrayList<>();
+        }
         this.models.add(model);
         model.setBrand(this);
     }
 }
-

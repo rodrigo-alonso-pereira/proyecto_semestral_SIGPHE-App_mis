@@ -44,27 +44,36 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UserPhoneEntity> phones;
 
-    @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<KardexEntity> kardexRecords;
 
-    @OneToMany(mappedBy = "customerUser", orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "customerUser", fetch = FetchType.LAZY)
     private List<LoanEntity> loans;
 
     // Helper method to add a phone
     // This ensures the bidirectional relationship is maintained
     public void addPhone(UserPhoneEntity phone) {
+        if (this.phones == null) {
+            this.phones = new java.util.ArrayList<>();
+        }
         this.phones.add(phone);
         phone.setUser(this);
     }
 
     // Helper method to add a kardex record
     public void addKardexRecord(KardexEntity kardex) {
+        if (this.kardexRecords == null) {
+            this.kardexRecords = new java.util.ArrayList<>();
+        }
         this.kardexRecords.add(kardex);
         kardex.setUser(this);
     }
 
     // Helper method to add a loan
     public void addLoan(LoanEntity loan) {
+        if (this.loans == null) {
+            this.loans = new java.util.ArrayList<>();
+        }
         this.loans.add(loan);
         loan.setCustomerUser(this);
     }

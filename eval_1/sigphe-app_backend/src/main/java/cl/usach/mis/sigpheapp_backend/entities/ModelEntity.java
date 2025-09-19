@@ -36,8 +36,10 @@ public class ModelEntity {
 
     // Helper method to add a tool
     public void addTool(ToolEntity tool) {
+        if (this.tools == null) {
+            this.tools = new java.util.ArrayList<>();
+        }
         this.tools.add(tool);
         tool.setModel(this);
     }
 }
-

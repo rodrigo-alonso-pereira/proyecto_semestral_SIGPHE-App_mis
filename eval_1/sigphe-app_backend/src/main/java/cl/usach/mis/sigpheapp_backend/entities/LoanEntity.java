@@ -50,14 +50,19 @@ public class LoanEntity {
 
     // Helper methods to add details
     public void addLoanDetail(LoanDetailEntity loanDetail) {
+        if (this.loanDetails == null) {
+            this.loanDetails = new java.util.ArrayList<>();
+        }
         this.loanDetails.add(loanDetail);
         loanDetail.setLoan(this);
     }
 
     // Helper method to add a penalty
     public void addPenalty(PenaltyEntity penalty) {
+        if (this.penalties == null) {
+            this.penalties = new java.util.ArrayList<>();
+        }
         this.penalties.add(penalty);
         penalty.setLoan(this);
     }
 }
-

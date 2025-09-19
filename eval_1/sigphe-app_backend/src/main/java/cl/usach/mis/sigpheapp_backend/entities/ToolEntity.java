@@ -47,8 +47,10 @@ public class ToolEntity {
 
     // Helper method to add a loan detail
     public void addLoanDetail(LoanDetailEntity loanDetail) {
+        if (this.loanDetails == null) {
+            this.loanDetails = new java.util.ArrayList<>();
+        }
         this.loanDetails.add(loanDetail);
         loanDetail.setTool(this);
     }
 }
-
