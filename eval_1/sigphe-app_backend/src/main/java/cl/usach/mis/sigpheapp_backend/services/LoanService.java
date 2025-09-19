@@ -33,6 +33,7 @@ public class LoanService {
         dto.setReturnDate(loan.getReturnDate());
         dto.setDueDate(loan.getDueDate());
         dto.setTotalAmount(loan.getTotalAmount());
+        // loanStatus and customerName might be null, handle accordingly
         dto.setLoanStatus(Optional.ofNullable(loan.getLoanStatus())
                 .map(LoanStatusEntity::getName)
                 .orElse("Unknown"));
