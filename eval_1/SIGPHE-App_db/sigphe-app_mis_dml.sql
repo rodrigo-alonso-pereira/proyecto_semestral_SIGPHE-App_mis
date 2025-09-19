@@ -1,6 +1,10 @@
 -- DML Script for populating the 'sigphe_app_db' database
--- Version: 1.0
+-- Version: 1.1
 -- Author: Rodrigo Pereira Yañez
+-- Date: 2025-09-19
+-- Description: This script populates the database with initial data for testing
+--              and demonstration purposes. It includes catalog data, users,
+--              tools, loans, and penalties.
 
 -- Set the schema to work in
 SET search_path TO sigphe;
