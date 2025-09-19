@@ -18,15 +18,14 @@ public class PenaltyTypeEntity {
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, unique = true)
-    private int id;
+    private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 200)
     private String name;
 
-    @Column(name = "penalty_factor", nullable = false, precision = 5, scale = 2)
+    @Column(name = "penalty_factor", nullable = false, precision = 10, scale = 2)
     private BigDecimal penaltyFactor;
 
     @Column(nullable = false)
     private boolean status = true;
 }
-

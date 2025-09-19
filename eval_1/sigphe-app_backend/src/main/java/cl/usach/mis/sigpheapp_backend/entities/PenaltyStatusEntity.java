@@ -19,7 +19,7 @@ public class PenaltyStatusEntity {
     @Column(nullable = false, unique = true)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 200)
     private String name;
 
     @Column(nullable = false)
