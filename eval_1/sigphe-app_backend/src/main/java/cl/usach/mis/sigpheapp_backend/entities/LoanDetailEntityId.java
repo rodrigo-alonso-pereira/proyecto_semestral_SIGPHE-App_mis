@@ -2,12 +2,17 @@ package cl.usach.mis.sigpheapp_backend.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 @Embeddable
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class LoanDetailEntityId implements Serializable {
     @Column(name = "loan_id")
