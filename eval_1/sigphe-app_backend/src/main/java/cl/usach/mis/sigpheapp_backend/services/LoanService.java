@@ -9,6 +9,7 @@ import cl.usach.mis.sigpheapp_backend.repositories.LoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,6 +26,17 @@ public class LoanService {
                 .collect(Collectors.toList());
     }
 
+    public List<LoanSummaryDTO> getAllLoansByStatuses(List<String> statuses) {
+        return loanRepository.findByLoanStatusNameIn(statuses).stream()
+                .map(this::toLoanSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    /*
+     Mapper Layer
+     */
+
+    // Convert LoanEntity to LoanSummaryDTO
     public LoanSummaryDTO toLoanSummaryDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
         LoanSummaryDTO dto = new LoanSummaryDTO();

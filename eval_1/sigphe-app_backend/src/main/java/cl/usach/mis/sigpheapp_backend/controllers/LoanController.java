@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -22,4 +23,10 @@ public class LoanController {
         return ResponseEntity.ok(loans);
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<LoanSummaryDTO>> getActiveLoans() {
+        List<String> statuses = Arrays.asList("Vigente", "Atrasada");
+        List<LoanSummaryDTO> loans = loanService.getAllLoansByStatuses(statuses);
+        return ResponseEntity.ok(loans);
+    }
 }
