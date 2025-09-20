@@ -1,13 +1,14 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
+import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.LoanSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,5 +29,16 @@ public class LoanController {
         List<String> statuses = Arrays.asList("Vigente", "Atrasada");
         List<LoanSummaryDTO> loans = loanService.getAllLoansByStatuses(statuses);
         return ResponseEntity.ok(loans);
+    }
+
+    @PostMapping
+    public ResponseEntity<LoanSummaryDTO> createLoan(@RequestBody CreateLoanRequestDTO request) {
+        LoanSummaryDTO createdLoan = loanService.createLoan(request);
+        URI location = ServletUriComponentsBuilder // Retornar 201 Created con la ubicación del nuevo recurso
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdLoan.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(createdLoan);
     }
 }
