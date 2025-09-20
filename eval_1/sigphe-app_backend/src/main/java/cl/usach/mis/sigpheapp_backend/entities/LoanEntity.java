@@ -48,7 +48,7 @@ public class LoanEntity {
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PenaltyEntity> penalties;
 
-    // Helper methods to add details
+    // Metodo helper para agregar un LoanDetail y establecer la relacion bidireccional
     public void addLoanDetail(LoanDetailEntity loanDetail) {
         if (this.loanDetails == null) {
             this.loanDetails = new java.util.ArrayList<>();
@@ -57,7 +57,7 @@ public class LoanEntity {
         loanDetail.setLoan(this);
     }
 
-    // Helper method to add a penalty
+    // Metodo helper para agregar una Penalty y establecer la relacion bidireccional
     public void addPenalty(PenaltyEntity penalty) {
         if (this.penalties == null) {
             this.penalties = new java.util.ArrayList<>();

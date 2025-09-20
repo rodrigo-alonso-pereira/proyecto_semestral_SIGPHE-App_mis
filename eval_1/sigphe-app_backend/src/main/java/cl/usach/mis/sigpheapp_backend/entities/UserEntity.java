@@ -50,8 +50,7 @@ public class UserEntity {
     @OneToMany(mappedBy = "customerUser", fetch = FetchType.LAZY)
     private List<LoanEntity> loans;
 
-    // Helper method to add a phone
-    // This ensures the bidirectional relationship is maintained
+    // Metodo helper para agregar un telefono y establecer la relacion bidireccional
     public void addPhone(UserPhoneEntity phone) {
         if (this.phones == null) {
             this.phones = new java.util.ArrayList<>();
@@ -60,7 +59,7 @@ public class UserEntity {
         phone.setUser(this);
     }
 
-    // Helper method to add a kardex record
+    // Metodo helper para agregar un registro de kardex y establecer la relacion bidireccional
     public void addKardexRecord(KardexEntity kardex) {
         if (this.kardexRecords == null) {
             this.kardexRecords = new java.util.ArrayList<>();
@@ -69,7 +68,7 @@ public class UserEntity {
         kardex.setUser(this);
     }
 
-    // Helper method to add a loan
+    // Metodo helper para agregar un prestamo y establecer la relacion bidireccional
     public void addLoan(LoanEntity loan) {
         if (this.loans == null) {
             this.loans = new java.util.ArrayList<>();
@@ -78,4 +77,3 @@ public class UserEntity {
         loan.setCustomerUser(this);
     }
 }
-
