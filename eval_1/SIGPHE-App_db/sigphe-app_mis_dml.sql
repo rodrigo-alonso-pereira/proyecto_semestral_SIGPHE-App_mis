@@ -50,7 +50,7 @@ INSERT INTO kardex_types (id, name) OVERRIDING SYSTEM VALUE VALUES
 (2, 'Prestamo'),
 (3, 'Devolucion'),
 (4, 'Baja'),
-(5, 'Reparacion')
+(5, 'Reparacion'),
 (6, 'Raparada')
 ON CONFLICT (id) DO NOTHING;
 
