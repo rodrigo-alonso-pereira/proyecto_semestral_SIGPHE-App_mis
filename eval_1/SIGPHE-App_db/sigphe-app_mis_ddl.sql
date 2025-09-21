@@ -183,14 +183,14 @@ create table kardex (
     quantity int not null,
     tool_id bigint not null,
     kardex_type_id bigint not null,
-    user_id bigint not null,
+    worker_user_id bigint not null,
     constraint kardex_pk primary key (id),
     constraint kardex_tool_id_check check (tool_id > 0),
     constraint kardex_kardex_type_id_check check (kardex_type_id > 0),
-    constraint kardex_user_id_check check (user_id > 0),
+    constraint kardex_worker_user_id_check check (worker_user_id > 0),
     constraint kardex_tool_id_fk foreign key (tool_id) references tools(id),
     constraint kardex_kardex_type_id_fk foreign key (kardex_type_id) references kardex_types(id),
-    constraint kardex_user_id_fk foreign key (user_id) references users(id)
+    constraint kardex_worker_user_id_fk foreign key (worker_user_id) references users(id)
 );
 
 create table loans (
