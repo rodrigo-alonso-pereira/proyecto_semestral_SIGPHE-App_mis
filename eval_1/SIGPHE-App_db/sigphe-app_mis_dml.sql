@@ -75,11 +75,12 @@ INSERT INTO loan_statuses (id, name) OVERRIDING SYSTEM VALUE VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- brands and models
-INSERT INTO brands (id, name) OVERRIDING SYSTEM VALUE VALUES (1, 'DeWalt'), (2, 'Bosch'), (3, 'Makita') ON CONFLICT (id) DO NOTHING;
+INSERT INTO brands (id, name) OVERRIDING SYSTEM VALUE VALUES (1, 'DeWalt'), (2, 'Bosch'), (3, 'Makita'), (4, 'Stanley') ON CONFLICT (id) DO NOTHING;
 INSERT INTO models (id, name, brand_id) OVERRIDING SYSTEM VALUE VALUES
 (1, 'DCD777C2', 1), (2, 'DCF887B', 1),
 (3, 'GSR 12V-300', 2), (4, 'GDS 18V-400', 2),
-(5, 'XDT131', 3)
+(5, 'XDT131', 3), 
+(6, 'Global Plus Stanley 3m/10 pulgadas', 4)
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequences for generated IDs to avoid collisions with hardcoded values
@@ -120,25 +121,25 @@ SELECT setval(pg_get_serial_sequence('sigphe.users', 'id'), COALESCE(max(id), 1)
 -- Tool 1: Taladro DeWalt
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
 OVERRIDING SYSTEM VALUE VALUES (1, 'Taladro Percutor Inalámbrico 20V DeWalt', 150000, 10000, 1, 1, 1) ON CONFLICT (id) DO NOTHING;
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity)
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
 OVERRIDING SYSTEM VALUE VALUES (1, 1, 1, 1); -- type 1: Ingreso, user 1: Trabajador
 
 -- Tool 2: Taladro Bosch
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
 OVERRIDING SYSTEM VALUE VALUES (2, 'Taladro Atornillador 12V Bosch', 80000, 7000, 1, 1, 3) ON CONFLICT (id) DO NOTHING;
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity)
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
 OVERRIDING SYSTEM VALUE VALUES (2, 1, 1, 1);
 
 -- Tool 3: Llave de Impacto DeWalt
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
 OVERRIDING SYSTEM VALUE VALUES (3, 'Llave de Impacto 20V DeWalt', 250000, 15000, 1, 1, 2) ON CONFLICT (id) DO NOTHING;
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity)
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
 OVERRIDING SYSTEM VALUE VALUES (3, 1, 1, 1);
 
 -- Tool 4: Huincha de Medir
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 8m', 15000, 2000, 3, 1, 3) ON CONFLICT (id) DO NOTHING;
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity)
+OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 8m', 10000, 2000, 3, 1, 6) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
 OVERRIDING SYSTEM VALUE VALUES (4, 1, 1, 1);
 
 SELECT setval(pg_get_serial_sequence('sigphe.tools', 'id'), COALESCE(max(id), 1)) FROM sigphe.tools;
