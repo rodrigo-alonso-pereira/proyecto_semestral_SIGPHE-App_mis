@@ -51,6 +51,7 @@ INSERT INTO kardex_types (id, name) OVERRIDING SYSTEM VALUE VALUES
 (3, 'Devolucion'),
 (4, 'Baja'),
 (5, 'Reparacion')
+(6, 'Raparada')
 ON CONFLICT (id) DO NOTHING;
 
 -- user_types
@@ -165,6 +166,26 @@ UPDATE tools SET tool_status_id = 2 WHERE id IN (2, 3); -- status 2: Prestada
 INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity) OVERRIDING SYSTEM VALUE VALUES
 (2, 2, 1, -1), -- type 2: Prestamo
 (3, 2, 1, -1);
+
+-- SCENARIO 1.1: A valid, current loan for Juan Pérez (Cliente 2)
+-- =============================================================
+-- Create the loan
+INSERT INTO loans (id, start_date, due_date, total_amount, loan_status_id, customer_user_id)
+OVERRIDING SYSTEM VALUE VALUES (103, '2025-09-19 10:00:00', '2025-09-23 10:00:00', 8000, 1, 2) ON CONFLICT (id) DO NOTHING; -- status 1: Vigente
+
+-- Add details for the loan
+INSERT INTO loan_details (loan_id, tool_id, rental_value_at_time) OVERRIDING SYSTEM VALUE VALUES
+(103, 4, 2000);  -- Huincha de Medir 8m
+
+delete from loan_details ld
+where ld.loan_id = 103;
+
+delete from loans l
+where l.id = 103;
+
+update  tools
+SET tool_status_id = 1
+where id = 4;
 
 
 -- SCENARIO 2: An overdue loan for Ana Gómez (Cliente 3) with a penalty
