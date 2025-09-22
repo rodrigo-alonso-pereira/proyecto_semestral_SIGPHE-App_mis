@@ -36,7 +36,7 @@ public class LoanEntity {
     private BigDecimal totalRental;
 
     @Column(name = "total_penalties", precision = 10, scale = 2)
-    private BigDecimal totalPenalties;
+    private BigDecimal totalPenalties = BigDecimal.ZERO;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_status_id", nullable = false)

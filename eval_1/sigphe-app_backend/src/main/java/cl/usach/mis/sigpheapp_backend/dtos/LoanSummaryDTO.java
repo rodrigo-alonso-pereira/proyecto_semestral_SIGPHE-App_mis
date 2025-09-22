@@ -15,6 +15,7 @@ public class LoanSummaryDTO {
     private LocalDateTime startDate, returnDate;
     private LocalDateTime dueDate;
     private BigDecimal totalAmount;
+    private BigDecimal totalPenalties;
     private String loanStatus;
     private String customerName;
 }
