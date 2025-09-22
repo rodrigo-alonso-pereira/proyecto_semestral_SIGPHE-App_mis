@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,8 +32,11 @@ public class LoanEntity {
     @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "total_rental", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalRental;
+
+    @Column(name = "total_penalties", precision = 10, scale = 2)
+    private BigDecimal totalPenalties;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_status_id", nullable = false)
@@ -43,18 +47,15 @@ public class LoanEntity {
     private UserEntity customerUser;
 
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<LoanDetailEntity> loanDetails;
+    private List<LoanDetailEntity> loanDetails = new ArrayList<>();
 
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PenaltyEntity> penalties;
 
     // Metodo helper para agregar un LoanDetail y establecer la relacion bidireccional
     public void addLoanDetail(LoanDetailEntity loanDetail) {
-        if (this.loanDetails == null) {
-            this.loanDetails = new java.util.ArrayList<>();
-        }
         this.loanDetails.add(loanDetail);
-        loanDetail.setLoan(this);
+        loanDetail.setLoan(this);  // Establecer relación bidireccional
     }
 
     // Metodo helper para agregar una Penalty y establecer la relacion bidireccional

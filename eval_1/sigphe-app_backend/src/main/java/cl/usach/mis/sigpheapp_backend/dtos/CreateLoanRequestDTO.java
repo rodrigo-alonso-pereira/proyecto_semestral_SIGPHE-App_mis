@@ -23,6 +23,9 @@ public class CreateLoanRequestDTO {
     @NotNull(message = "Customer ID is required")
     private Long customerId;
 
+    @NotNull(message = "Worker ID is required")
+    private Long workerId;
+
     @NotEmpty(message = "At least one tool ID is required")
     private List<Long> toolIds;
 

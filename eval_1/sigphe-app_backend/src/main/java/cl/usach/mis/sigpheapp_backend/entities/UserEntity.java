@@ -44,7 +44,7 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UserPhoneEntity> phones;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "workerUser", fetch = FetchType.LAZY)
     private List<KardexEntity> kardexRecords;
 
     @OneToMany(mappedBy = "customerUser", fetch = FetchType.LAZY)
@@ -65,7 +65,7 @@ public class UserEntity {
             this.kardexRecords = new java.util.ArrayList<>();
         }
         this.kardexRecords.add(kardex);
-        kardex.setUser(this);
+        kardex.setWorkerUser(this);
     }
 
     // Metodo helper para agregar un prestamo y establecer la relacion bidireccional

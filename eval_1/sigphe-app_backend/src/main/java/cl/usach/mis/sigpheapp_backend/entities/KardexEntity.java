@@ -35,7 +35,7 @@ public class KardexEntity {
     private KardexTypeEntity kardexType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    @JoinColumn(name = "worker_user_id", nullable = false)
+    private UserEntity workerUser;
 }
 
