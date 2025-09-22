@@ -30,9 +30,6 @@ public class PenaltyEntity {
     @Column(length = 500)
     private String description;
 
-    @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_id", nullable = false)
     private LoanEntity loan;

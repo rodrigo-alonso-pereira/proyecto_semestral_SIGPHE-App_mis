@@ -32,6 +32,9 @@ public class LoanEntity {
     @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
     @Column(name = "total_rental", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalRental;
 
