@@ -233,13 +233,15 @@ create table penalties (
 );
 
 create table loan_details (
+    id bigint generated always as identity,
     tool_id bigint not null,
     loan_id bigint not null,
     rental_value_at_time numeric(10,2) not null,
-    constraint loan_details_pk primary key (tool_id, loan_id),
+    constraint loan_details_pk primary key (id),
     constraint loan_details_tool_id_check check (tool_id > 0),
     constraint loan_details_loan_id_check check (loan_id > 0),
     constraint loan_details_rental_value_at_time_check check (rental_value_at_time > 0),
+    constraint loan_details_loan_tool_id_unique UNIQUE (loan_id, tool_id), -- Un prestamo no puede tener la misma herramienta mas de una vez
     constraint loan_details_tool_id_fk foreign key (tool_id) references tools(id),
     constraint loan_details_loan_id_fk foreign key (loan_id) references loans(id)
 );

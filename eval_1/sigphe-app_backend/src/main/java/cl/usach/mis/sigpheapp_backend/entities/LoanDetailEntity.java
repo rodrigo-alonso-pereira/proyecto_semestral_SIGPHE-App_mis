@@ -3,6 +3,7 @@ package cl.usach.mis.sigpheapp_backend.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -14,16 +15,16 @@ import java.util.Objects;
 @AllArgsConstructor
 public class LoanDetailEntity {
 
-    @EmbeddedId
-    private LoanDetailEntityId id;
+    @Id
+    @EqualsAndHashCode.Include
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("toolId")
     @JoinColumn(name = "tool_id", nullable = false)
     private ToolEntity tool;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("loanId")
     @JoinColumn(name = "loan_id", nullable = false)
     private LoanEntity loan;
 
