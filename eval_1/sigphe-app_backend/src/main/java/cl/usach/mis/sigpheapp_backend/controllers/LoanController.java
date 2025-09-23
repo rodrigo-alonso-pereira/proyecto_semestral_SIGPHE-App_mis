@@ -5,6 +5,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class LoanController {
     }
 
     @PostMapping
-    public ResponseEntity<LoanDTO> createLoan(@RequestBody CreateLoanRequestDTO request) {
+    public ResponseEntity<LoanDTO> createLoan(@Valid @RequestBody CreateLoanRequestDTO request) {
         LoanDTO createdLoan = loanService.createLoan(request);
         URI location = ServletUriComponentsBuilder // Retornar 201 Created con la ubicación del nuevo recurso
                 .fromCurrentRequest()
@@ -45,13 +46,13 @@ public class LoanController {
     }
 
     @PutMapping("/{id}/return")
-    public ResponseEntity<LoanDTO> returnLoan(@PathVariable Long id, @RequestBody ReturnLoanRequestDTO request) {
+    public ResponseEntity<LoanDTO> returnLoan(@PathVariable Long id, @Valid @RequestBody ReturnLoanRequestDTO request) {
         LoanDTO updatedLoan = loanService.processReturnLoan(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
 
     @PutMapping("/{id}/payment")
-    public ResponseEntity<LoanDTO> makePayment(@PathVariable Long id, @RequestBody PaymentLoanRequestDTO request) {
+    public ResponseEntity<LoanDTO> makePayment(@PathVariable Long id, @Valid @RequestBody PaymentLoanRequestDTO request) {
         LoanDTO updatedLoan = loanService.processPayment(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
