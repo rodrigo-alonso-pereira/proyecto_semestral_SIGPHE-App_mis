@@ -1,7 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.LoanSummaryDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
@@ -21,21 +21,21 @@ public class LoanController {
     @Autowired private LoanService loanService;
 
     @GetMapping
-    public ResponseEntity<List<LoanSummaryDTO>> getAll() {
-        List<LoanSummaryDTO> loans = loanService.getAllLoansSummary();
+    public ResponseEntity<List<LoanDTO>> getAll() {
+        List<LoanDTO> loans = loanService.getAllLoansSummary();
         return ResponseEntity.ok(loans);
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<LoanSummaryDTO>> getActiveLoans() {
+    public ResponseEntity<List<LoanDTO>> getActiveLoans() {
         List<String> statuses = Arrays.asList("Vigente", "Atrasada");
-        List<LoanSummaryDTO> loans = loanService.getAllLoansByStatuses(statuses);
+        List<LoanDTO> loans = loanService.getAllLoansByStatuses(statuses);
         return ResponseEntity.ok(loans);
     }
 
     @PostMapping
-    public ResponseEntity<LoanSummaryDTO> createLoan(@RequestBody CreateLoanRequestDTO request) {
-        LoanSummaryDTO createdLoan = loanService.createLoan(request);
+    public ResponseEntity<LoanDTO> createLoan(@RequestBody CreateLoanRequestDTO request) {
+        LoanDTO createdLoan = loanService.createLoan(request);
         URI location = ServletUriComponentsBuilder // Retornar 201 Created con la ubicación del nuevo recurso
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -45,14 +45,14 @@ public class LoanController {
     }
 
     @PutMapping("/{id}/return")
-    public ResponseEntity<LoanSummaryDTO> returnLoan(@PathVariable Long id, @RequestBody ReturnLoanRequestDTO request) {
-        LoanSummaryDTO updatedLoan = loanService.processReturnLoan(id, request);
+    public ResponseEntity<LoanDTO> returnLoan(@PathVariable Long id, @RequestBody ReturnLoanRequestDTO request) {
+        LoanDTO updatedLoan = loanService.processReturnLoan(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
 
     @PutMapping("/{id}/payment")
-    public ResponseEntity<LoanSummaryDTO> makePayment(@PathVariable Long id, @RequestBody PaymentLoanRequestDTO request) {
-        LoanSummaryDTO updatedLoan = loanService.processPayment(id, request);
+    public ResponseEntity<LoanDTO> makePayment(@PathVariable Long id, @RequestBody PaymentLoanRequestDTO request) {
+        LoanDTO updatedLoan = loanService.processPayment(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
 }

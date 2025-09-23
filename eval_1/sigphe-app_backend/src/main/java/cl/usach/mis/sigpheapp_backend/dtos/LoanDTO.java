@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanSummaryDTO {
+public class LoanDTO {
     private Long id;
     private LocalDateTime startDate, returnDate;
     private LocalDateTime dueDate;

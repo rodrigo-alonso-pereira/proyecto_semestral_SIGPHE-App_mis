@@ -1,7 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.LoanSummaryDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
@@ -35,20 +35,20 @@ public class LoanService {
     @Autowired private PenaltyStatusRepository penaltyStatusRepository;
     @Autowired private UserStatusRepository userStatusRepository;
 
-    public List<LoanSummaryDTO> getAllLoansSummary() {
+    public List<LoanDTO> getAllLoansSummary() {
         return loanRepository.findAll().stream()
                 .map(this::toLoanSummaryDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<LoanSummaryDTO> getAllLoansByStatuses(List<String> statuses) {
+    public List<LoanDTO> getAllLoansByStatuses(List<String> statuses) {
         return loanRepository.findByLoanStatusNameIn(statuses).stream()
                 .map(this::toLoanSummaryDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public LoanSummaryDTO createLoan(CreateLoanRequestDTO dto) {
+    public LoanDTO createLoan(CreateLoanRequestDTO dto) {
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtener worker
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtener customer
 
@@ -117,7 +117,7 @@ public class LoanService {
     }
 
     @Transactional
-    public LoanSummaryDTO processReturnLoan(Long id, ReturnLoanRequestDTO dto) {
+    public LoanDTO processReturnLoan(Long id, ReturnLoanRequestDTO dto) {
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene worker
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
         LoanEntity loan = getLoanById(id); // Obtiene préstamo
@@ -198,7 +198,7 @@ public class LoanService {
     }
 
     @Transactional
-    public LoanSummaryDTO processPayment(Long id, PaymentLoanRequestDTO dto) {
+    public LoanDTO processPayment(Long id, PaymentLoanRequestDTO dto) {
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
         LoanEntity loan = getLoanById(id); // Obtiene préstamo
 
@@ -232,7 +232,7 @@ public class LoanService {
         return toLoanSummaryDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
-    // TODO: Dar de baja un loan
+    // TODO: Hacer metodo para cambiar un prestamo por otro nuevo por error del operario
 
     /* Metodos auxiliares */
 
@@ -314,10 +314,10 @@ public class LoanService {
 
     /* Metodos Mapper */
 
-    // Convert LoanEntity to LoanSummaryDTO
-    public LoanSummaryDTO toLoanSummaryDTO(LoanEntity loan) {
+    // Convert LoanEntity to LoanDTO
+    public LoanDTO toLoanSummaryDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
-        LoanSummaryDTO dto = new LoanSummaryDTO();
+        LoanDTO dto = new LoanDTO();
         dto.setId(loan.getId());
         dto.setStartDate(loan.getStartDate());
         dto.setReturnDate(loan.getReturnDate());
