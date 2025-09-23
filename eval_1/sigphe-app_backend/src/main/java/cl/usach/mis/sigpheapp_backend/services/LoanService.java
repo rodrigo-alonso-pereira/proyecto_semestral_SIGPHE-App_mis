@@ -123,9 +123,15 @@ public class LoanService {
         LoanEntity loan = getLoanById(id); // Obtiene préstamo
 
         // Validar que el préstamo pertenezca al cliente indicado
-        if (!doesLoanBelongToCustomer(loan, customer.getId())) {
+        if (doesLoanBelongToCustomer(loan, customer.getId())) {
             throw new IllegalStateException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
         }
+
+        // Validar que el estado del préstamo permita realizar la devolución
+        if (isLoanStatusIn(loan, "Vigente")) {
+            throw new IllegalStateException("Loan ID " + id + " is not in a returnable status");
+        }
+
 
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
         dto.getToolConditions().forEach((condition, toolId) -> {
