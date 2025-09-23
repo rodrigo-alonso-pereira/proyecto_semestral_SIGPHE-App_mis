@@ -48,13 +48,8 @@ public class LoanService {
 
     @Transactional
     public LoanSummaryDTO createLoan(CreateLoanRequestDTO dto) {
-        // Validar que trabajador exista
-        UserEntity worker = userRepository.findById(dto.getWorkerId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid worker ID: " + dto.getWorkerId()));
-
-        // Validar que el cliente exista
-        UserEntity customer = userRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid customer ID: " + dto.getCustomerId()));
+        UserEntity worker = getUserById(dto.getWorkerId()); // Obtener worker
+        UserEntity customer = getUserById(dto.getCustomerId()); // Obtener customer
 
         // Validar que el cliente sea elegible para un nuevo préstamo según reglas de negocio
         if (!userService.isCustomerEligibleForNewLoan(customer.getId())) {
@@ -62,23 +57,17 @@ public class LoanService {
         }
 
         // Obtener entidades necesarias para el préstamo
-        LoanStatusEntity loanStatus = loanStatusRepository.findByName("Vigente")
-                .orElseThrow(() -> new IllegalStateException("Loan status 'Vigente' not found"));
-
-        ToolStatusEntity toolStatus = toolStatusRepository.findByName("Prestada")
-                .orElseThrow(() -> new IllegalStateException("Tool status 'Prestada' not found"));
-
-        KardexTypeEntity kardexType = kardexTypeRepository.findByName("Prestamo")
-                .orElseThrow(() -> new IllegalStateException("Kardex type 'Prestamo' not found"));
+        LoanStatusEntity loanStatus = getLoanStatusByName("Vigente");
+        ToolStatusEntity toolStatus = getToolStatusByName("Prestada");
+        KardexTypeEntity kardexType = getKardexTypeByName("Prestamo");
 
         // Preparacion para calcular el valor total del alquiler
         BigDecimal totalRental = BigDecimal.ZERO;
-        long rentalDays = (long) Math.ceil((double) Duration.between(LocalDateTime.now(), dto.getDueDate()).toHours() / 24); // Calcular días de alquiler redondeando hacia arriba
+        long rentalDays = (long) Math.ceil((double) Duration.between(
+                LocalDateTime.now(), dto.getDueDate()).toHours() / 24); // Calcular días de alquiler redondeando hacia arriba
         if (rentalDays <= 1) rentalDays = 1; // Asegurar al menos un día de alquiler
         for (Long toolId : dto.getToolIds()) {
-            // Obtener la herramienta
-            ToolEntity tool = toolRepository.findById(toolId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + toolId));
+            ToolEntity tool = getToolById(toolId); // Obtener herramienta
 
             // Validar que la herramienta esté disponible
             if (!tool.getToolStatus().getName().equals("Disponible")) {
@@ -87,7 +76,8 @@ public class LoanService {
 
             // Calcular el valor del alquiler de herramienta actual
             BigDecimal rentalValue = tool.getRentalValue(); // Obtener valor de alquiler
-            totalRental = totalRental.add(rentalValue.multiply(BigDecimal.valueOf(rentalDays))); // Sumar al total
+            totalRental = totalRental.add(rentalValue.multiply(BigDecimal.valueOf(rentalDays)
+                    .setScale(2, RoundingMode.CEILING))); // Sumar al total
         }
 
         // Crear la entidad Loan -> asignar valores iniciales -> guardar
@@ -110,12 +100,7 @@ public class LoanService {
             toolRepository.save(tool);
 
             // Registrar movimiento en Kardex
-            KardexEntity kardexEntry = new KardexEntity();
-            kardexEntry.setDateTime(LocalDateTime.now());
-            kardexEntry.setQuantity(-1); // Cantidad negativa por préstamo
-            kardexEntry.setTool(tool);
-            kardexEntry.setKardexType(kardexType);
-            kardexEntry.setWorkerUser(worker); // Usuario que realiza el préstamo
+            KardexEntity kardexEntry = addKardexEntry(-1, tool, kardexType, worker); // -1 -> prestamo
             kardexRepository.save(kardexEntry);
 
             // Registrar el detalle del prestamo (Loan se asigna x addLoanDetail)
