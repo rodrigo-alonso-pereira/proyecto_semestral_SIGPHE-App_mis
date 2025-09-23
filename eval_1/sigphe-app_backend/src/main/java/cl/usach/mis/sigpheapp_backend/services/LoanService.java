@@ -2,6 +2,7 @@ package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.LoanSummaryDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
@@ -190,7 +191,40 @@ public class LoanService {
         return toLoanSummaryDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
-    // TODO: Proceso de pago de un loan
+    @Transactional
+    public LoanSummaryDTO processPayment(Long id, PaymentLoanRequestDTO dto) {
+        UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
+        LoanEntity loan = getLoanById(id); // Obtiene préstamo
+
+        // Validar que el préstamo pertenezca al cliente indicado
+        if (doesLoanBelongToCustomer(loan, customer.getId())) {
+            throw new IllegalStateException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
+        }
+
+        // Validar que el estado del préstamo permita realizar el pago
+        if (isLoanStatusIn(loan, "Atrasada")) {
+            throw new IllegalStateException("Loan ID " + id + " is not in a payable status");
+        }
+
+        // Validar que el monto del pago coincida con el total adeudado (alquiler + multas)
+        if (!loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING)
+                .equals(BigDecimal.valueOf(dto.getPaymentAmount()).setScale(2, RoundingMode.CEILING))) {
+            throw new IllegalArgumentException("Payment amount does not match total due $" +
+                    loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING));
+        }
+
+        // Procesar el pago del préstamo y actualizar estados
+        for (PenaltyEntity penalty : loan.getPenalties()) { // Por cada penalty asociada al préstamo
+            penalty.setPenaltyStatus(getPenaltyStatusByName("Pagada")); // Penalty -> "Pagada"
+            penaltyRepository.save(penalty); // Guardar el cambio de estado
+        }
+        loan.setPaymentDate(LocalDateTime.now()); // Establecer la fecha de pago
+        loan.setLoanStatus(getLoanStatusByName("Finalizado")); // Cambiar estado del préstamo
+        loanRepository.save(loan); // Guardar el préstamo actualizado
+        customer.setUserStatus(getUserStatusByName("Activo"));// Cliente -> "Activo"
+        userRepository.save(customer); // Guardar el cliente actualizado
+        return toLoanSummaryDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
+    }
 
     // TODO: Dar de baja un loan
 
@@ -265,7 +299,11 @@ public class LoanService {
     };
 
     public boolean doesLoanBelongToCustomer(LoanEntity loan, Long customerId) {
-        return loan.getCustomerUser().getId().equals(customerId);
+        return !loan.getCustomerUser().getId().equals(customerId);
+    }
+
+    public boolean isLoanStatusIn(LoanEntity loan, String statuses) {
+        return !statuses.contains(loan.getLoanStatus().getName());
     }
 
     /* Metodos Mapper */

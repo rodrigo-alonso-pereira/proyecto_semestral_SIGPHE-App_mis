@@ -2,6 +2,7 @@ package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.LoanSummaryDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,12 @@ public class LoanController {
     @PutMapping("/{id}/return")
     public ResponseEntity<LoanSummaryDTO> returnLoan(@PathVariable Long id, @RequestBody ReturnLoanRequestDTO request) {
         LoanSummaryDTO updatedLoan = loanService.processReturnLoan(id, request);
+        return ResponseEntity.ok(updatedLoan);
+    }
+
+    @PutMapping("/{id}/payment")
+    public ResponseEntity<LoanSummaryDTO> makePayment(@PathVariable Long id, @RequestBody PaymentLoanRequestDTO request) {
+        LoanSummaryDTO updatedLoan = loanService.processPayment(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
 }
