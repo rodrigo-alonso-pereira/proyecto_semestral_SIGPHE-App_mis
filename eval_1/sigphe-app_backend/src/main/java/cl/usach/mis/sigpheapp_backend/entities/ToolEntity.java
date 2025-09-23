@@ -45,7 +45,7 @@ public class ToolEntity {
     @OneToMany(mappedBy = "tool", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<LoanDetailEntity> loanDetails;
 
-    // Helper method to add a loan detail
+    // Metodo helpter para agregar LoanDetail y mantener la relacion bidireccional
     public void addLoanDetail(LoanDetailEntity loanDetail) {
         if (this.loanDetails == null) {
             this.loanDetails = new java.util.ArrayList<>();
