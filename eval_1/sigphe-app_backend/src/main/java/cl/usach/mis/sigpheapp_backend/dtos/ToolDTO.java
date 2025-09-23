@@ -9,10 +9,11 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ToolSummaryDTO {
+public class ToolDTO {
+    private Long id;
     private String name;
     private BigDecimal rentalValue;
-    private ToolCategorySummaryDTO category;
-    private ToolStatusSummaryDTO status;
-    private ModelSummaryDTO model;
+    private String category;
+    private String status;
+    private String model;
 }
