@@ -13,6 +13,7 @@ public class ToolDTO {
     private Long id;
     private String name;
     private BigDecimal rentalValue;
+    private BigDecimal replacementValue;
     private String category;
     private String status;
     private String model;
