@@ -22,7 +22,7 @@ public class PenaltyEntity {
     private Long id;
 
     @Column(name = "penalty_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal penaltyAmount;
+    private BigDecimal penaltyAmount = BigDecimal.ZERO;
 
     @Column(name = "penalty_date", nullable = false)
     private LocalDateTime penaltyDate;
