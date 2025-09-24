@@ -102,8 +102,7 @@ public class LoanService {
             toolRepository.save(tool);
 
             // Registrar movimiento en Kardex
-            KardexEntity kardexEntry = addKardexEntry(-1, tool, kardexType, worker); // -1 -> prestamo
-            kardexRepository.save(kardexEntry);
+            addKardexEntry(-1, tool, kardexType, worker); // -1 -> prestamo
 
             // Registrar el detalle del prestamo (Loan se asigna x addLoanDetail)
             LoanDetailEntity loanDetail = new LoanDetailEntity(); // Crear el detalle del préstamo
@@ -138,14 +137,14 @@ public class LoanService {
 
 
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
-        dto.getToolConditions().forEach((condition, toolId) -> {
+        dto.getToolConditions().forEach((toolId, condition) -> {
             ToolEntity tool = getToolById(toolId); // Obtener herramienta
             KardexEntity kardexEntry; // Inicializa un registro en kardex
             PenaltyEntity penalty = new PenaltyEntity(); // Inicializa una multa si aplica
 
             // Validar que la herramienta pertenezca al préstamo
-            if (loan.getLoanDetails().stream()
-                    .noneMatch(detail -> detail.getTool().getId().equals(tool.getId()))) {
+            if (!loan.getLoanDetails().stream()
+                    .anyMatch(detail -> detail.getTool().getId().equals(toolId))) {
                 throw new IllegalStateException("Tool ID " + toolId + " is not part of loan ID " + id);
             }
 
@@ -153,21 +152,21 @@ public class LoanService {
             switch (condition.toLowerCase()) {
                 case "ok": // Herramienta en buen estado -> Cambiar a "Disponible" y registrar en kardex
                     tool.setToolStatus(getToolStatusByName("Disponible"));
-                    kardexEntry = addKardexEntry(1, tool, getKardexTypeByName("Devolucion"), worker); // +1 -> devolucion
+                    addKardexEntry(1, tool, getKardexTypeByName("Devolucion"), worker); // +1 -> devolucion
                     break;
                 case "dañada": // Herramienta dañada -> Cambiar a "En Reparacion", calcular multa y registrar en kardex
                     tool.setToolStatus(getToolStatusByName("En Reparacion"));
                     penalty = createAndCalculatePenalty("Reparacion", tool.getReplacementValue());
                     penalty.setLoan(loan); // Asociar la multa al préstamo
                     penaltyRepository.save(penalty); // Guardar la multa
-                    kardexEntry = addKardexEntry(-1, tool, getKardexTypeByName("Reparacion"), worker); // -1 -> reparacion
+                    addKardexEntry(-1, tool, getKardexTypeByName("Reparacion"), worker); // -1 -> reparacion
                     break;
                 case "perdida": // Herramienta perdida -> Cambiar a "Dada de baja", calcular multa y registrar en kardex
                     tool.setToolStatus(getToolStatusByName("Dada de baja"));
                     penalty = createAndCalculatePenalty("Daño irreparable", tool.getReplacementValue());
                     penalty.setLoan(loan); // Asociar la multa al préstamo
                     penaltyRepository.save(penalty); // Guardar la multa
-                    kardexEntry = addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // -1 -> perdida
+                    addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // -1 -> perdida
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid tool condition: " + condition);
@@ -284,14 +283,14 @@ public class LoanService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user status name: " + name));
     }
 
-    private KardexEntity addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
+    private void addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
         KardexEntity kardexEntry = new KardexEntity();
         kardexEntry.setDateTime(LocalDateTime.now());
         kardexEntry.setQuantity(quantity);
         kardexEntry.setTool(tool);
         kardexEntry.setKardexType(type);
         kardexEntry.setWorkerUser(worker);
-        return kardexRepository.save(kardexEntry);
+        kardexRepository.save(kardexEntry);
     }
 
     private PenaltyEntity createAndCalculatePenalty(String penaltyTypeName, BigDecimal value) {

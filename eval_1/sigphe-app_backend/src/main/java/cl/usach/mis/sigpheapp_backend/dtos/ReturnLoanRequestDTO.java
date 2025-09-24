@@ -21,5 +21,5 @@ public class ReturnLoanRequestDTO {
 
     @NotNull(message = "Tool conditions are required")
     @NotEmpty(message = "Tool conditions cannot be empty")
-    private Map<String, Long> toolConditions;
+    private Map<Long, String> toolConditions;
 }
