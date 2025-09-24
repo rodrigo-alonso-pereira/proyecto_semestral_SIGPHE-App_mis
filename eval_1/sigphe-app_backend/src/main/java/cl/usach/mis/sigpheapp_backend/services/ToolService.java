@@ -77,6 +77,7 @@ public class ToolService {
         return toToolDTO(updatedTool);
     }
 
+    // TODO: Agregar MostUserToolDTO y desacoplar con la proyeccion
     public List<MostUsedToolProjection> getMostUsedTools() {
         return toolRepository.findMostUsedTools();
     }

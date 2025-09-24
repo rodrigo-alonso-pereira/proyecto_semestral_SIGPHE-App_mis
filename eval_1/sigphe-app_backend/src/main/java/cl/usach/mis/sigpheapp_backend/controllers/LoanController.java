@@ -35,6 +35,8 @@ public class LoanController {
         return ResponseEntity.ok(loans);
     }
 
+    // TODO: Agregar api para obtener prestados activos entre fechas
+
     @PostMapping
     public ResponseEntity<LoanDTO> createLoan(@Valid @RequestBody CreateLoanRequestDTO request) {
         LoanDTO createdLoan = loanService.createLoan(request);

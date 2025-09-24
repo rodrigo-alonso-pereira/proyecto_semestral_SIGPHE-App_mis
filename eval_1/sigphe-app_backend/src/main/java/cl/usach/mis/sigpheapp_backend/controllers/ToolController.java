@@ -44,4 +44,6 @@ public class ToolController {
         List<MostUsedToolProjection> tools = toolService.getMostUsedTools();
         return ResponseEntity.ok(tools);
     }
+
+    // TODO: Agregar API para consultar herramientas mas usadas entre fechas
 }
