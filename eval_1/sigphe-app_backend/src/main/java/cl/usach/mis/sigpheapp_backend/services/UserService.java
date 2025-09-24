@@ -39,6 +39,7 @@ public class UserService {
     }
 
     /* Metodos auxiliares */
+
     private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid User Status name: " + name));
@@ -52,7 +53,7 @@ public class UserService {
     /* Mapper Layer */
 
     // UserEntity -> UserSummaryDTO
-    public UserSummaryDTO toUserDTO(UserEntity user) {
+    private UserSummaryDTO toUserDTO(UserEntity user) {
         Objects.requireNonNull(user, "UserEntity cannot be null");
         UserSummaryDTO dto = new UserSummaryDTO();
         dto.setName(user.getName());
