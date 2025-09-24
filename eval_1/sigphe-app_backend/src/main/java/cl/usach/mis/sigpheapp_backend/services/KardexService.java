@@ -2,7 +2,10 @@ package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.KardexSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.entities.KardexEntity;
+import cl.usach.mis.sigpheapp_backend.entities.ToolEntity;
 import cl.usach.mis.sigpheapp_backend.repositories.KardexRepository;
+import cl.usach.mis.sigpheapp_backend.repositories.ToolRepository;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +16,25 @@ import java.util.Objects;
 public class KardexService {
 
     @Autowired KardexRepository kardexRepository;
+    @Autowired ToolRepository toolRepository;
 
     public List<KardexSummaryDTO> getAllKardexEntries() {
         return kardexRepository.findAll().stream()
                 .map(this::toKardexDTO)
                 .toList();
+    }
+
+    public List<KardexSummaryDTO> getKardexEntriesByToolId(@NotNull Long id) {
+        ToolEntity tool = getToolById(id);
+        return kardexRepository.findAllByToolIdEqualsOrderByDateTimeDesc(tool.getId()).stream()
+                .map(this::toKardexDTO)
+                .toList();
+    }
+
+    /* Metodos auxiliares */
+    private ToolEntity getToolById(Long id) {
+        return toolRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + id));
     }
 
     /* Mapper Layer */
@@ -31,4 +48,6 @@ public class KardexService {
         dto.setWorkerName(kardex.getWorkerUser().getName());
         return dto;
     }
+
+
 }
