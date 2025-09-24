@@ -1,13 +1,19 @@
 package cl.usach.mis.sigpheapp_backend.repositories;
 
 import cl.usach.mis.sigpheapp_backend.entities.KardexEntity;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
 @Repository
 public interface KardexRepository extends JpaRepository<KardexEntity, Long> {
     List<KardexEntity> findAllByToolIdEqualsOrderByDateTimeDesc(Long id);
+    List<KardexEntity> findAllByDateTimeBetweenOrderByDateTimeDesc(LocalDateTime startDate, LocalDateTime endDate);
+    List<KardexEntity> findAllByToolIdEqualsAndDateTimeBetweenOrderByDateTimeDesc(Long id,
+                                                                                  LocalDateTime startDate,
+                                                                                  LocalDateTime endDate);
 }

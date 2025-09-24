@@ -1,14 +1,13 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
+import cl.usach.mis.sigpheapp_backend.dtos.DateRangeKardexRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.KardexSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.services.KardexService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,13 +19,28 @@ public class KardexController {
 
     @GetMapping
     public ResponseEntity<List<KardexSummaryDTO>> getAll() {
-        List<KardexSummaryDTO> kardexEntries = kardexService.getAllKardexEntries();
-        return ResponseEntity.ok(kardexEntries);
+        return ResponseEntity.ok(kardexService.getAllKardexEntries());
     }
 
-    @GetMapping("/{id}/tool-history")
+    @GetMapping("/tool/{id}/history")
     public ResponseEntity<List<KardexSummaryDTO>> getToolHistory(@PathVariable @NotNull Long id) {
-        List<KardexSummaryDTO> kardexEntries = kardexService.getKardexEntriesByToolId(id);
-        return ResponseEntity.ok(kardexEntries);
+        return ResponseEntity.ok(kardexService.getKardexEntriesByToolId(id));
+    }
+
+    @GetMapping("/date-range")
+    public ResponseEntity<List<KardexSummaryDTO>> getAllByDateRange(@Valid @RequestBody DateRangeKardexRequestDTO request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+        }
+        return ResponseEntity.ok(kardexService.getKardexEntriesByDateRange(request.getStartDate(), request.getEndDate()));
+    }
+
+    @GetMapping("/tool/{id}/history/date-range")
+    public ResponseEntity<List<KardexSummaryDTO>> getToolHistoryByDateRange(@PathVariable @NotNull Long id,
+                                                                            @Valid @RequestBody DateRangeKardexRequestDTO request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+        }
+        return ResponseEntity.ok(kardexService.getKardexEntriesByToolIdAndDateRange(id, request.getStartDate(), request.getEndDate()));
     }
 }

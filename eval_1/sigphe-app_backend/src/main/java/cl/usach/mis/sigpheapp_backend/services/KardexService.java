@@ -7,8 +7,10 @@ import cl.usach.mis.sigpheapp_backend.repositories.KardexRepository;
 import cl.usach.mis.sigpheapp_backend.repositories.ToolRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +33,22 @@ public class KardexService {
                 .toList();
     }
 
+    public List<KardexSummaryDTO> getKardexEntriesByDateRange(@NotNull LocalDateTime startDate,
+                                                              @NotNull LocalDateTime endDate) {
+        return kardexRepository.findAllByDateTimeBetweenOrderByDateTimeDesc(startDate, endDate).stream()
+                .map(this::toKardexDTO)
+                .toList();
+    }
+
+    public List<KardexSummaryDTO> getKardexEntriesByToolIdAndDateRange(@NotNull Long id,
+                                                                       @NotNull LocalDateTime startDate,
+                                                                       @NotNull LocalDateTime endDate) {
+        ToolEntity tool = getToolById(id);
+        return kardexRepository.findAllByToolIdEqualsAndDateTimeBetweenOrderByDateTimeDesc(tool.getId(), startDate, endDate).stream()
+                .map(this::toKardexDTO)
+                .toList();
+    }
+
     /* Metodos auxiliares */
     private ToolEntity getToolById(Long id) {
         return toolRepository.findById(id)
@@ -48,6 +66,4 @@ public class KardexService {
         dto.setWorkerName(kardex.getWorkerUser().getName());
         return dto;
     }
-
-
 }
