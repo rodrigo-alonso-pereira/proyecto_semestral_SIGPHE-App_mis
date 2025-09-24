@@ -1,5 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.dtos;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,5 +20,6 @@ public class ReturnLoanRequestDTO {
     private Long customerId;
 
     @NotNull(message = "Tool conditions are required")
+    @NotEmpty(message = "Tool conditions cannot be empty")
     private Map<String, Long> toolConditions;
 }

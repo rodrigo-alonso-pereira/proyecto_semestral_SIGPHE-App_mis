@@ -6,6 +6,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,6 +110,7 @@ public class LoanService {
             loanDetail.setTool(tool); // Asociar la herramienta al detalle
             loanDetail.setLoan(savedLoan); // Asociar el préstamo al detalle
             loanDetail.setRentalValueAtTime(tool.getRentalValue()); // Valor de alquiler al momento del préstamo
+            //tool.addLoanDetail(loanDetail); // Asociar el detalle a la herramienta con el helper
 
             savedLoan.addLoanDetail(loanDetail); // Asociar el detalle al préstamo con el helper
         }
@@ -116,8 +118,10 @@ public class LoanService {
         return toLoanSummaryDTO(finalLoan); // Convertir y retornar el DTO del préstamo creado
     }
 
+    // TODO: Evaluar cambios con metodos helper
+
     @Transactional
-    public LoanDTO processReturnLoan(Long id, ReturnLoanRequestDTO dto) {
+    public LoanDTO processReturnLoan(@NotNull Long id, ReturnLoanRequestDTO dto) {
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene worker
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
         LoanEntity loan = getLoanById(id); // Obtiene préstamo
@@ -136,8 +140,7 @@ public class LoanService {
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
         dto.getToolConditions().forEach((condition, toolId) -> {
             ToolEntity tool = getToolById(toolId); // Obtener herramienta
-            KardexEntity kardexEntry = new KardexEntity(); // Inicializa un registro en kardex
-            ToolStatusEntity newStatus = new ToolStatusEntity(); // Inicializa un nuevo estado de herramienta
+            KardexEntity kardexEntry; // Inicializa un registro en kardex
             PenaltyEntity penalty = new PenaltyEntity(); // Inicializa una multa si aplica
 
             // Validar que la herramienta pertenezca al préstamo
@@ -172,7 +175,7 @@ public class LoanService {
             loan.setTotalPenalties(loan.getTotalPenalties().add(penalty.getPenaltyAmount()
                     .setScale(2, RoundingMode.CEILING))); // Actualizar total de multas del préstamo
             toolRepository.save(tool); // Guardar el cambio de estado
-            kardexRepository.save(kardexEntry); // Guardar el registro en kardex
+            //kardexRepository.save(kardexEntry); // Guardar el registro en kardex
         });
 
         // Cálculo de multas por retraso en la devolución si aplica
@@ -198,7 +201,7 @@ public class LoanService {
     }
 
     @Transactional
-    public LoanDTO processPayment(Long id, PaymentLoanRequestDTO dto) {
+    public LoanDTO processPayment(@NotNull Long id, PaymentLoanRequestDTO dto) {
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
         LoanEntity loan = getLoanById(id); // Obtiene préstamo
 
@@ -236,52 +239,52 @@ public class LoanService {
 
     /* Metodos auxiliares */
 
-    public LoanEntity getLoanById(Long loanId) {
+    private LoanEntity getLoanById(Long loanId) {
         return loanRepository.findById(loanId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid loan ID: " + loanId));
     }
 
-    public UserEntity getUserById(Long userId) {
+    private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
     }
 
-    public ToolEntity getToolById(Long toolId) {
+    private ToolEntity getToolById(Long toolId) {
         return toolRepository.findById(toolId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + toolId));
     }
 
-    public ToolStatusEntity getToolStatusByName(String name) {
+    private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid tool status name: " + name));
     }
 
-    public LoanStatusEntity getLoanStatusByName(String name) {
+    private LoanStatusEntity getLoanStatusByName(String name) {
         return loanStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid loan status name: " + name));
     }
 
-    public KardexTypeEntity getKardexTypeByName(String name) {
+    private KardexTypeEntity getKardexTypeByName(String name) {
         return kardexTypeRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid kardex type name: " + name));
     }
 
-    public PenaltyStatusEntity getPenaltyStatusByName(String name) {
+    private PenaltyStatusEntity getPenaltyStatusByName(String name) {
         return penaltyStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid penalty status name: " + name));
     }
 
-    public PenaltyTypeEntity getPenaltyTypeByName(String name) {
+    private PenaltyTypeEntity getPenaltyTypeByName(String name) {
         return penaltyTypeRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid penalty type name: " + name));
     }
 
-    public UserStatusEntity getUserStatusByName(String name) {
+    private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user status name: " + name));
     }
 
-    public KardexEntity addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
+    private KardexEntity addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
         KardexEntity kardexEntry = new KardexEntity();
         kardexEntry.setDateTime(LocalDateTime.now());
         kardexEntry.setQuantity(quantity);
@@ -291,7 +294,7 @@ public class LoanService {
         return kardexRepository.save(kardexEntry);
     }
 
-    public PenaltyEntity createAndCalculatePenalty(String penaltyTypeName, BigDecimal value) {
+    private PenaltyEntity createAndCalculatePenalty(String penaltyTypeName, BigDecimal value) {
         PenaltyEntity penalty = new PenaltyEntity();
         PenaltyTypeEntity penaltyType = getPenaltyTypeByName(penaltyTypeName);
         penalty.setPenaltyAmount(value.multiply(penaltyType.getPenaltyFactor()
@@ -304,18 +307,18 @@ public class LoanService {
         return penalty;
     };
 
-    public boolean doesLoanBelongToCustomer(LoanEntity loan, Long customerId) {
+    private boolean doesLoanBelongToCustomer(LoanEntity loan, Long customerId) {
         return !loan.getCustomerUser().getId().equals(customerId);
     }
 
-    public boolean isLoanStatusIn(LoanEntity loan, String statuses) {
+    private boolean isLoanStatusIn(LoanEntity loan, String statuses) {
         return !statuses.contains(loan.getLoanStatus().getName());
     }
 
     /* Metodos Mapper */
 
-    // Convert LoanEntity to LoanDTO
-    public LoanDTO toLoanSummaryDTO(LoanEntity loan) {
+    // LoanEntity -> LoanDTO
+    private LoanDTO toLoanSummaryDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
         LoanDTO dto = new LoanDTO();
         dto.setId(loan.getId());

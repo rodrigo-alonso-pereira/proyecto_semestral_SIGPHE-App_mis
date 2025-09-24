@@ -6,6 +6,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,13 +47,13 @@ public class LoanController {
     }
 
     @PutMapping("/{id}/return")
-    public ResponseEntity<LoanDTO> returnLoan(@PathVariable Long id, @Valid @RequestBody ReturnLoanRequestDTO request) {
+    public ResponseEntity<LoanDTO> returnLoan(@PathVariable @NotNull Long id, @Valid @RequestBody ReturnLoanRequestDTO request) {
         LoanDTO updatedLoan = loanService.processReturnLoan(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
 
     @PutMapping("/{id}/payment")
-    public ResponseEntity<LoanDTO> makePayment(@PathVariable Long id, @Valid @RequestBody PaymentLoanRequestDTO request) {
+    public ResponseEntity<LoanDTO> makePayment(@PathVariable @NotNull Long id, @Valid @RequestBody PaymentLoanRequestDTO request) {
         LoanDTO updatedLoan = loanService.processPayment(id, request);
         return ResponseEntity.ok(updatedLoan);
     }
