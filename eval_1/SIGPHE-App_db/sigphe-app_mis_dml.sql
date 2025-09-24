@@ -80,7 +80,8 @@ INSERT INTO models (id, name, brand_id) OVERRIDING SYSTEM VALUE VALUES
 (1, 'DCD777C2', 1), (2, 'DCF887B', 1),
 (3, 'GSR 12V-300', 2), (4, 'GDS 18V-400', 2),
 (5, 'XDT131', 3), 
-(6, 'Global Plus Stanley 3m/10 pulgadas', 4)
+(6, 'Global Plus Stanley 3m/10 pulgadas', 4),
+(7, 'SDS MAX de 19.4J', 1)
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequences for generated IDs to avoid collisions with hardcoded values
@@ -138,7 +139,7 @@ OVERRIDING SYSTEM VALUE VALUES (3, 1, 1, 1);
 
 -- Tool 4: Huincha de Medir
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 8m', 10000, 2000, 3, 1, 6) ON CONFLICT (id) DO NOTHING;
+OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 8m', 10000c2000, 3, 1, 6) ON CONFLICT (id) DO NOTHING;
 INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
 OVERRIDING SYSTEM VALUE VALUES (4, 1, 1, 1);
 
