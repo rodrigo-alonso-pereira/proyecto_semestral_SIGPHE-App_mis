@@ -1,13 +1,14 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.deactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.services.ToolService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -31,8 +32,8 @@ public class ToolController {
     }
 
     @PutMapping("/{id}/deactivate")
-    public ResponseEntity<ToolDTO> deactivateTool(@PathVariable Long id,
-                                                  @Valid @RequestBody DeactivateToolRequestDTO request) {
+    public ResponseEntity<ToolDTO> deactivateTool(@PathVariable @NotNull Long id,
+                                                  @Valid @RequestBody deactivateToolRequestDTO request) {
         ToolDTO updatedTool = toolService.deactivateTool(id, request);
         return ResponseEntity.ok(updatedTool);
     }

@@ -1,12 +1,14 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.deactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,7 +58,30 @@ public class ToolService {
         return createdTools;
     }
 
+    @Transactional
+    public ToolDTO deactivateTool(@NotNull Long toolId, deactivateToolRequestDTO dto) {
+        ToolEntity tool = getToolById(toolId);
+        UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene trabajador
+
+        // Solo se puede desactivar si la herramienta está "Disponible" o "En Reparacion"
+        if (!tool.getToolStatus().getName().equals("Disponible") &&
+            !tool.getToolStatus().getName().equals("En Reparacion")) {
+            throw new IllegalStateException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
+        }
+
+        tool.setToolStatus(getToolStatusByName("Dada de baja")); // Cambia estado a Inactivo
+        ToolEntity updatedTool = toolRepository.save(tool);
+        addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // Agrega salida al kardex
+        return toToolDTO(updatedTool);
+    }
+
     /* Metodos auxiliares */
+
+    private ToolEntity getToolById(Long id) {
+        return toolRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + id));
+    }
+
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid tool status name: " + name));
