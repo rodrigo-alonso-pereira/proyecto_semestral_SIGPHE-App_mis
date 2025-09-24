@@ -1,7 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.deactivateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
@@ -61,7 +61,7 @@ public class ToolService {
     }
 
     @Transactional
-    public ToolDTO deactivateTool(@NotNull Long toolId, deactivateToolRequestDTO dto) {
+    public ToolDTO deactivateTool(@NotNull Long toolId, DeactivateToolRequestDTO dto) {
         ToolEntity tool = getToolById(toolId);
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene trabajador
 

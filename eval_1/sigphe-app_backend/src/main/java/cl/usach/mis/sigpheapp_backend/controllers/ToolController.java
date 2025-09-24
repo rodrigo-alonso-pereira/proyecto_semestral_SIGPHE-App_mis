@@ -1,7 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.deactivateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
 import cl.usach.mis.sigpheapp_backend.services.ToolService;
@@ -34,7 +34,7 @@ public class ToolController {
 
     @PutMapping("/{id}/deactivate")
     public ResponseEntity<ToolDTO> deactivateTool(@PathVariable @NotNull Long id,
-                                                  @Valid @RequestBody deactivateToolRequestDTO request) {
+                                                  @Valid @RequestBody DeactivateToolRequestDTO request) {
         ToolDTO updatedTool = toolService.deactivateTool(id, request);
         return ResponseEntity.ok(updatedTool);
     }
