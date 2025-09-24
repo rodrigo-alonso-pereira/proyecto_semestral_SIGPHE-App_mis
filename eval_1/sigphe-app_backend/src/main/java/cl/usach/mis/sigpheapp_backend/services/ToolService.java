@@ -5,6 +5,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.deactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
+import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class ToolService {
                 .toList();
     }
 
+    @Transactional
     public List<ToolDTO> createTool(CreateToolRequestDTO dto) {
         ToolCategoryEntity category = getToolCategoryById(dto.getToolCategoryId()); // Obtiene categoria
         ModelEntity model = getModelById(dto.getModelId()); // Obtiene modelo
@@ -73,6 +75,10 @@ public class ToolService {
         ToolEntity updatedTool = toolRepository.save(tool);
         addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // Agrega salida al kardex
         return toToolDTO(updatedTool);
+    }
+
+    public List<MostUsedToolProjection> getMostUsedTools() {
+        return toolRepository.findMostUsedTools();
     }
 
     /* Metodos auxiliares */
