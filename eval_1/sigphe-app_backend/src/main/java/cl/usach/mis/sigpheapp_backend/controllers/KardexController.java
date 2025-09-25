@@ -1,6 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
-import cl.usach.mis.sigpheapp_backend.dtos.DateRangeKardexRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.KardexSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.services.KardexService;
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ public class KardexController {
     }
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<KardexSummaryDTO>> getAllByDateRange(@Valid @RequestBody DateRangeKardexRequestDTO request) {
+    public ResponseEntity<List<KardexSummaryDTO>> getAllByDateRange(@Valid @RequestBody DateRangeRequestDTO request) {
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
@@ -37,7 +37,7 @@ public class KardexController {
 
     @GetMapping("/tool/{id}/history/date-range")
     public ResponseEntity<List<KardexSummaryDTO>> getToolHistoryByDateRange(@PathVariable @NotNull Long id,
-                                                                            @Valid @RequestBody DateRangeKardexRequestDTO request) {
+                                                                            @Valid @RequestBody DateRangeRequestDTO request) {
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }

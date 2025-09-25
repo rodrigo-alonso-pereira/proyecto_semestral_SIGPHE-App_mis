@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DateRangeKardexRequestDTO {
+public class DateRangeRequestDTO {
 
     @NotNull(message = "Start date is required")
     private LocalDateTime startDate;
