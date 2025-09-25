@@ -82,6 +82,7 @@ INSERT INTO models (id, name, brand_id) OVERRIDING SYSTEM VALUE VALUES
 (5, 'XDT131', 3), 
 (6, 'Global Plus Stanley 3m/10 pulgadas', 4),
 (7, 'SDS MAX de 19.4J', 1)
+(8, '4" Angle Grinder', 1)
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequences for generated IDs to avoid collisions with hardcoded values
