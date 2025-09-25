@@ -8,6 +8,7 @@ import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +25,34 @@ import java.util.stream.Collectors;
 @Service
 public class LoanService {
 
-    @Autowired private UserService userService;
+    // Status constants
+    private static final String STATUS_USER_WITH_DEBT = "Con Deuda";
+    private static final String STATUS_USER_ACTIVE = "Activo";
+    private static final String STATUS_LOAN_ACTIVE = "Vigente";
+    private static final String STATUS_LOAN_OVERDUE = "Atrasada";
+    private static final String STATUS_LOAN_FINISHED = "Finalizado";
+    private static final String STATUS_PENALTY_PAID = "Pagada";
+    private static final String STATUS_PENALTY_ACTIVE = "Activo";
+    private static final String STATUS_TOOL_AVAILABLE = "Disponible";
+    private static final String STATUS_TOOL_LOANED = "Prestada";
+    private static final String STATUS_TOOL_IN_REPAIR = "En Reparacion";
+    private static final String STATUS_TOOL_DECOMMISSIONED = "Dada de baja";
+
+    // Kardex type constants
+    private static final String TYPE_KARDEX_LOAN = "Prestamo";
+    private static final String TYPE_KARDEX_RETURN = "Devolucion";
+    private static final String TYPE_KARDEX_REPAIR = "Reparacion";
+    private static final String TYPE_KARDEX_DECOMMISSION = "Baja";
+
+    // Penalty type constants
+    private static final String TYPE_PENALTY_REPAIR = "Reparacion";
+    private static final String TYPE_PENALTY_IRREPARABLE = "Daño irreparable";
+    private static final String TYPE_PENALTY_LATE = "Atraso";
+
+    // Business rules constants
+    @Value("${app.loan.max}")
+    private int MAX_VIGENT_LOANS;
+
     @Autowired private LoanRepository loanRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private LoanStatusRepository loanStatusRepository;
@@ -38,13 +67,19 @@ public class LoanService {
 
     public List<LoanDTO> getAllLoansSummary() {
         return loanRepository.findAll().stream()
-                .map(this::toLoanSummaryDTO)
+                .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }
 
     public List<LoanDTO> getAllLoansByStatuses(List<String> statuses) {
         return loanRepository.findByLoanStatusNameIn(statuses).stream()
-                .map(this::toLoanSummaryDTO)
+                .map(this::toLoanDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanDTO> getAllLoansByCustomerId(Long customerId) {
+        return loanRepository.findAllById(customerId).stream()
+                .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }
 
@@ -54,26 +89,34 @@ public class LoanService {
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtener customer
 
         // Validar que el cliente sea elegible para un nuevo préstamo según reglas de negocio
-        if (!userService.isCustomerEligibleForNewLoan(customer.getId())) {
+        if (!isCustomerEligibleForNewLoan(customer)) {
             throw new IllegalStateException("Customer " + customer.getName() + " is not eligible for a new loan");
         }
 
         // Obtener entidades necesarias para el préstamo
-        LoanStatusEntity loanStatus = getLoanStatusByName("Vigente");
-        ToolStatusEntity toolStatus = getToolStatusByName("Prestada");
-        KardexTypeEntity kardexType = getKardexTypeByName("Prestamo");
+        LoanStatusEntity loanStatus = getLoanStatusByName(STATUS_LOAN_ACTIVE);
+        ToolStatusEntity toolStatus = getToolStatusByName(STATUS_TOOL_LOANED);
+        KardexTypeEntity kardexType = getKardexTypeByName(TYPE_KARDEX_LOAN);
 
         // Preparacion para calcular el valor total del alquiler
         BigDecimal totalRental = BigDecimal.ZERO;
         long rentalDays = (long) Math.ceil((double) Duration.between(
                 LocalDateTime.now(), dto.getDueDate()).toHours() / 24); // Calcular días de alquiler redondeando hacia arriba
         if (rentalDays <= 1) rentalDays = 1; // Asegurar al menos un día de alquiler
+        List<Long> toolModelsInLoan = new ArrayList<>(); // Lista auxiliar para validar modelos de herramientas
         for (Long toolId : dto.getToolIds()) {
             ToolEntity tool = getToolById(toolId); // Obtener herramienta
 
             // Validar que la herramienta esté disponible
-            if (!tool.getToolStatus().getName().equals("Disponible")) {
+            if (!tool.getToolStatus().getName().equals(STATUS_TOOL_AVAILABLE)) {
                 throw new IllegalStateException("Tool with ID " + toolId + " is not available");
+            }
+
+            // Validar que no se puede tener más de un mismo modelo en el mismo préstamo
+            toolModelsInLoan.add(tool.getModel().getId());
+            if (toolModelsInLoan.stream().filter(id -> id.equals(tool.getModel().getId())).count() > 1) {
+                throw new IllegalStateException("Cannot have more than one tool of the same model '" +
+                        tool.getModel().getName() + "' in a single loan");
             }
 
             // Calcular el valor del alquiler de herramienta actual
@@ -114,7 +157,7 @@ public class LoanService {
             savedLoan.addLoanDetail(loanDetail); // Asociar el detalle al préstamo con el helper
         }
         LoanEntity finalLoan = loanRepository.save(savedLoan); // Guardar el préstamo junto con sus detalles
-        return toLoanSummaryDTO(finalLoan); // Convertir y retornar el DTO del préstamo creado
+        return toLoanDTO(finalLoan); // Convertir y retornar el DTO del préstamo creado
     }
 
     // TODO: Evaluar cambios con metodos helper
@@ -131,7 +174,7 @@ public class LoanService {
         }
 
         // Validar que el estado del préstamo permita realizar la devolución
-        if (isLoanStatusIn(loan, "Vigente")) {
+        if (isLoanStatusIn(loan, STATUS_LOAN_ACTIVE)) {
             throw new IllegalStateException("Loan ID " + id + " is not in a returnable status");
         }
 
@@ -151,22 +194,22 @@ public class LoanService {
             // Actualizar el estado de la herramienta según la condición reportada
             switch (condition.toLowerCase()) {
                 case "ok": // Herramienta en buen estado -> Cambiar a "Disponible" y registrar en kardex
-                    tool.setToolStatus(getToolStatusByName("Disponible"));
-                    addKardexEntry(1, tool, getKardexTypeByName("Devolucion"), worker); // +1 -> devolucion
+                    tool.setToolStatus(getToolStatusByName(STATUS_TOOL_AVAILABLE));
+                    addKardexEntry(1, tool, getKardexTypeByName(TYPE_KARDEX_RETURN), worker); // +1 -> devolucion
                     break;
                 case "dañada": // Herramienta dañada -> Cambiar a "En Reparacion", calcular multa y registrar en kardex
-                    tool.setToolStatus(getToolStatusByName("En Reparacion"));
-                    penalty = createAndCalculatePenalty("Reparacion", tool.getReplacementValue());
+                    tool.setToolStatus(getToolStatusByName(STATUS_TOOL_IN_REPAIR));
+                    penalty = createAndCalculatePenalty(TYPE_PENALTY_REPAIR, tool.getReplacementValue());
                     penalty.setLoan(loan); // Asociar la multa al préstamo
                     penaltyRepository.save(penalty); // Guardar la multa
-                    addKardexEntry(-1, tool, getKardexTypeByName("Reparacion"), worker); // -1 -> reparacion
+                    addKardexEntry(-1, tool, getKardexTypeByName(TYPE_KARDEX_REPAIR), worker); // -1 -> reparacion
                     break;
                 case "perdida": // Herramienta perdida -> Cambiar a "Dada de baja", calcular multa y registrar en kardex
-                    tool.setToolStatus(getToolStatusByName("Dada de baja"));
-                    penalty = createAndCalculatePenalty("Daño irreparable", tool.getReplacementValue());
+                    tool.setToolStatus(getToolStatusByName(STATUS_TOOL_DECOMMISSIONED));
+                    penalty = createAndCalculatePenalty(TYPE_PENALTY_IRREPARABLE, tool.getReplacementValue());
                     penalty.setLoan(loan); // Asociar la multa al préstamo
                     penaltyRepository.save(penalty); // Guardar la multa
-                    addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // -1 -> perdida
+                    addKardexEntry(-1, tool, getKardexTypeByName(TYPE_KARDEX_DECOMMISSION), worker); // -1 -> perdida
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid tool condition: " + condition);
@@ -182,7 +225,7 @@ public class LoanService {
             long daysLate = (long) Math.ceil((double)
                     Duration.between(loan.getDueDate(), LocalDateTime.now()).toHours() / 24); // Calcular días de retraso
             if (daysLate <= 1) daysLate = 1; // Asegurar al menos un día de retraso
-            PenaltyEntity latePenalty = createAndCalculatePenalty("Atraso",
+            PenaltyEntity latePenalty = createAndCalculatePenalty(TYPE_PENALTY_LATE,
                     (loan.getTotalRental().multiply(BigDecimal.valueOf(daysLate)
                             .setScale(2, RoundingMode.CEILING)))); // Crear multa por atraso
             latePenalty.setLoan(loan); // Asociar la multa al préstamo
@@ -192,11 +235,11 @@ public class LoanService {
         }
 
         loan.setReturnDate(LocalDateTime.now()); // Establecer la fecha de devolución
-        loan.setLoanStatus(getLoanStatusByName("Atrasada")); // Cambiar estado del préstamo
+        loan.setLoanStatus(getLoanStatusByName(STATUS_LOAN_OVERDUE)); // Cambiar estado del préstamo
         loanRepository.save(loan); // Guardar el préstamo actualizado
-        customer.setUserStatus(getUserStatusByName("Con Deuda"));// Cliente -> "Con Deuda"
+        customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));// Cliente -> "Con Deuda"
         userRepository.save(customer); // Guardar el cliente actualizado
-        return toLoanSummaryDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
+        return toLoanDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
     @Transactional
@@ -210,7 +253,7 @@ public class LoanService {
         }
 
         // Validar que el estado del préstamo permita realizar el pago
-        if (isLoanStatusIn(loan, "Atrasada")) {
+        if (isLoanStatusIn(loan, STATUS_LOAN_OVERDUE)) {
             throw new IllegalStateException("Loan ID " + id + " is not in a payable status");
         }
 
@@ -223,15 +266,15 @@ public class LoanService {
 
         // Procesar el pago del préstamo y actualizar estados
         for (PenaltyEntity penalty : loan.getPenalties()) { // Por cada penalty asociada al préstamo
-            penalty.setPenaltyStatus(getPenaltyStatusByName("Pagada")); // Penalty -> "Pagada"
+            penalty.setPenaltyStatus(getPenaltyStatusByName(STATUS_PENALTY_PAID));
             penaltyRepository.save(penalty); // Guardar el cambio de estado
         }
         loan.setPaymentDate(LocalDateTime.now()); // Establecer la fecha de pago
-        loan.setLoanStatus(getLoanStatusByName("Finalizado")); // Cambiar estado del préstamo
+        loan.setLoanStatus(getLoanStatusByName(STATUS_LOAN_FINISHED)); // Cambiar estado del préstamo
         loanRepository.save(loan); // Guardar el préstamo actualizado
-        customer.setUserStatus(getUserStatusByName("Activo"));// Cliente -> "Activo"
+        customer.setUserStatus(getUserStatusByName(STATUS_USER_ACTIVE));// Cliente -> "Activo"
         userRepository.save(customer); // Guardar el cliente actualizado
-        return toLoanSummaryDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
+        return toLoanDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
     // TODO: Hacer metodo para cambiar un prestamo por otro nuevo por error del operario
@@ -302,7 +345,7 @@ public class LoanService {
         penalty.setDescription("Multa por herramienta en estado: '" + penaltyTypeName.toLowerCase()
                 + "'. Por valor de: $" + penalty.getPenaltyAmount().setScale(2, RoundingMode.CEILING));
         penalty.setPenaltyType(penaltyType);
-        penalty.setPenaltyStatus(getPenaltyStatusByName("Activo"));
+        penalty.setPenaltyStatus(getPenaltyStatusByName(STATUS_PENALTY_ACTIVE));
         return penalty;
     };
 
@@ -314,10 +357,51 @@ public class LoanService {
         return !statuses.contains(loan.getLoanStatus().getName());
     }
 
+    public boolean isCustomerEligibleForNewLoan(UserEntity customer) {
+        // Validar que el cliente esté activo y no tenga deudas pendientes
+        if (customer.getUserStatus().getName().equals(STATUS_USER_WITH_DEBT)) {
+            throw new IllegalStateException("Customer " + customer.getName() + " has outstanding debts");
+        }
+        List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId()); // Lista de prestamos del cliente
+        List<Long> toolModelsInLoan = new ArrayList<>(); // Lista auxiliar para validar modelos de herramientas
+
+        int vigentLoans = 0;
+        for (LoanEntity loan : loans) {
+            // Validar que no tenga préstamos atrasados
+            if (loan.getDueDate().isBefore(LocalDateTime.now())) {
+                throw new IllegalStateException("Customer " + customer.getName() + " has overdue loans");
+            }
+            // Error: No entra a loans con estatus vigenteq
+            if (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
+                vigentLoans++;
+                toolModelsInLoan.add(loan.getLoanDetails().stream()
+                        .map(detail -> detail.getTool().getModel().getId())
+                        .findFirst()
+                        .orElse(-1L)); // Agregar modelo de herramienta del préstamo vigente
+            }
+        }
+
+        // Validar que no se puede tener más de un mismo modelo en préstamos vigentes
+        for (Long modelId : toolModelsInLoan) {
+            if (toolModelsInLoan.stream().filter(id -> id.equals(modelId)).count() > 1) {
+                throw new IllegalStateException("Customer " + customer.getName() +
+                        "can't have more than one tool of the same model ID: " + modelId + " in different loans");
+            }
+        }
+
+        // Validar cantidad máxima de préstamos vigentes no exceda el límite
+        if (vigentLoans >= MAX_VIGENT_LOANS) {
+            throw new IllegalStateException("Customer " + customer.getName() +
+                    " can't have more than " + MAX_VIGENT_LOANS + " active loans");
+        }
+
+        return true;
+    }
+
     /* Metodos Mapper */
 
     // LoanEntity -> LoanDTO
-    private LoanDTO toLoanSummaryDTO(LoanEntity loan) {
+    private LoanDTO toLoanDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
         LoanDTO dto = new LoanDTO();
         dto.setId(loan.getId());

@@ -33,11 +33,6 @@ public class UserService {
                 .toList();
     }
 
-    // TODO: Implementar lógica real de elegibilidad
-    public boolean isCustomerEligibleForNewLoan(Long userId) {
-        return true;
-    }
-
     /* Metodos auxiliares */
 
     private UserStatusEntity getUserStatusByName(String name) {
@@ -48,6 +43,11 @@ public class UserService {
     private UserTypeEntity getUserTypeByName(String name) {
         return userTypeRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid User Type name: " + name));
+    }
+
+    private UserEntity getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
     }
 
     /* Mapper Layer */
