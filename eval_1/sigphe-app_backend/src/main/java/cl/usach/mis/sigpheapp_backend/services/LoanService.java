@@ -78,9 +78,11 @@ public class LoanService {
                 .collect(Collectors.toList());
     }
 
-    public List<LoanDTO> getAllLoansByStatusesAndDateRange(@NotEmpty @NotNull List<String> statuses) {
-        return loanRepository.findAllByLoanStatusNameInAndStartDateBetweenOrderByStartDateDesc(
-                        statuses, LocalDateTime.now().minusMonths(1), LocalDateTime.now()).stream()
+    public List<LoanDTO> getAllLoansByStatusesAndDateRange(@NotEmpty @NotNull List<String> statuses,
+                                                           @NotNull LocalDateTime startDate,
+                                                           @NotNull LocalDateTime endDate) {
+        return loanRepository.findAllByLoanStatusNameInAndStartDateBetweenOrderByStartDateDesc(statuses,
+                        startDate, endDate).stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }

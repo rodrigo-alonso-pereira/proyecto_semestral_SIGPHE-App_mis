@@ -43,7 +43,8 @@ public class LoanController {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
         List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
-        List<LoanDTO> loans = loanService.getAllLoansByStatusesAndDateRange(statuses);
+        List<LoanDTO> loans = loanService.getAllLoansByStatusesAndDateRange(statuses,
+                request.getStartDate(), request.getEndDate());
         return ResponseEntity.ok(loans);
     }
 
