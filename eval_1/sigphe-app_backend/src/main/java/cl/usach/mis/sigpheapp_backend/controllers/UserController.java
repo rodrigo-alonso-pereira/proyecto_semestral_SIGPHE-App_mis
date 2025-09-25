@@ -24,6 +24,24 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/costumers")
+    public ResponseEntity<List<UserSummaryDTO>> getAllCostumers() {
+        List<UserSummaryDTO> users = userService.getAllCostumers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/costumers/active")
+    public ResponseEntity<List<UserSummaryDTO>> getActiveCostumers() {
+        List<UserSummaryDTO> users = userService.getActiveCostumers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/employees")
+    public ResponseEntity<List<UserSummaryDTO>> getAllEmployees() {
+        List<UserSummaryDTO> users = userService.getAllEmployees();
+        return ResponseEntity.ok(users);
+    }
+
     @GetMapping("/with-debts")
     public ResponseEntity<List<UserSummaryDTO>> getUsersWithDebts() {
         List<UserSummaryDTO> users = userService.getAllUsersWithDebts();

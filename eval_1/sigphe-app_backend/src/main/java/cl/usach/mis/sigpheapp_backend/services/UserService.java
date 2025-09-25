@@ -23,10 +23,14 @@ public class UserService {
 
     // Constantes de estados de usuario
     private static final String STATUS_USER_WITH_DEBT = "Con Deuda";
+    private static final String STATUS_USER_ACTIVE = "Activo";
 
     // Constantes de estados de prestamo
     private static final String STATUS_LOAN_ACTIVE = "Vigente";
     private static final String STATUS_LOAN_OVERDUE = "Atrasada";
+
+    private static final String TYPE_USER_COSTUMER = "Cliente";
+    private static final String TYPE_USER_WORKER = "Trabajador";
 
     @Autowired UserRepository userRepository;
     @Autowired UserStatusRepository userStatusRepository;
@@ -34,6 +38,25 @@ public class UserService {
 
     public List<UserSummaryDTO> getAllUsers() {
         return userRepository.findAll().stream()
+                .map(this::toUserDTO)
+                .toList();
+    }
+
+    public List<UserSummaryDTO> getAllCostumers() {
+        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_COSTUMER).getId()).stream()
+                .map(this::toUserDTO)
+                .toList();
+    }
+
+    public List<UserSummaryDTO> getActiveCostumers() {
+        return userRepository.findAllByUserTypeIdEqualsAndUserStatusIdEquals(
+                getUserTypeByName(TYPE_USER_COSTUMER).getId(), getUserStatusByName(STATUS_USER_ACTIVE).getId()).stream()
+                .map(this::toUserDTO)
+                .toList();
+    }
+
+    public List<UserSummaryDTO> getAllEmployees() {
+        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_WORKER).getId()).stream()
                 .map(this::toUserDTO)
                 .toList();
     }
@@ -73,6 +96,7 @@ public class UserService {
     private UserSummaryDTO toUserDTO(UserEntity user) {
         Objects.requireNonNull(user, "UserEntity cannot be null");
         UserSummaryDTO dto = new UserSummaryDTO();
+        dto.setId(user.getId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setUserStatus(Optional.ofNullable(user.getUserStatus())

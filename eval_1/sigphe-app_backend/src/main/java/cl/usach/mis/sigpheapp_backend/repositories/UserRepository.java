@@ -38,4 +38,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
                                                                       @NotNull LocalDateTime endDate,
                                                                       String statusLoanOverdue,
                                                                       String statusLoanActive);
+
+    List<UserEntity> findAllByUserTypeIdEquals(@NotNull Long id);
+    List<UserEntity> findAllByUserTypeIdEqualsAndUserStatusIdEquals(@NotNull Long id, @NotNull Long id1);
 }
