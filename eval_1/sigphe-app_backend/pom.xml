@@ -10,9 +10,9 @@
     </parent>
     <groupId>cl.usach.mis</groupId>
     <artifactId>sigphe-app_backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>v1.0.0</version>
     <name>sigphe-app_backend</name>
-    <description>sigphe-app_backend</description>
+    <description>Backend de SIGPHE-APP</description>
     <url/>
     <licenses>
         <license/>
