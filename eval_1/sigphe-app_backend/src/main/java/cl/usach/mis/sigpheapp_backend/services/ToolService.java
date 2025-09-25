@@ -82,6 +82,12 @@ public class ToolService {
         return toolRepository.findMostUsedTools();
     }
 
+    // TODO: Agregar MostUserToolDTO y desacoplar con la proyeccion
+    public List<MostUsedToolProjection> getMostUsedToolsByDateRange(@NotNull LocalDateTime startDate,
+                                                                    @NotNull LocalDateTime endDate) {
+        return toolRepository.findMostUsedToolsBetweenDates(startDate, endDate);
+    }
+
     /* Metodos auxiliares */
 
     private ToolEntity getToolById(Long id) {

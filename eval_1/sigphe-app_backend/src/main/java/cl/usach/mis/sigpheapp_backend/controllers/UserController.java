@@ -1,10 +1,14 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
+import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
+import cl.usach.mis.sigpheapp_backend.repositories.projection.ClientsWithDebtsProjection;
 import cl.usach.mis.sigpheapp_backend.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +29,17 @@ public class UserController {
     @GetMapping("/with-debts")
     public ResponseEntity<List<UserSummaryDTO>> getUsersWithDebts() {
         List<UserSummaryDTO> users = userService.getAllUsersWithDebts();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/with-debts/date-range")
+    public ResponseEntity<List<ClientsWithDebtsProjection>> getUsersWithDebts(
+            @Valid @RequestBody DateRangeRequestDTO request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+        }
+        List<ClientsWithDebtsProjection> users = userService.getAllUsersWithDebtsByDateRange(request.getStartDate(),
+                request.getEndDate());
         return ResponseEntity.ok(users);
     }
 }

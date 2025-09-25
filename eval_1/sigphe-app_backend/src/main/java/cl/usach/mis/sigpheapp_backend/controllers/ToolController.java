@@ -1,6 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
@@ -45,5 +46,11 @@ public class ToolController {
         return ResponseEntity.ok(tools);
     }
 
-    // TODO: Agregar API para consultar herramientas mas usadas entre fechas
+    @GetMapping("/most-borrowed/date-range")
+    public ResponseEntity<List<MostUsedToolProjection>> getMostBorrowedTools(
+            @Valid @RequestBody DateRangeRequestDTO request) {
+        List<MostUsedToolProjection> tools = toolService.getMostUsedToolsByDateRange(request.getStartDate(),
+                request.getEndDate());
+        return ResponseEntity.ok(tools);
+    }
 }
