@@ -17,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/tools")
+@CrossOrigin("*")
 public class ToolController {
 
     @Autowired ToolService toolService;
@@ -24,6 +25,12 @@ public class ToolController {
     @GetMapping
     public ResponseEntity<List<ToolDTO>> getAll() {
         List<ToolDTO> tools = toolService.getAllTools();
+        return ResponseEntity.ok(tools);
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<List<ToolDTO>> getActiveTools() {
+        List<ToolDTO> tools = toolService.getActiveTools();
         return ResponseEntity.ok(tools);
     }
 

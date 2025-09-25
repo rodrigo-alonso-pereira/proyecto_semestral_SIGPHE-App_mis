@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ToolRepository extends JpaRepository<ToolEntity, Long> {
@@ -46,4 +47,6 @@ public interface ToolRepository extends JpaRepository<ToolEntity, Long> {
             nativeQuery = true)
     List<MostUsedToolProjection> findMostUsedToolsBetweenDates(@NotNull LocalDateTime startDate,
                                                                @NotNull LocalDateTime endDate);
+
+    List<ToolEntity> findAllByToolStatusIdEquals(@NotNull Long toolStatusId);
 }

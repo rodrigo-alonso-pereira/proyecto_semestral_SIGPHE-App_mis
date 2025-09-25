@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/loans")
+@CrossOrigin("*")
 public class LoanController {
 
     // Constantes de estado de préstamo

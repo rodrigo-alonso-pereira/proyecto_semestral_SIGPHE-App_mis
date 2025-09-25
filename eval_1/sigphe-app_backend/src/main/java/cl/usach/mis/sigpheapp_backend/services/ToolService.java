@@ -20,6 +20,8 @@ import java.util.Optional;
 @Service
 public class ToolService {
 
+    private static final String STATUS_TOOL_AVAILABLE = "Disponible";
+
     @Autowired ToolRepository toolRepository;
     @Autowired ToolStatusRepository toolStatusRepository;
     @Autowired ToolCategoryRepository toolCategoryRepository;
@@ -30,6 +32,12 @@ public class ToolService {
 
     public List<ToolDTO> getAllTools() {
         return toolRepository.findAll().stream()
+                .map(this::toToolDTO)
+                .toList();
+    }
+
+    public List<ToolDTO> getActiveTools() {
+        return toolRepository.findAllByToolStatusIdEquals(getToolStatusByName(STATUS_TOOL_AVAILABLE).getId()).stream()
                 .map(this::toToolDTO)
                 .toList();
     }

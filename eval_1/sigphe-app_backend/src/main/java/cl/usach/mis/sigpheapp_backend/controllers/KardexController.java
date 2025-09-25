@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/kardex")
+@CrossOrigin("*")
 public class KardexController {
 
     @Autowired KardexService kardexService;
