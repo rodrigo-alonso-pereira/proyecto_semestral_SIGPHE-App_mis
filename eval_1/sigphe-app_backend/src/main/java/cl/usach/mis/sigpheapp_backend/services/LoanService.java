@@ -6,6 +6,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 public class LoanService {
 
-    // Status constants
+    // Constantes de estados de prestamo, usuario, herramienta y multa
     private static final String STATUS_USER_WITH_DEBT = "Con Deuda";
     private static final String STATUS_USER_ACTIVE = "Activo";
     private static final String STATUS_LOAN_ACTIVE = "Vigente";
@@ -38,18 +39,18 @@ public class LoanService {
     private static final String STATUS_TOOL_IN_REPAIR = "En Reparacion";
     private static final String STATUS_TOOL_DECOMMISSIONED = "Dada de baja";
 
-    // Kardex type constants
+    // Constantes de tipos de kardex
     private static final String TYPE_KARDEX_LOAN = "Prestamo";
     private static final String TYPE_KARDEX_RETURN = "Devolucion";
     private static final String TYPE_KARDEX_REPAIR = "Reparacion";
     private static final String TYPE_KARDEX_DECOMMISSION = "Baja";
 
-    // Penalty type constants
+    // Constantes de tipos de multa
     private static final String TYPE_PENALTY_REPAIR = "Reparacion";
     private static final String TYPE_PENALTY_IRREPARABLE = "Daño irreparable";
     private static final String TYPE_PENALTY_LATE = "Atraso";
 
-    // Business rules constants
+    // Reglas de negocio
     @Value("${app.loan.max}")
     private int MAX_VIGENT_LOANS;
 
@@ -77,8 +78,9 @@ public class LoanService {
                 .collect(Collectors.toList());
     }
 
-    public List<LoanDTO> getAllLoansByCustomerId(Long customerId) {
-        return loanRepository.findAllById(customerId).stream()
+    public List<LoanDTO> getAllLoansByStatusesAndDateRange(@NotEmpty @NotNull List<String> statuses) {
+        return loanRepository.findAllByLoanStatusNameInAndStartDateBetweenOrderByStartDateDesc(
+                        statuses, LocalDateTime.now().minusMonths(1), LocalDateTime.now()).stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }

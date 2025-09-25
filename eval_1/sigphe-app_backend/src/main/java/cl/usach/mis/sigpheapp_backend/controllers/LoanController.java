@@ -1,9 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
-import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.*;
 import cl.usach.mis.sigpheapp_backend.services.LoanService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +17,10 @@ import java.util.List;
 @RequestMapping("/api/v1/loans")
 public class LoanController {
 
+    // Constantes de estado de préstamo
+    private static final String STATUS_LOAN_ACTIVE = "Vigente";
+    private static final String STATUS_LOAN_OVERDUE = "Atrasada";
+
     @Autowired private LoanService loanService;
 
     @GetMapping
@@ -30,12 +31,21 @@ public class LoanController {
 
     @GetMapping("/active")
     public ResponseEntity<List<LoanDTO>> getActiveLoans() {
-        List<String> statuses = Arrays.asList("Vigente", "Atrasada");
+        List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
         List<LoanDTO> loans = loanService.getAllLoansByStatuses(statuses);
         return ResponseEntity.ok(loans);
     }
 
-    // TODO: Agregar api para obtener prestados activos entre fechas
+    @GetMapping("/active/date-range")
+    public ResponseEntity<List<LoanDTO>> getAllLoansByStatusesAndDateRange(
+            @Valid @RequestBody DateRangeRequestDTO request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+        }
+        List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
+        List<LoanDTO> loans = loanService.getAllLoansByStatusesAndDateRange(statuses);
+        return ResponseEntity.ok(loans);
+    }
 
     @PostMapping
     public ResponseEntity<LoanDTO> createLoan(@Valid @RequestBody CreateLoanRequestDTO request) {
