@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import employeeService from "../services/employee.service";
+import loanService from "../services/loan.service";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -9,25 +9,49 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 
 const LoanList = () => {
   const [loans, setLoans] = useState([]);
 
   const navigate = useNavigate();
 
+  // Función para formatear fechas
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:00`;
+  };
+
+  // Función para formatear valores monetarios
+  const formatCurrency = (value) => {
+    if (!value || value === 0) return '$0';
+    
+    const number = parseFloat(value);
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number);
+  };
+
   const init = () => {
-    employeeService
+    loanService
       .getAll()
       .then((response) => {
-        console.log("Mostrando listado de todos los empleados.", response.data);
-        setEmployees(response.data);
+        console.log("Mostrando listado de todos los prestamos.", response.data);
+        setLoans(response.data);
       })
       .catch((error) => {
         console.log(
-          "Se ha producido un error al intentar mostrar listado de todos los empleados.",
+          "Se ha producido un error al intentar mostrar listado de todos los prestamos.",
           error
         );
       });
@@ -37,43 +61,17 @@ const LoanList = () => {
     init();
   }, []);
 
-  const handleDelete = (id) => {
-    console.log("Printing id", id);
-    const confirmDelete = window.confirm(
-      "¿Esta seguro que desea borrar este empleado?"
-    );
-    if (confirmDelete) {
-      employeeService
-        .remove(id)
-        .then((response) => {
-          console.log("empleado ha sido eliminado.", response.data);
-          init();
-        })
-        .catch((error) => {
-          console.log(
-            "Se ha producido un error al intentar eliminar al empleado",
-            error
-          );
-        });
-    }
-  };
-
-  const handleEdit = (id) => {
-    console.log("Printing id", id);
-    navigate(`/employee/edit/${id}`);
-  };
-
   return (
     <TableContainer component={Paper}>
       <br />
       <Link
-        to="/employee/add"
+        to="/loan/add"
         style={{ textDecoration: "none", marginBottom: "1rem" }}
       >
         <Button
           variant="contained"
           color="primary"
-          startIcon={<PersonAddIcon />}
+          startIcon={<AddCircleRoundedIcon />}
         >
           Añadir Prestamo
         </Button>
@@ -83,59 +81,45 @@ const LoanList = () => {
         <TableHead>
           <TableRow>
             <TableCell align="left" sx={{ fontWeight: "bold" }}>
-              Rut
+              Fecha de Inicio
             </TableCell>
             <TableCell align="left" sx={{ fontWeight: "bold" }}>
-              Nombre
+              Fecha de retorno
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold" }}>
-              Sueldo
+              Fecha Limite
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold" }}>
-              Nro.Hijos
+              Fecha de pago
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold" }}>
-              Categoria
+              Valor arriendo
             </TableCell>
             <TableCell align="left" sx={{ fontWeight: "bold" }}>
-              Operaciones
+              Valor de multas
+            </TableCell>
+            <TableCell align="left" sx={{ fontWeight: "bold" }}>
+              Estado
+            </TableCell>
+            <TableCell align="left" sx={{ fontWeight: "bold" }}>
+              Nombre del cliente
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {employees.map((employee) => (
+          {loans.map((loan) => (
             <TableRow
-              key={employee.id}
+              key={loan.id}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
             >
-              <TableCell align="left">{employee.rut}</TableCell>
-              <TableCell align="left">{employee.name}</TableCell>
-              <TableCell align="right">{employee.salary}</TableCell>
-              <TableCell align="right">{employee.children}</TableCell>
-              <TableCell align="right">{employee.category}</TableCell>
-              <TableCell>
-                <Button
-                  variant="contained"
-                  color="info"
-                  size="small"
-                  onClick={() => handleEdit(employee.id)}
-                  style={{ marginLeft: "0.5rem" }}
-                  startIcon={<EditIcon />}
-                >
-                  Editar
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() => handleDelete(employee.id)}
-                  style={{ marginLeft: "0.5rem" }}
-                  startIcon={<DeleteIcon />}
-                >
-                  Eliminar
-                </Button>
-              </TableCell>
+              <TableCell align="center">{formatDate(loan.startDate)}</TableCell>
+              <TableCell align="center">{formatDate(loan.returnDate)}</TableCell>
+              <TableCell align="center">{formatDate(loan.dueDate)}</TableCell>
+              <TableCell align="center">{formatDate(loan.paymentDate)}</TableCell>
+              <TableCell align="right">{formatCurrency(loan.totalAmount)}</TableCell>
+              <TableCell align="right">{formatCurrency(loan.totalPenalties)}</TableCell>
+              <TableCell align="center">{loan.loanStatus}</TableCell>
+              <TableCell align="center">{loan.customerName}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -13,11 +13,11 @@ const getActiveLoansDateRange = data => {
 }
 
 const create = data => {
-    return httpClient.post("/api/v1/loans/", data);
+    return httpClient.post("/api/v1/loans", data);
 }
 
 const returnLoan = (id, data) => {
-    return httpClient.put(`/api/v1/loans/${id}`, data);
+    return httpClient.put(`/api/v1/loans/${id}/return`, data);
 }
 
 const makePayment = (id, data) => {
