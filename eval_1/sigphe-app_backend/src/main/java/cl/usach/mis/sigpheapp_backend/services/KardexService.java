@@ -7,7 +7,6 @@ import cl.usach.mis.sigpheapp_backend.repositories.KardexRepository;
 import cl.usach.mis.sigpheapp_backend.repositories.ToolRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
