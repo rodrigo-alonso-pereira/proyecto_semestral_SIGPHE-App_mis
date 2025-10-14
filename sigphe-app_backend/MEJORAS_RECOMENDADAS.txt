@@ -1,0 +1,1726 @@
+================================================================================
+MEJORAS RECOMENDADAS PARA SIGPHE-APP BACKEND
+================================================================================
+Proyecto: Sistema de Gestión de Préstamo de Herramientas (SIGPHE)
+Fecha de Análisis: 2 de Octubre, 2025
+Versión Actual: v1.0.0
+================================================================================
+
+================================================================================
+🔴 CRÍTICAS - REQUIEREN ATENCIÓN INMEDIATA
+================================================================================
+
+1. SEGURIDAD - IMPLEMENTAR AUTENTICACIÓN Y AUTORIZACIÓN
+--------------------------------------------------------------------------------
+PROBLEMA:
+- No existe ningún mecanismo de seguridad
+- Cualquiera puede acceder a todos los endpoints
+- No hay diferenciación entre roles (trabajador vs cliente)
+
+SOLUCIÓN:
+Agregar Spring Security con JWT
+
+EJEMPLO - Agregar dependencias en pom.xml:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.5</version>
+</dependency>
+```
+
+EJEMPLO - Crear SecurityConfig.java:
+```java
+package cl.usach.mis.sigpheapp_backend.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/users/**").hasRole("WORKER")
+                .requestMatchers("/api/v1/loans/*/payment").hasAnyRole("WORKER", "CUSTOMER")
+                .requestMatchers("/api/v1/loans/**").hasRole("WORKER")
+                .requestMatchers("/api/v1/tools/**").hasRole("WORKER")
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            );
+        return http.build();
+    }
+}
+```
+
+ARCHIVOS A CREAR:
+- src/main/java/cl/usach/mis/sigpheapp_backend/config/SecurityConfig.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/security/JwtAuthenticationFilter.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/security/JwtTokenProvider.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/controllers/AuthController.java
+
+
+2. CREDENCIALES EXPUESTAS - EXTERNALIZAR CONFIGURACIÓN SENSIBLE
+--------------------------------------------------------------------------------
+PROBLEMA:
+- Contraseñas hardcodeadas en application.properties
+- Configuración expuesta en repositorio
+
+ARCHIVO ACTUAL: src/main/resources/application.properties
+```properties
+spring.datasource.password=mysecretpassword  # ❌ INSEGURO
+```
+
+SOLUCIÓN:
+Usar variables de entorno y Spring Profiles
+
+EJEMPLO - Modificar application.properties:
+```properties
+spring.application.name=sigphe-app_backend
+
+# Server Configuration
+server.port=${SERVER_PORT:8090}
+
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:sigphe-app_db}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=${JPA_DDL_AUTO:validate}
+spring.jpa.show-sql=${JPA_SHOW_SQL:false}
+spring.jpa.properties.hibernate.default_schema=sigphe
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Business Logic Configuration
+app.loan.max=${LOAN_MAX:5}
+
+# JWT Configuration
+app.jwt.secret=${JWT_SECRET}
+app.jwt.expiration=${JWT_EXPIRATION:86400000}
+```
+
+EJEMPLO - Crear .env.example:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=sigphe-app_db
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password_seguro_aqui
+JWT_SECRET=tu_secret_jwt_de_al_menos_256_bits
+JWT_EXPIRATION=86400000
+JPA_DDL_AUTO=validate
+JPA_SHOW_SQL=false
+```
+
+ARCHIVOS A MODIFICAR:
+- src/main/resources/application.properties
+- Crear: .env.example (no versionar .env)
+- Actualizar: .gitignore
+
+
+3. MANEJO DE ERRORES - CREAR EXCEPTION HANDLER CENTRALIZADO
+--------------------------------------------------------------------------------
+PROBLEMA:
+- No hay manejo centralizado de excepciones
+- Stack traces expuestos al cliente
+- Códigos HTTP inconsistentes
+
+SOLUCIÓN:
+Implementar @ControllerAdvice
+
+EJEMPLO - Crear GlobalExceptionHandler.java:
+```java
+package cl.usach.mis.sigpheapp_backend.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, WebRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            "Invalid Request",
+            ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(
+            IllegalStateException ex, WebRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            "Business Rule Violation",
+            ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),
+            "Resource Not Found",
+            ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(
+            Exception ex, WebRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "Internal Server Error",
+            "An unexpected error occurred",
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+```
+
+EJEMPLO - Crear ErrorResponse.java:
+```java
+package cl.usach.mis.sigpheapp_backend.exception;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import java.time.LocalDateTime;
+
+@Data
+@AllArgsConstructor
+public class ErrorResponse {
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+}
+```
+
+EJEMPLO - Crear ResourceNotFoundException.java:
+```java
+package cl.usach.mis.sigpheapp_backend.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+    
+    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
+        super(String.format("%s not found with %s: '%s'", resourceName, fieldName, fieldValue));
+    }
+}
+```
+
+ARCHIVOS A CREAR:
+- src/main/java/cl/usach/mis/sigpheapp_backend/exception/GlobalExceptionHandler.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/exception/ErrorResponse.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/exception/ResourceNotFoundException.java
+- src/main/java/cl/usach/mis/sigpheapp_backend/exception/BusinessRuleException.java
+
+
+4. LOGGING Y AUDITORÍA - IMPLEMENTAR SISTEMA DE LOGS
+--------------------------------------------------------------------------------
+PROBLEMA:
+- No hay trazabilidad de operaciones
+- Imposible debuggear problemas en producción
+- Sin auditoría de acciones críticas
+
+SOLUCIÓN:
+Configurar logging estructurado
+
+EJEMPLO - Crear logback-spring.xml:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}"/>
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level) %clr(%logger{36}){cyan} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+    
+    <logger name="cl.usach.mis.sigpheapp_backend" level="DEBUG"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+</configuration>
+```
+
+EJEMPLO - Usar logging en servicios:
+```java
+package cl.usach.mis.sigpheapp_backend.services;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class LoanService {
+    
+    @Transactional
+    public LoanDTO createLoan(CreateLoanRequestDTO dto) {
+        log.info("Creating loan for customer ID: {}, tools: {}", 
+                 dto.getCustomerId(), dto.getToolIds());
+        
+        try {
+            // ... lógica existente ...
+            
+            log.info("Loan created successfully with ID: {}", savedLoan.getId());
+            return toLoanDTO(finalLoan);
+            
+        } catch (Exception e) {
+            log.error("Error creating loan for customer {}: {}", 
+                     dto.getCustomerId(), e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    @Transactional
+    public LoanDTO processPayment(@NotNull Long id, PaymentLoanRequestDTO dto) {
+        log.info("Processing payment for loan ID: {}, customer: {}, amount: {}", 
+                 id, dto.getCustomerId(), dto.getPaymentAmount());
+        
+        // ... lógica existente ...
+        
+        log.info("Payment processed successfully for loan ID: {}", id);
+        return toLoanDTO(loan);
+    }
+}
+```
+
+ARCHIVOS A CREAR:
+- src/main/resources/logback-spring.xml
+- Modificar todos los servicios para agregar @Slf4j y logs
+
+
+5. CONFIGURACIÓN DE PRODUCCIÓN PELIGROSA
+--------------------------------------------------------------------------------
+PROBLEMA:
+- ddl-auto=update puede causar pérdida de datos
+- show-sql=true impacta performance
+
+ARCHIVO: src/main/resources/application.properties
+
+CAMBIAR DE:
+```properties
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+```
+
+CAMBIAR A:
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+```
+
+MEJOR AÚN - Crear profiles:
+
+application-dev.properties:
+```properties
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+```
+
+application-prod.properties:
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+logging.level.root=WARN
+logging.level.cl.usach.mis.sigpheapp_backend=INFO
+
+# Connection pool
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=30000
+```
+
+ARCHIVOS A CREAR:
+- src/main/resources/application-dev.properties
+- src/main/resources/application-prod.properties
+- src/main/resources/application-test.properties
+
+
+================================================================================
+🟠 ALTAS - IMPACTAN FUNCIONALIDAD SIGNIFICATIVAMENTE
+================================================================================
+
+6. BUG CRÍTICO EN VALIDACIÓN DE ELEGIBILIDAD DE PRÉSTAMO
+--------------------------------------------------------------------------------
+PROBLEMA:
+Lógica invertida en LoanService.isCustomerEligibleForNewLoan()
+
+ARCHIVO: src/main/java/.../services/LoanService.java (línea ~395)
+
+CÓDIGO ACTUAL (BUGUEADO):
+```java
+public boolean isCustomerEligibleForNewLoan(UserEntity customer) {
+    // ... código ...
+    
+    for (LoanEntity loan : loans) {
+        if (loan.getDueDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Customer " + customer.getName() + " has overdue loans");
+        }
+        
+        // ❌ BUG: Esta validación está invertida
+        if (isLoanStatusIn(loan, STATUS_LOAN_ACTIVE)) {
+            throw new IllegalStateException("Loan ID " + id + " is not in a returnable status");
+        }
+        
+        if (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
+            vigentLoans++;
+            // ...
+        }
+    }
+    // ...
+}
+
+private boolean isLoanStatusIn(LoanEntity loan, String statuses) {
+    return !statuses.contains(loan.getLoanStatus().getName()); // ❌ Retorna negado
+}
+```
+
+CÓDIGO CORREGIDO:
+```java
+public boolean isCustomerEligibleForNewLoan(UserEntity customer) {
+    if (customer.getUserStatus().getName().equals(STATUS_USER_WITH_DEBT)) {
+        throw new IllegalStateException("Customer " + customer.getName() + " has outstanding debts");
+    }
+    
+    List<LoanEntity> activeLoans = loanRepository.findAllByCustomerUserIdAndLoanStatusNameIn(
+        customer.getId(), 
+        Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE)
+    );
+    
+    // Validar préstamos atrasados
+    boolean hasOverdueLoans = activeLoans.stream()
+        .anyMatch(loan -> loan.getDueDate().isBefore(LocalDateTime.now()));
+    
+    if (hasOverdueLoans) {
+        throw new IllegalStateException("Customer " + customer.getName() + " has overdue loans");
+    }
+    
+    // Validar límite de préstamos vigentes
+    long vigentLoansCount = activeLoans.stream()
+        .filter(loan -> loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE))
+        .count();
+    
+    if (vigentLoansCount >= MAX_VIGENT_LOANS) {
+        throw new IllegalStateException("Customer " + customer.getName() + 
+            " has reached the maximum of " + MAX_VIGENT_LOANS + " active loans");
+    }
+    
+    // Validar modelos duplicados en préstamos vigentes
+    Set<Long> modelIdsInActiveLoans = activeLoans.stream()
+        .filter(loan -> loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE))
+        .flatMap(loan -> loan.getLoanDetails().stream())
+        .map(detail -> detail.getTool().getModel().getId())
+        .collect(Collectors.toSet());
+    
+    if (modelIdsInActiveLoans.size() != activeLoans.size()) {
+        throw new IllegalStateException("Customer " + customer.getName() + 
+            " cannot have tools of the same model in different active loans");
+    }
+    
+    return true;
+}
+```
+
+ELIMINAR métodos problemáticos:
+- doesLoanBelongToCustomer()
+- isLoanStatusIn()
+
+
+7. RACE CONDITIONS - AGREGAR CONTROL DE CONCURRENCIA
+--------------------------------------------------------------------------------
+PROBLEMA:
+Sin @Version, dos usuarios pueden prestar la misma herramienta simultáneamente
+
+SOLUCIÓN:
+Agregar control de concurrencia optimista
+
+EJEMPLO - Modificar ToolEntity.java:
+```java
+@Entity
+@Table(name = "tools")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class ToolEntity {
+    @Id
+    @EqualsAndHashCode.Include
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Version // ✅ Agregar esto
+    private Long version;
+    
+    // ... resto del código ...
+}
+```
+
+EJEMPLO - Modificar LoanEntity.java:
+```java
+@Entity
+@Table(name = "loans")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class LoanEntity {
+    @Id
+    @EqualsAndHashCode.Include
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Version // ✅ Agregar esto
+    private Long version;
+    
+    // ... resto del código ...
+}
+```
+
+Luego manejar OptimisticLockException en GlobalExceptionHandler:
+```java
+@ExceptionHandler(OptimisticLockException.class)
+public ResponseEntity<ErrorResponse> handleOptimisticLock(
+        OptimisticLockException ex, WebRequest request) {
+    ErrorResponse error = new ErrorResponse(
+        LocalDateTime.now(),
+        HttpStatus.CONFLICT.value(),
+        "Concurrent Modification",
+        "The resource was modified by another user. Please retry.",
+        request.getDescription(false)
+    );
+    return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+}
+```
+
+
+8. QUERIES INEFICIENTES - OPTIMIZAR CON FETCH JOINS
+--------------------------------------------------------------------------------
+PROBLEMA:
+N+1 queries al cargar relaciones lazy
+
+SOLUCIÓN:
+Usar @EntityGraph o fetch joins
+
+EJEMPLO - Modificar UserRepository.java:
+```java
+@Repository
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    
+    // Agregar EntityGraph para evitar N+1
+    @EntityGraph(attributePaths = {"userStatus", "userType", "phones"})
+    List<UserEntity> findAllByUserTypeIdEquals(@NotNull Long id);
+    
+    @EntityGraph(attributePaths = {"userStatus", "userType"})
+    List<UserEntity> findAllByUserStatusIdEquals(@NotNull Long userStatusId);
+    
+    // Query optimizada con paginación
+    @Query(value = "SELECT " +
+            "   u.name as userName, " +
+            "   u.email as userEmail, " +
+            "   us.name as userStatus, " +
+            "   ut.name as userType, " +
+            "   l.id as loanId, " +
+            "   ls.name as statusLoan, " +
+            "   l.due_date as dueDate " +
+            "FROM sigphe.users u " +
+            "JOIN sigphe.loans l ON u.id = l.customer_user_id " +
+            "JOIN sigphe.loan_statuses ls ON ls.id = l.loan_status_id " +
+            "JOIN sigphe.user_statuses us ON us.id = u.user_status_id " +
+            "JOIN sigphe.user_types ut ON ut.id = u.user_type_id " +
+            "WHERE l.due_date BETWEEN :startDate AND :endDate " +
+            "AND ls.name IN (:statusLoanOverdue, :statusLoanActive) " +
+            "ORDER BY l.due_date DESC " +
+            "LIMIT :limit OFFSET :offset", // ✅ Parámetros en lugar de hardcoded
+            nativeQuery = true)
+    List<ClientsWithDebtsProjection> findAllUserWithDebtsBetweenDates(
+            @NotNull LocalDateTime startDate,
+            @NotNull LocalDateTime endDate,
+            String statusLoanOverdue,
+            String statusLoanActive,
+            int limit,
+            int offset);
+}
+```
+
+
+9. TESTING INEXISTENTE - CREAR SUITE DE TESTS
+--------------------------------------------------------------------------------
+PROBLEMA:
+Solo un test vacío en todo el proyecto
+
+SOLUCIÓN:
+Implementar tests unitarios e integración
+
+EJEMPLO - Agregar dependencias en pom.xml:
+```xml
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-core</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+EJEMPLO - Crear LoanServiceTest.java:
+```java
+package cl.usach.mis.sigpheapp_backend.services;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class LoanServiceTest {
+
+    @Mock
+    private LoanRepository loanRepository;
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private ToolRepository toolRepository;
+    
+    @InjectMocks
+    private LoanService loanService;
+    
+    private UserEntity testCustomer;
+    private UserEntity testWorker;
+    private ToolEntity testTool;
+    
+    @BeforeEach
+    void setUp() {
+        // Setup test data
+        testCustomer = new UserEntity();
+        testCustomer.setId(1L);
+        testCustomer.setName("Test Customer");
+        
+        testWorker = new UserEntity();
+        testWorker.setId(2L);
+        testWorker.setName("Test Worker");
+        
+        testTool = new ToolEntity();
+        testTool.setId(1L);
+        testTool.setName("Test Tool");
+    }
+    
+    @Test
+    void createLoan_WithValidData_ShouldCreateLoan() {
+        // Given
+        CreateLoanRequestDTO request = new CreateLoanRequestDTO();
+        request.setCustomerId(1L);
+        request.setWorkerId(2L);
+        request.setDueDate(LocalDateTime.now().plusDays(7));
+        request.setToolIds(List.of(1L));
+        
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(testWorker));
+        when(toolRepository.findById(1L)).thenReturn(Optional.of(testTool));
+        
+        // When
+        LoanDTO result = loanService.createLoan(request);
+        
+        // Then
+        assertNotNull(result);
+        verify(loanRepository, times(1)).save(any(LoanEntity.class));
+    }
+    
+    @Test
+    void createLoan_WithCustomerInDebt_ShouldThrowException() {
+        // Given
+        UserStatusEntity debtStatus = new UserStatusEntity();
+        debtStatus.setName("Con Deuda");
+        testCustomer.setUserStatus(debtStatus);
+        
+        CreateLoanRequestDTO request = new CreateLoanRequestDTO();
+        request.setCustomerId(1L);
+        
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> 
+            loanService.createLoan(request)
+        );
+    }
+}
+```
+
+EJEMPLO - Crear LoanControllerIntegrationTest.java:
+```java
+package cl.usach.mis.sigpheapp_backend.controllers;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class LoanControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @Test
+    void getAllLoans_ShouldReturnOk() throws Exception {
+        mockMvc.perform(get("/api/v1/loans"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+    
+    @Test
+    void createLoan_WithInvalidData_ShouldReturnBadRequest() throws Exception {
+        String invalidJson = """
+            {
+                "customerId": null,
+                "workerId": 1,
+                "dueDate": "2024-01-01T10:00:00"
+            }
+            """;
+        
+        mockMvc.perform(post("/api/v1/loans")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+                .andExpect(status().isBadRequest());
+    }
+}
+```
+
+ARCHIVOS A CREAR:
+- src/test/java/.../services/LoanServiceTest.java
+- src/test/java/.../services/UserServiceTest.java
+- src/test/java/.../services/ToolServiceTest.java
+- src/test/java/.../controllers/LoanControllerIntegrationTest.java
+- src/test/resources/application-test.properties
+
+
+10. VALIDACIONES INSUFICIENTES - MEJORAR VALIDACIÓN DE DATOS
+--------------------------------------------------------------------------------
+PROBLEMA:
+Validaciones básicas, falta validación de business rules
+
+SOLUCIÓN:
+Agregar validaciones personalizadas
+
+EJEMPLO - Crear validación de RUT chileno:
+```java
+package cl.usach.mis.sigpheapp_backend.validation;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import java.lang.annotation.*;
+
+@Documented
+@Constraint(validatedBy = RutValidator.class)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ValidRut {
+    String message() default "Invalid Chilean RUT format";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+```
+
+```java
+package cl.usach.mis.sigpheapp_backend.validation;
+
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+public class RutValidator implements ConstraintValidator<ValidRut, String> {
+    
+    @Override
+    public boolean isValid(String rut, ConstraintValidatorContext context) {
+        if (rut == null || rut.isEmpty()) {
+            return false;
+        }
+        
+        // Lógica de validación de RUT chileno
+        rut = rut.replaceAll("[^0-9kK]", "");
+        if (rut.length() < 2) return false;
+        
+        String body = rut.substring(0, rut.length() - 1);
+        char dv = rut.charAt(rut.length() - 1);
+        
+        return calculateDV(body) == Character.toUpperCase(dv);
+    }
+    
+    private char calculateDV(String rut) {
+        int sum = 0;
+        int multiplier = 2;
+        
+        for (int i = rut.length() - 1; i >= 0; i--) {
+            sum += Character.getNumericValue(rut.charAt(i)) * multiplier;
+            multiplier = multiplier == 7 ? 2 : multiplier + 1;
+        }
+        
+        int remainder = 11 - (sum % 11);
+        
+        if (remainder == 11) return '0';
+        if (remainder == 10) return 'K';
+        return Character.forDigit(remainder, 10);
+    }
+}
+```
+
+EJEMPLO - Usar en UserEntity:
+```java
+@Column(name = "national_id", nullable = false, unique = true, length = 30)
+@ValidRut(message = "El RUT ingresado no es válido")
+private String nationalId;
+```
+
+EJEMPLO - Mejorar ReturnLoanRequestDTO:
+```java
+package cl.usach.mis.sigpheapp_backend.dtos;
+
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Map;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReturnLoanRequestDTO {
+
+    @NotNull(message = "Worker ID is required")
+    @Positive(message = "Worker ID must be positive")
+    private Long workerId;
+
+    @NotNull(message = "Customer ID is required")
+    @Positive(message = "Customer ID must be positive")
+    private Long customerId;
+
+    @NotNull(message = "Tool conditions are required")
+    @NotEmpty(message = "Tool conditions cannot be empty")
+    private Map<@Positive Long, @Pattern(regexp = "^(ok|dañada|perdida)$", 
+                message = "Condition must be: ok, dañada, or perdida") String> toolConditions;
+}
+```
+
+ARCHIVOS A CREAR:
+- src/main/java/.../validation/ValidRut.java
+- src/main/java/.../validation/RutValidator.java
+- src/main/java/.../validation/ValidDateRange.java
+- src/main/java/.../validation/DateRangeValidator.java
+
+
+11. GET CON REQUEST BODY - CORREGIR ENDPOINTS NO RESTFUL
+--------------------------------------------------------------------------------
+PROBLEMA:
+Varios endpoints usan GET con RequestBody, violando estándar HTTP
+
+ARCHIVO: src/main/java/.../controllers/UserController.java
+
+CAMBIAR DE:
+```java
+@GetMapping("/with-debts/date-range")
+public ResponseEntity<List<ClientsWithDebtsProjection>> getUsersWithDebts(
+        @Valid @RequestBody DateRangeRequestDTO request) { // ❌ GET con body
+    // ...
+}
+```
+
+OPCIÓN 1 - Cambiar a POST:
+```java
+@PostMapping("/with-debts/search")
+public ResponseEntity<List<ClientsWithDebtsProjection>> searchUsersWithDebts(
+        @Valid @RequestBody DateRangeRequestDTO request) {
+    if (request.getStartDate().isAfter(request.getEndDate())) {
+        throw new IllegalArgumentException("Start date must be before or equal to end date.");
+    }
+    List<ClientsWithDebtsProjection> users = userService.getAllUsersWithDebtsByDateRange(
+            request.getStartDate(), request.getEndDate());
+    return ResponseEntity.ok(users);
+}
+```
+
+OPCIÓN 2 - Usar query parameters:
+```java
+@GetMapping("/with-debts")
+public ResponseEntity<List<ClientsWithDebtsProjection>> getUsersWithDebtsByDateRange(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+    
+    if (startDate.isAfter(endDate)) {
+        throw new IllegalArgumentException("Start date must be before or equal to end date.");
+    }
+    
+    List<ClientsWithDebtsProjection> users = userService.getAllUsersWithDebtsByDateRange(
+            startDate, endDate);
+    return ResponseEntity.ok(users);
+}
+```
+
+APLICAR A ESTOS CONTROLADORES:
+- UserController: /with-debts/date-range
+- LoanController: /active/date-range
+- KardexController: /date-range y /tool/{id}/history/date-range
+- ToolController: /most-borrowed/date-range
+
+
+12. SERVICIOS SOBRECARGADOS - REFACTORIZAR ARQUITECTURA
+--------------------------------------------------------------------------------
+PROBLEMA:
+LoanService tiene 428 líneas con demasiadas responsabilidades
+
+SOLUCIÓN:
+Separar en servicios especializados
+
+ESTRUCTURA PROPUESTA:
+```
+services/
+├── loan/
+│   ├── LoanService.java          (orquestador)
+│   ├── LoanValidationService.java (validaciones de negocio)
+│   ├── LoanCalculationService.java (cálculos de multas, rentas)
+│   └── LoanStatusService.java     (gestión de estados)
+├── penalty/
+│   └── PenaltyService.java
+├── kardex/
+│   └── KardexService.java
+└── mapper/
+    ├── LoanMapper.java
+    ├── UserMapper.java
+    └── ToolMapper.java
+```
+
+EJEMPLO - Extraer LoanValidationService.java:
+```java
+package cl.usach.mis.sigpheapp_backend.services.loan;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class LoanValidationService {
+    
+    private final LoanRepository loanRepository;
+    private final int maxVigentLoans;
+    
+    public void validateCustomerEligibility(UserEntity customer) {
+        if (customer.getUserStatus().getName().equals("Con Deuda")) {
+            throw new BusinessRuleException(
+                "Customer " + customer.getName() + " has outstanding debts"
+            );
+        }
+        
+        validateMaxActiveLoans(customer);
+        validateNoDuplicateModels(customer);
+        validateNoOverdueLoans(customer);
+    }
+    
+    public void validateToolsAvailable(List<Long> toolIds) {
+        for (Long toolId : toolIds) {
+            ToolEntity tool = toolRepository.findById(toolId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", toolId));
+            
+            if (!"Disponible".equals(tool.getToolStatus().getName())) {
+                throw new BusinessRuleException(
+                    "Tool " + tool.getName() + " is not available"
+                );
+            }
+        }
+    }
+    
+    private void validateMaxActiveLoans(UserEntity customer) {
+        long activeLoansCount = loanRepository.countByCustomerUserAndLoanStatusNameIn(
+            customer, Arrays.asList("Vigente", "Atrasada")
+        );
+        
+        if (activeLoansCount >= maxVigentLoans) {
+            throw new BusinessRuleException(
+                "Customer has reached maximum of " + maxVigentLoans + " active loans"
+            );
+        }
+    }
+    
+    // ... más métodos de validación ...
+}
+```
+
+EJEMPLO - Extraer LoanCalculationService.java:
+```java
+package cl.usach.mis.sigpheapp_backend.services.loan;
+
+import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+@Service
+public class LoanCalculationService {
+    
+    public BigDecimal calculateTotalRental(List<ToolEntity> tools, LocalDateTime dueDate) {
+        long rentalDays = calculateRentalDays(dueDate);
+        
+        return tools.stream()
+            .map(tool -> tool.getRentalValue()
+                .multiply(BigDecimal.valueOf(rentalDays)))
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(2, RoundingMode.CEILING);
+    }
+    
+    public BigDecimal calculateLatePenalty(LoanEntity loan) {
+        if (!loan.getDueDate().isBefore(LocalDateTime.now())) {
+            return BigDecimal.ZERO;
+        }
+        
+        long daysLate = calculateDaysLate(loan.getDueDate());
+        return loan.getTotalRental()
+            .multiply(BigDecimal.valueOf(daysLate))
+            .setScale(2, RoundingMode.CEILING);
+    }
+    
+    private long calculateRentalDays(LocalDateTime dueDate) {
+        long days = (long) Math.ceil(
+            (double) Duration.between(LocalDateTime.now(), dueDate).toHours() / 24
+        );
+        return Math.max(1, days);
+    }
+    
+    private long calculateDaysLate(LocalDateTime dueDate) {
+        long days = (long) Math.ceil(
+            (double) Duration.between(dueDate, LocalDateTime.now()).toHours() / 24
+        );
+        return Math.max(1, days);
+    }
+}
+```
+
+EJEMPLO - LoanService refactorizado:
+```java
+package cl.usach.mis.sigpheapp_backend.services;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class LoanService {
+    
+    private final LoanRepository loanRepository;
+    private final LoanValidationService validationService;
+    private final LoanCalculationService calculationService;
+    private final LoanMapper loanMapper;
+    
+    @Transactional
+    public LoanDTO createLoan(CreateLoanRequestDTO dto) {
+        log.info("Creating loan for customer: {}", dto.getCustomerId());
+        
+        // Validaciones
+        UserEntity customer = userRepository.findById(dto.getCustomerId())
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.getCustomerId()));
+        
+        validationService.validateCustomerEligibility(customer);
+        validationService.validateToolsAvailable(dto.getToolIds());
+        
+        // Cálculos
+        List<ToolEntity> tools = toolRepository.findAllById(dto.getToolIds());
+        BigDecimal totalRental = calculationService.calculateTotalRental(tools, dto.getDueDate());
+        
+        // Crear préstamo
+        LoanEntity loan = new LoanEntity();
+        loan.setCustomerUser(customer);
+        loan.setStartDate(LocalDateTime.now());
+        loan.setDueDate(dto.getDueDate());
+        loan.setTotalRental(totalRental);
+        loan.setLoanStatus(loanStatusRepository.findByName("Vigente").orElseThrow());
+        
+        LoanEntity savedLoan = loanRepository.save(loan);
+        
+        log.info("Loan created successfully: {}", savedLoan.getId());
+        return loanMapper.toDTO(savedLoan);
+    }
+}
+```
+
+
+================================================================================
+🟡 MEDIAS - MEJORAN CALIDAD DEL CÓDIGO
+================================================================================
+
+13. NOMENCLATURA - CORREGIR "COSTUMERS" A "CUSTOMERS"
+--------------------------------------------------------------------------------
+ARCHIVOS A MODIFICAR:
+- UserController.java: getAllCostumers() → getAllCustomers()
+- UserController.java: getActiveCostumers() → getActiveCustomers()
+- UserController.java: /costumers → /customers
+- UserService.java: getAllCostumers() → getAllCustomers()
+- UserService.java: getActiveCostumers() → getActiveCustomers()
+- Constantes: TYPE_USER_COSTUMER → TYPE_USER_CUSTOMER
+
+
+14. DEPENDENCIAS - AGREGAR LIBRERÍAS ÚTILES
+--------------------------------------------------------------------------------
+AGREGAR A pom.xml:
+
+```xml
+<!-- MapStruct para mapeo automático -->
+<dependency>
+    <groupId>org.mapstruct</groupId>
+    <artifactId>mapstruct</artifactId>
+    <version>1.5.5.Final</version>
+</dependency>
+<dependency>
+    <groupId>org.mapstruct</groupId>
+    <artifactId>mapstruct-processor</artifactId>
+    <version>1.5.5.Final</version>
+    <scope>provided</scope>
+</dependency>
+
+<!-- Spring Boot Actuator para monitoreo -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+<!-- SpringDoc OpenAPI para documentación -->
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.3.0</version>
+</dependency>
+
+<!-- Validation Groups -->
+<dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+</dependency>
+```
+
+
+15. DOCUMENTACIÓN API - AGREGAR SWAGGER/OPENAPI
+--------------------------------------------------------------------------------
+CONFIGURAR OpenAPI
+
+CREAR OpenApiConfig.java:
+```java
+package cl.usach.mis.sigpheapp_backend.config;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+public class OpenApiConfig {
+    
+    @Bean
+    public OpenAPI sigpheOpenAPI() {
+        Server devServer = new Server();
+        devServer.setUrl("http://localhost:8090");
+        devServer.setDescription("Development server");
+        
+        Contact contact = new Contact();
+        contact.setName("SIGPHE Team");
+        contact.setEmail("sigphe@usach.cl");
+        
+        Info info = new Info()
+            .title("SIGPHE API")
+            .version("1.0.0")
+            .contact(contact)
+            .description("API para Sistema de Gestión de Préstamo de Herramientas");
+        
+        return new OpenAPI()
+            .info(info)
+            .servers(List.of(devServer));
+    }
+}
+```
+
+AGREGAR ANOTACIONES en controladores:
+```java
+@RestController
+@RequestMapping("/api/v1/loans")
+@CrossOrigin("*")
+@Tag(name = "Loans", description = "Gestión de préstamos de herramientas")
+public class LoanController {
+
+    @Operation(summary = "Obtener todos los préstamos",
+               description = "Retorna la lista completa de préstamos registrados")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping
+    public ResponseEntity<List<LoanDTO>> getAll() {
+        // ...
+    }
+    
+    @Operation(summary = "Crear nuevo préstamo",
+               description = "Registra un nuevo préstamo de herramientas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Préstamo creado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "409", description = "Conflicto con reglas de negocio")
+    })
+    @PostMapping
+    public ResponseEntity<LoanDTO> createLoan(
+            @Valid @RequestBody CreateLoanRequestDTO request) {
+        // ...
+    }
+}
+```
+
+Acceder a documentación en: http://localhost:8090/swagger-ui.html
+
+
+16. PROYECCIONES - CONVERTIR A DTOs
+--------------------------------------------------------------------------------
+PROBLEMA:
+Retornar interfaces de proyección acopla la API a estructura interna
+
+EJEMPLO - Crear MostUsedToolDTO.java:
+```java
+package cl.usach.mis.sigpheapp_backend.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MostUsedToolDTO {
+    private Long toolId;
+    private String toolName;
+    private String toolModel;
+    private String toolBrand;
+    private Long usageCount;
+}
+```
+
+MODIFICAR ToolService para convertir:
+```java
+public List<MostUsedToolDTO> getMostUsedTools() {
+    List<MostUsedToolProjection> projections = toolRepository.findMostUsedTools();
+    return projections.stream()
+        .map(this::toMostUsedToolDTO)
+        .toList();
+}
+
+private MostUsedToolDTO toMostUsedToolDTO(MostUsedToolProjection projection) {
+    return new MostUsedToolDTO(
+        projection.getToolId(),
+        projection.getToolName(),
+        projection.getToolModel(),
+        projection.getToolBrand(),
+        projection.getUsageCount()
+    );
+}
+```
+
+MODIFICAR ToolController:
+```java
+@GetMapping("/most-borrowed")
+public ResponseEntity<List<MostUsedToolDTO>> getMostBorrowedTools() {
+    List<MostUsedToolDTO> tools = toolService.getMostUsedTools();
+    return ResponseEntity.ok(tools);
+}
+```
+
+
+17. CONSTANTES - CENTRALIZAR EN ENUMS
+--------------------------------------------------------------------------------
+PROBLEMA:
+Constantes duplicadas en múltiples servicios
+
+CREAR enums:
+```java
+package cl.usach.mis.sigpheapp_backend.enums;
+
+public enum LoanStatus {
+    ACTIVE("Vigente"),
+    OVERDUE("Atrasada"),
+    FINISHED("Finalizado");
+    
+    private final String displayName;
+    
+    LoanStatus(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+```
+
+```java
+package cl.usach.mis.sigpheapp_backend.enums;
+
+public enum ToolStatus {
+    AVAILABLE("Disponible"),
+    LOANED("Prestada"),
+    IN_REPAIR("En Reparacion"),
+    DECOMMISSIONED("Dada de baja");
+    
+    private final String displayName;
+    
+    ToolStatus(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+```
+
+USO en servicios:
+```java
+LoanStatusEntity status = getLoanStatusByName(LoanStatus.ACTIVE.getDisplayName());
+```
+
+
+18. PAGINACIÓN - IMPLEMENTAR EN ENDPOINTS
+--------------------------------------------------------------------------------
+MODIFICAR repositorios:
+```java
+@Repository
+public interface LoanRepository extends JpaRepository<LoanEntity, Long> {
+    Page<LoanEntity> findByLoanStatusNameIn(List<String> statuses, Pageable pageable);
+}
+```
+
+MODIFICAR servicios:
+```java
+public Page<LoanDTO> getAllLoansByStatuses(List<String> statuses, Pageable pageable) {
+    return loanRepository.findByLoanStatusNameIn(statuses, pageable)
+            .map(this::toLoanDTO);
+}
+```
+
+MODIFICAR controladores:
+```java
+@GetMapping
+public ResponseEntity<Page<LoanDTO>> getAll(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size,
+        @RequestParam(defaultValue = "id,desc") String[] sort) {
+    
+    Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.by(sort[0])
+        .with(Sort.Direction.fromString(sort[1]))));
+    
+    Page<LoanDTO> loans = loanService.getAllLoans(pageable);
+    return ResponseEntity.ok(loans);
+}
+```
+
+
+19. CORS - CONFIGURAR DE FORMA SEGURA
+--------------------------------------------------------------------------------
+ELIMINAR @CrossOrigin("*") de controladores
+
+CREAR CorsConfig.java:
+```java
+package cl.usach.mis.sigpheapp_backend.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    
+    @Value("${app.cors.allowed-origins}")
+    private String[] allowedOrigins;
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+}
+```
+
+AGREGAR a application.properties:
+```properties
+# Development
+app.cors.allowed-origins=http://localhost:3000,http://localhost:4200
+```
+
+application-prod.properties:
+```properties
+# Production
+app.cors.allowed-origins=https://sigphe.usach.cl
+```
+
+
+20. LÓGICA EN ENTIDADES - MOVER A SERVICIOS
+--------------------------------------------------------------------------------
+PROBLEMA:
+Métodos helper en entidades mezclan responsabilidades
+
+ELIMINAR de entidades métodos como:
+- addPhone()
+- addLoanDetail()
+- addPenalty()
+
+MOVER lógica a servicios especializados o usar eventos de JPA:
+```java
+@Service
+public class UserPhoneService {
+    public void addPhoneToUser(UserEntity user, String phoneNumber) {
+        UserPhoneEntity phone = new UserPhoneEntity();
+        phone.setPhoneNumber(phoneNumber);
+        phone.setUser(user);
+        phone.setStatus(true);
+        
+        userPhoneRepository.save(phone);
+    }
+}
+```
+
+
+================================================================================
+🟢 BAJAS - OPTIMIZACIONES Y MEJORES PRÁCTICAS
+================================================================================
+
+21. JAVA VERSION - CAMBIAR A LTS
+--------------------------------------------------------------------------------
+MODIFICAR pom.xml:
+```xml
+<properties>
+    <java.version>21</java.version>  <!-- O 17 si prefieres -->
+</properties>
+```
+
+
+22. POOL DE CONEXIONES - CONFIGURAR HIKARICP
+--------------------------------------------------------------------------------
+AGREGAR a application-prod.properties:
+```properties
+# HikariCP Configuration
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+spring.datasource.hikari.pool-name=SigpheHikariPool
+```
+
+
+23. COMPRESIÓN - HABILITAR GZIP
+--------------------------------------------------------------------------------
+AGREGAR a application.properties:
+```properties
+# Compression
+server.compression.enabled=true
+server.compression.mime-types=application/json,application/xml,text/html,text/xml,text/plain
+server.compression.min-response-size=1024
+```
+
+
+24. ÍNDICES - DEFINIR EN ENTIDADES
+--------------------------------------------------------------------------------
+EJEMPLO - Modificar LoanEntity:
+```java
+@Entity
+@Table(name = "loans",
+       indexes = {
+           @Index(name = "idx_loan_customer", columnList = "customer_user_id"),
+           @Index(name = "idx_loan_status", columnList = "loan_status_id"),
+           @Index(name = "idx_loan_dates", columnList = "start_date,due_date")
+       })
+public class LoanEntity {
+    // ...
+}
+```
+
+
+25. CACHE - IMPLEMENTAR PARA CONSULTAS FRECUENTES
+--------------------------------------------------------------------------------
+AGREGAR dependencia:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-cache</artifactId>
+</dependency>
+```
+
+HABILITAR cache:
+```java
+@SpringBootApplication
+@EnableCaching
+public class SigpheAppBackendApplication {
+    // ...
+}
+```
+
+USAR en servicios:
+```java
+@Cacheable(value = "toolStatuses", unless = "#result == null")
+public ToolStatusEntity getToolStatusByName(String name) {
+    return toolStatusRepository.findByName(name)
+        .orElseThrow(() -> new IllegalArgumentException("Invalid tool status: " + name));
+}
+
+@CacheEvict(value = "toolStatuses", allEntries = true)
+public void clearToolStatusCache() {
+    // Se llamaría cuando se modifiquen estados
+}
+```
+
+
+26. AUDITORÍA AUTOMÁTICA - USAR JPA AUDITING
+--------------------------------------------------------------------------------
+CREAR BaseEntity:
+```java
+package cl.usach.mis.sigpheapp_backend.entities;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+public abstract class BaseEntity {
+    
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
+```
+
+HABILITAR:
+```java
+@SpringBootApplication
+@EnableJpaAuditing
+public class SigpheAppBackendApplication {
+    // ...
+}
+```
+
+EXTENDER en entidades:
+```java
+@Entity
+@Table(name = "loans")
+public class LoanEntity extends BaseEntity {
+    // ... campos existentes ...
+}
+```
+
+
+27. HEALTH CHECKS - CONFIGURAR ACTUATOR
+--------------------------------------------------------------------------------
+AGREGAR a application.properties:
+```properties
+# Actuator
+management.endpoints.web.exposure.include=health,info,metrics,prometheus
+management.endpoint.health.show-details=when-authorized
+management.health.db.enabled=true
+```
+
+CREAR CustomHealthIndicator:
+```java
+package cl.usach.mis.sigpheapp_backend.health;
+
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DatabaseHealthIndicator implements HealthIndicator {
+    
+    private final LoanRepository loanRepository;
+    
+    public DatabaseHealthIndicator(LoanRepository loanRepository) {
+        this.loanRepository = loanRepository;
+    }
+    
+    @Override
+    public Health health() {
+        try {
+            long count = loanRepository.count();
+            return Health.up()
+                .withDetail("database", "reachable")
+                .withDetail("total_loans", count)
+                .build();
+        } catch (Exception e) {
+            return Health.down()
+                .withDetail("error", e.getMessage())
+                .build();
+        }
+    }
+}
+```
+
+Acceder a: http://localhost:8090/actuator/health
+
+
+28. BIGDECIMAL - USAR CONSTANTES PARA ESCALA
+--------------------------------------------------------------------------------
+CREAR clase de constantes:
+```java
+package cl.usach.mis.sigpheapp_backend.constants;
+
+import java.math.RoundingMode;
+
+public final class MoneyConstants {
+    public static final int DECIMAL_SCALE = 2;
+    public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    
+    private MoneyConstants() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+}
+```
+
+USAR consistentemente:
+```java
+import static cl.usach.mis.sigpheapp_backend.constants.MoneyConstants.*;
+
+BigDecimal total = amount.setScale(DECIMAL_SCALE, ROUNDING_MODE);
+```
+
+
+================================================================================
+PRIORIZACIÓN Y PLAN DE IMPLEMENTACIÓN
+================================================================================
+
+SPRINT 1 (CRÍTICO - 2 semanas):
+- Implementar Spring Security + JWT
+- Externalizar configuración
+- GlobalExceptionHandler
+- Logging básico
+- Corregir bug de validación de préstamos
+
+SPRINT 2 (ALTO - 2 semanas):
+- Tests unitarios (mínimo 70% cobertura servicios)
+- Control de concurrencia (@Version)
+- Corregir endpoints GET con body
+- Mejorar validaciones
+
+SPRINT 3 (MEDIO - 2 semanas):
+- Refactorizar servicios grandes
+- Implementar paginación
+- Documentación OpenAPI
+- DTOs en lugar de proyecciones
+- CORS configurado
+
+SPRINT 4 (BAJO - 1 semana):
+- Optimizaciones de queries
+- Cache
+- Actuator
+- Profiles
+- Java 21 LTS
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
