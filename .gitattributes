@@ -1,0 +1,14 @@
+# Configura el comportamiento por defecto para que Git decida
+* text=auto
+
+# Forza a que los scripts de shell siempre usen LF (formato Linux)
+*.sh text eol=lf
+
+# Forza a que los scripts de Windows siempre usen CRLF (formato Windows)
+# Esto soluciona tu warning para siempre y para todo el equipo.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Marca archivos binarios para que Git no los modifique
+*.png binary
+*.jpg binary
