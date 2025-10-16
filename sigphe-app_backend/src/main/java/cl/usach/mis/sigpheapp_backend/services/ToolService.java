@@ -4,6 +4,8 @@ import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
+import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
+import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
 import jakarta.validation.constraints.NotNull;
@@ -100,32 +102,32 @@ public class ToolService {
 
     private ToolEntity getToolById(Long id) {
         return toolRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", id));
     }
 
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "name", name));
     }
 
     private ToolCategoryEntity getToolCategoryById(Long id) {
         return toolCategoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: "+ id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool Category", "id", id));
     }
 
     private UserEntity getUserById(Long workerId) {
         return userRepository.findById(workerId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid worker ID: " + workerId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", workerId));
     }
 
     private ModelEntity getModelById(Long id) {
         return modelRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid model ID: "+ id));
+                .orElseThrow(() -> new ResourceNotFoundException("Model", "id", id));
     }
 
     private KardexTypeEntity getKardexTypeByName(String name) {
         return kardexTypeRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid kardex type name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Kardex Type", "name", name));
     }
 
     private void addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {

@@ -5,6 +5,9 @@ import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
+import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
+import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
+import cl.usach.mis.sigpheapp_backend.exceptions.ValidationException;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -287,47 +290,47 @@ public class LoanService {
 
     private LoanEntity getLoanById(Long loanId) {
         return loanRepository.findById(loanId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid loan ID: " + loanId));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", loanId));
     }
 
     private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     private ToolEntity getToolById(Long toolId) {
         return toolRepository.findById(toolId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + toolId));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", toolId));
     }
 
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "name", name));
     }
 
     private LoanStatusEntity getLoanStatusByName(String name) {
         return loanStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid loan status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan Status", "name", name));
     }
 
     private KardexTypeEntity getKardexTypeByName(String name) {
         return kardexTypeRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid kardex type name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Kardex Type", "name", name));
     }
 
     private PenaltyStatusEntity getPenaltyStatusByName(String name) {
         return penaltyStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid penalty status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Penalty Status", "name", name));
     }
 
     private PenaltyTypeEntity getPenaltyTypeByName(String name) {
         return penaltyTypeRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid penalty type name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Penalty Type", "name", name));
     }
 
     private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("User Status", "name", name));
     }
 
     private void addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {

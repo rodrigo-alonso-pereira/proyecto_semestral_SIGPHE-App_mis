@@ -5,6 +5,7 @@ import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.entities.UserEntity;
 import cl.usach.mis.sigpheapp_backend.entities.UserStatusEntity;
 import cl.usach.mis.sigpheapp_backend.entities.UserTypeEntity;
+import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
 import cl.usach.mis.sigpheapp_backend.repositories.UserRepository;
 import cl.usach.mis.sigpheapp_backend.repositories.UserStatusRepository;
 import cl.usach.mis.sigpheapp_backend.repositories.UserTypeRepository;
@@ -77,17 +78,17 @@ public class UserService {
 
     private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid User Status name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("User Status", "name", name));
     }
 
     private UserTypeEntity getUserTypeByName(String name) {
         return userTypeRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid User Type name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("User Type", "name", name));
     }
 
     private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     /* Mapper Layer */
