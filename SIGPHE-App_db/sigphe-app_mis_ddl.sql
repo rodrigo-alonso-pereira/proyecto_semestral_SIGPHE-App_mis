@@ -256,20 +256,20 @@ create table loan_details (
 -- Nuevo loan -> tools de cada herramienta en prestamo pasan a 'Prestado' (2) : OK
 
 -- Funcion para actualizar el tool_status_id a 'Prestado' (2) al insertar un nuevo detalle de prestamo
-create or replace function update_tool_status_on_loan_insert()
-returns trigger as $$
-begin
-    update tools
-    set tool_status_id = 2 -- 'Prestado'
-    where id = NEW.tool_id;
-    return NEW;
-end;
-$$ language plpgsql;
-
-create or replace trigger trg_update_tool_status_on_loan_insert 
-after insert on loan_details
-for each row
-execute function update_tool_status_on_loan_insert();
+-- create or replace function update_tool_status_on_loan_insert()
+-- returns trigger as $$
+-- begin
+--     update tools
+--     set tool_status_id = 2 -- 'Prestado'
+--     where id = NEW.tool_id;
+--     return NEW;
+-- end;
+-- $$ language plpgsql;
+--
+-- create or replace trigger trg_update_tool_status_on_loan_insert
+-- after insert on loan_details
+-- for each row
+-- execute function update_tool_status_on_loan_insert();
 
 -- NO VA FUNCIONAR YA QUE EL USUARIO A REGISTRAR EN KARDEX ES TRABAJADOR Y NO CLIENTE
 -- Y LOAN TIENE CLIENTE_ID 
@@ -283,28 +283,28 @@ execute function update_tool_status_on_loan_insert();
 -- Tool_statuses 'Dada de baja' (4) -> Kardex tipo 'Baja' (4) -1
 
 -- Funcion para crear una entrada en kardex cuando una herramienta cambia a 'Prestado' (2)
-create or replace function create_kardex_on_tool_loan()
-returns trigger as $$
-declare
-    v_user_id bigint;
-begin
-    -- Obtener el user_id del loan asociado al tool en prestamo
-    select l.customer_user_id into v_user_id
-    from loans l
-    join loan_details ld on l.id = ld.loan_id
-    where ld.tool_id = NEW.id -- NEW.id es el ID de la herramienta que cambió a 'Prestado'
-    order by l.start_date desc -- Ordenar desc por fecha de inicio del préstamo 
-    limit 1;
-    -- Insertar registro en kardex
-    insert into kardex (date_time, quantity, tool_id, kardex_type_id, user_id)
-    values (NOW(), -1, NEW.id, 2, v_user_id); -- Kardex tipo 'Prestamo' (2)
-    return NEW;
-end;
-$$ language plpgsql;    
-
-create trigger trg_create_kardex_on_tool_loan
-after update of tool_status_id on tools
-for each row
-    when (NEW.tool_status_id = 2 AND OLD.tool_status_id <> 2) -- Cambia a 'Prestado' (2)
-execute function create_kardex_on_tool_loan();
+-- create or replace function create_kardex_on_tool_loan()
+-- returns trigger as $$
+-- declare
+--     v_user_id bigint;
+-- begin
+--     -- Obtener el user_id del loan asociado al tool en prestamo
+--     select l.customer_user_id into v_user_id
+--     from loans l
+--     join loan_details ld on l.id = ld.loan_id
+--     where ld.tool_id = NEW.id -- NEW.id es el ID de la herramienta que cambió a 'Prestado'
+--     order by l.start_date desc -- Ordenar desc por fecha de inicio del préstamo
+--     limit 1;
+--     -- Insertar registro en kardex
+--     insert into kardex (date_time, quantity, tool_id, kardex_type_id, user_id)
+--     values (NOW(), -1, NEW.id, 2, v_user_id); -- Kardex tipo 'Prestamo' (2)
+--     return NEW;
+-- end;
+-- $$ language plpgsql;
+--
+-- create trigger trg_create_kardex_on_tool_loan
+-- after update of tool_status_id on tools
+-- for each row
+--     when (NEW.tool_status_id = 2 AND OLD.tool_status_id <> 2) -- Cambia a 'Prestado' (2)
+-- execute function create_kardex_on_tool_loan();
 
