@@ -3,6 +3,7 @@ package cl.usach.mis.sigpheapp_backend.services;
 import cl.usach.mis.sigpheapp_backend.dtos.KardexSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.entities.KardexEntity;
 import cl.usach.mis.sigpheapp_backend.entities.ToolEntity;
+import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
 import cl.usach.mis.sigpheapp_backend.repositories.KardexRepository;
 import cl.usach.mis.sigpheapp_backend.repositories.ToolRepository;
 import jakarta.validation.constraints.NotNull;
@@ -51,7 +52,7 @@ public class KardexService {
     /* Metodos auxiliares */
     private ToolEntity getToolById(Long id) {
         return toolRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", id));
     }
 
     /* Mapper Layer */

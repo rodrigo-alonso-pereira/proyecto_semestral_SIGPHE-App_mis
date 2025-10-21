@@ -7,7 +7,6 @@ import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
 import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
-import cl.usach.mis.sigpheapp_backend.exceptions.ValidationException;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -97,7 +96,7 @@ public class LoanService {
 
         // Validar que el cliente sea elegible para un nuevo préstamo según reglas de negocio
         if (!isCustomerEligibleForNewLoan(customer)) {
-            throw new IllegalStateException("Customer " + customer.getName() + " is not eligible for a new loan");
+            throw new BusinessException("Customer " + customer.getName() + " is not eligible for a new loan");
         }
 
         // Obtener entidades necesarias para el préstamo
@@ -116,13 +115,13 @@ public class LoanService {
 
             // Validar que la herramienta esté disponible
             if (!tool.getToolStatus().getName().equals(STATUS_TOOL_AVAILABLE)) {
-                throw new IllegalStateException("Tool with ID " + toolId + " is not available");
+                throw new BusinessException("Tool with ID " + toolId + " is not available");
             }
 
             // Validar que no se puede tener más de un mismo modelo en el mismo préstamo
             toolModelsInLoan.add(tool.getModel().getId());
             if (toolModelsInLoan.stream().filter(id -> id.equals(tool.getModel().getId())).count() > 1) {
-                throw new IllegalStateException("Cannot have more than one tool of the same model '" +
+                throw new BusinessException("Cannot have more than one tool of the same model '" +
                         tool.getModel().getName() + "' in a single loan");
             }
 
@@ -144,8 +143,7 @@ public class LoanService {
         // Procesar cada herramienta y crear detalles
         for (Long idTool : dto.getToolIds()) {
             // Obtener la herramienta
-            ToolEntity tool = toolRepository.findById(idTool)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid tool ID: " + idTool));
+            ToolEntity tool = getToolById(idTool);
 
             // Cambiar el estado de la herramienta
             tool.setToolStatus(toolStatus); // toolStatus -> "Prestada"
@@ -177,12 +175,12 @@ public class LoanService {
 
         // Validar que el préstamo pertenezca al cliente indicado
         if (doesLoanBelongToCustomer(loan, customer.getId())) {
-            throw new IllegalStateException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
+            throw new BusinessException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
         }
 
         // Validar que el estado del préstamo permita realizar la devolución
         if (isLoanStatusIn(loan, STATUS_LOAN_ACTIVE)) {
-            throw new IllegalStateException("Loan ID " + id + " is not in a returnable status");
+            throw new BusinessException("Loan ID " + id + " is not in a returnable status");
         }
 
 
@@ -195,7 +193,7 @@ public class LoanService {
             // Validar que la herramienta pertenezca al préstamo
             if (!loan.getLoanDetails().stream()
                     .anyMatch(detail -> detail.getTool().getId().equals(toolId))) {
-                throw new IllegalStateException("Tool ID " + toolId + " is not part of loan ID " + id);
+                throw new BusinessException("Tool ID " + toolId + " is not part of loan ID " + id);
             }
 
             // Actualizar el estado de la herramienta según la condición reportada
@@ -219,7 +217,7 @@ public class LoanService {
                     addKardexEntry(-1, tool, getKardexTypeByName(TYPE_KARDEX_DECOMMISSION), worker); // -1 -> perdida
                     break;
                 default:
-                    throw new IllegalArgumentException("Invalid tool condition: " + condition);
+                    throw new BusinessException("Invalid tool condition: " + condition);
             };
             loan.setTotalPenalties(loan.getTotalPenalties().add(penalty.getPenaltyAmount()
                     .setScale(2, RoundingMode.CEILING))); // Actualizar total de multas del préstamo
@@ -256,18 +254,18 @@ public class LoanService {
 
         // Validar que el préstamo pertenezca al cliente indicado
         if (doesLoanBelongToCustomer(loan, customer.getId())) {
-            throw new IllegalStateException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
+            throw new BusinessException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
         }
 
         // Validar que el estado del préstamo permita realizar el pago
         if (isLoanStatusIn(loan, STATUS_LOAN_OVERDUE)) {
-            throw new IllegalStateException("Loan ID " + id + " is not in a payable status");
+            throw new BusinessException("Loan ID " + id + " is not in a payable status");
         }
 
         // Validar que el monto del pago coincida con el total adeudado (alquiler + multas)
         if (!loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING)
                 .equals(BigDecimal.valueOf(dto.getPaymentAmount()).setScale(2, RoundingMode.CEILING))) {
-            throw new IllegalArgumentException("Payment amount does not match total due $" +
+            throw new BusinessException("Payment amount does not match total due $" +
                     loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING));
         }
 
@@ -367,7 +365,7 @@ public class LoanService {
     public boolean isCustomerEligibleForNewLoan(UserEntity customer) {
         // Validar que el cliente esté activo y no tenga deudas pendientes
         if (customer.getUserStatus().getName().equals(STATUS_USER_WITH_DEBT)) {
-            throw new IllegalStateException("Customer " + customer.getName() + " has outstanding debts");
+            throw new BusinessException("Customer " + customer.getName() + " has outstanding debts");
         }
         List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId()); // Lista de prestamos del cliente
         List<Long> toolModelsInLoan = new ArrayList<>(); // Lista auxiliar para validar modelos de herramientas
@@ -376,9 +374,9 @@ public class LoanService {
         for (LoanEntity loan : loans) {
             // Validar que no tenga préstamos atrasados
             if (loan.getDueDate().isBefore(LocalDateTime.now())) {
-                throw new IllegalStateException("Customer " + customer.getName() + " has overdue loans");
+                throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
             }
-            // Error: No entra a loans con estatus vigenteq
+            // Error: No entra a loans con estatus vigente
             if (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
                 vigentLoans++;
                 toolModelsInLoan.add(loan.getLoanDetails().stream()
@@ -391,14 +389,14 @@ public class LoanService {
         // Validar que no se puede tener más de un mismo modelo en préstamos vigentes
         for (Long modelId : toolModelsInLoan) {
             if (toolModelsInLoan.stream().filter(id -> id.equals(modelId)).count() > 1) {
-                throw new IllegalStateException("Customer " + customer.getName() +
+                throw new BusinessException("Customer " + customer.getName() +
                         "can't have more than one tool of the same model ID: " + modelId + " in different loans");
             }
         }
 
         // Validar cantidad máxima de préstamos vigentes no exceda el límite
         if (vigentLoans >= MAX_VIGENT_LOANS) {
-            throw new IllegalStateException("Customer " + customer.getName() +
+            throw new BusinessException("Customer " + customer.getName() +
                     " can't have more than " + MAX_VIGENT_LOANS + " active loans");
         }
 

@@ -39,40 +39,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    // 400 - Business Exception
+    // 409 - Business Exception (Conflict with business rules)
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponseDTO> handleBusinessException(
             BusinessException ex,
             HttpServletRequest request) {
 
-        logger.error("Business exception: {}", ex.getMessage());
+        logger.error("Business rule violation: {}", ex.getMessage());
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    // 400 - Validation Exception
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationException(
-            ValidationException ex,
-            HttpServletRequest request) {
-
-        logger.error("Validation exception: {}", ex.getMessage());
-
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     // 400 - Bean Validation (@Valid)
@@ -142,24 +124,6 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    // 409 - Illegal State (Conflict)
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponseDTO> handleIllegalStateException(
-            IllegalStateException ex,
-            HttpServletRequest request) {
-
-        logger.error("Illegal state: {}", ex.getMessage());
-
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     // 500 - Internal Server Error (catch-all)

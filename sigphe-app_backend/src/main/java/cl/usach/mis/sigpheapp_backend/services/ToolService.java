@@ -78,7 +78,7 @@ public class ToolService {
         // Solo se puede desactivar si la herramienta está "Disponible" o "En Reparacion"
         if (!tool.getToolStatus().getName().equals("Disponible") &&
             !tool.getToolStatus().getName().equals("En Reparacion")) {
-            throw new IllegalStateException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
+            throw new BusinessException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
         }
 
         tool.setToolStatus(getToolStatusByName("Dada de baja")); // Cambia estado a Inactivo
