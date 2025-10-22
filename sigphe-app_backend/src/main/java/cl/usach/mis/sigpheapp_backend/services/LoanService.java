@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -67,6 +68,7 @@ public class LoanService {
     @Autowired private PenaltyTypeRepository penaltyTypeRepository;
     @Autowired private PenaltyStatusRepository penaltyStatusRepository;
     @Autowired private UserStatusRepository userStatusRepository;
+    @Autowired private UserService userService;
 
     public List<LoanDTO> getAllLoansSummary() {
         return loanRepository.findAllWithRelations().stream()
@@ -105,7 +107,7 @@ public class LoanService {
         // Preparacion para calcular el valor total del alquiler
         BigDecimal totalRental = BigDecimal.ZERO;
         long rentalDays = (long) Math.ceil((double) Duration.between(
-                LocalDateTime.now(), dto.getDueDate()).toHours() / 24); // Calcular días de alquiler redondeando hacia arriba
+                LocalDateTime.now(), dto.getDueDate()).toHours() / 24); // Calcular días de alquiler redondeando (up)
         if (rentalDays <= 1) rentalDays = 1; // Asegurar al menos un día de alquiler
         List<Long> toolModelsInLoan = new ArrayList<>(); // Lista auxiliar para validar modelos de herramientas
         for (Long toolId : dto.getToolIds()) {
@@ -341,7 +343,6 @@ public class LoanService {
 
     /**
      * Valida si un cliente es elegible para un nuevo préstamo.
-     * Lanza BusinessException con mensaje específico si no cumple alguna regla.
      *
      * @param customer El cliente a validar
      * @throws BusinessException si el cliente no es elegible (con razón específica)
@@ -357,12 +358,7 @@ public class LoanService {
 
         int vigentLoans = 0;
         for (LoanEntity loan : loans) {
-            // Validar que no tenga préstamos atrasados
-            if (loan.getDueDate().isBefore(LocalDateTime.now())) {
-                customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));
-                userRepository.saveAndFlush(customer);
-                throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
-            }
+            validateOverdueLoans(loan, customer); // Validar que no tenga préstamos atrasados
 
             // Contar préstamos vigentes y registrar modelos de herramientas en préstamos vigentes
             if (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
@@ -459,6 +455,19 @@ public class LoanService {
 
         if (!totalDue.equals(payment)) {
             throw new BusinessException("Payment amount $" + payment + " does not match total due $" + totalDue);
+        }
+    }
+
+    /**  Válida si un préstamo está atrasado y actualiza el estado del cliente si es así.
+     *
+     * @param loan El préstamo a validar
+     * @param customer El cliente asociado al préstamo
+     * @throws BusinessException si el préstamo está atrasado
+     */
+    private void validateOverdueLoans(LoanEntity loan, UserEntity customer) {
+        if (loan.getDueDate().isBefore(LocalDateTime.now())) {
+            userService.updateCostumerStatus(customer);
+            throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
         }
     }
 

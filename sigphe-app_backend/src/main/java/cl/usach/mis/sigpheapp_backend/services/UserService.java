@@ -13,6 +13,8 @@ import cl.usach.mis.sigpheapp_backend.repositories.projection.ClientsWithDebtsPr
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,6 +74,12 @@ public class UserService {
                                                                             @NotNull LocalDateTime endDate) {
         return userRepository.findAllUserWithDebtsBetweenDates(startDate, endDate,
                         STATUS_LOAN_OVERDUE, STATUS_LOAN_ACTIVE);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateCostumerStatus(UserEntity customer) {
+        customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));
+        userRepository.save(customer);
     }
 
     /* Metodos auxiliares */
