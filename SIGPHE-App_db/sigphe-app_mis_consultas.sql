@@ -17,6 +17,88 @@ select * from loans l;
 select * from loan_details ld;
 select * from penalties p;
 
+-- Consultas optimizadas para test
+-- USUARIOS CON SU ESTADO Y TIPO
+select
+    u.id as id,
+    u.name as user_name,
+    u.email as user_email,
+    us.name as user_status,
+    ut.name as user_type
+from users u
+join user_statuses us on u.user_status_id = us.id
+join user_types ut on u.user_type_id = ut.id;
+
+-- Herramientas con su categoria, estado y modelo
+select
+    t.id as id,
+    t.name as tool_name,
+    t.rental_value as rep_value,
+    t.rental_value as rent_value,
+    m.name as model,
+    tc.name as category,
+    ts.name as status,
+    l.id as loan_id
+from tools t
+join tool_categories tc on t.tool_category_id = tc.id
+join tool_statuses ts on t.tool_status_id = ts.id
+join models m on t.model_id = m.id
+join loan_details ld on t.id = ld.tool_id
+join loans l on ld.loan_id = l.id;
+
+-- Kardex con herramienta, tipo de movimiento y trabajador responsable
+select
+    k.id as id,
+    k.date_time as date_register,
+    t.name as tool_name,
+    k.quantity as quantity,
+    kt.name as kardex_type,
+    u.name as worker_name
+from kardex k
+join tools t on k.tool_id = t.id
+join kardex_types kt on k.kardex_type_id = kt.id
+join users u on k.worker_user_id = u.id;
+
+-- Préstamos con cliente, estado y detalles
+select
+    l.id as id,
+    l.start_date as start_date,
+    l.return_date as return_date,
+    l.due_date as due_date,
+    l.payment_date as payment_date ,
+    l.total_rental as total,
+    l.total_penalties as penalties,
+    ls.name as loan_status,
+    u.name as customer_name
+from loans l
+join users u on l.customer_user_id = u.id
+join loan_statuses ls on l.loan_status_id = ls.id;
+
+-- Detalles de préstamos con herramienta y valor de renta en el momento del préstamo
+select
+    ld.id as id,
+    t.name as tool_name,
+    l.id as loan_id,
+    ld.rental_value_at_time as rental_value
+from loans l
+join loan_details ld on l.id = ld.loan_id
+join tools t on ld.tool_id = t.id;
+
+-- Penalidades con estado, tipo y usuario asociado
+select
+    p.id as id,
+    p.penalty_date as penalty_date,
+    p.penalty_amount as amount,
+    p.description as description,
+    l.id as loan_id,
+    ps.name as penalty_status,
+    pt.name as penalty_type
+from penalties p
+join penalty_statuses ps on p.penalty_status_id = ps.id
+join penalty_types pt on p.penalty_type_id = pt.id
+join loans l on p.loan_id = l.id;
+
+--
 select t.id as id, t.name as tool_name, m.name as model, b.name as brand, count(ld.tool_id) as quantity
 from loan_details ld
 join tools t on ld.tool_id = t.id
