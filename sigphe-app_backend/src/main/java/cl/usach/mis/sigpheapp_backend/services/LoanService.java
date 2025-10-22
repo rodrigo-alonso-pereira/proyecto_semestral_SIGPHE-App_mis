@@ -95,9 +95,7 @@ public class LoanService {
         UserEntity customer = getUserById(dto.getCustomerId()); // Obtener customer
 
         // Validar que el cliente sea elegible para un nuevo préstamo según reglas de negocio
-        if (!isCustomerEligibleForNewLoan(customer)) {
-            throw new BusinessException("Customer " + customer.getName() + " is not eligible for a new loan");
-        }
+        validateCustomerEligibilityForNewLoan(customer);
 
         // Obtener entidades necesarias para el préstamo
         LoanStatusEntity loanStatus = getLoanStatusByName(STATUS_LOAN_ACTIVE);
@@ -169,32 +167,22 @@ public class LoanService {
 
     @Transactional
     public LoanDTO processReturnLoan(@NotNull Long id, ReturnLoanRequestDTO dto) {
-        UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene worker
-        UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
-        LoanEntity loan = getLoanById(id); // Obtiene préstamo
+        UserEntity worker = getUserById(dto.getWorkerId());
+        UserEntity customer = getUserById(dto.getCustomerId());
+        LoanEntity loan = getLoanById(id);
 
-        // Validar que el préstamo pertenezca al cliente indicado
-        if (doesLoanBelongToCustomer(loan, customer.getId())) {
-            throw new BusinessException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
-        }
-
-        // Validar que el estado del préstamo permita realizar la devolución
-        if (isLoanStatusIn(loan, STATUS_LOAN_ACTIVE)) {
-            throw new BusinessException("Loan ID " + id + " is not in a returnable status");
-        }
-
+        // Validaciones de negocio - lanzan excepciones si no cumplen
+        validateLoanBelongsToCustomer(loan, customer.getId());
+        validateLoanIsReturnable(loan);
 
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
         dto.getToolConditions().forEach((toolId, condition) -> {
-            ToolEntity tool = getToolById(toolId); // Obtener herramienta
+            ToolEntity tool = getToolById(toolId);
             KardexEntity kardexEntry; // Inicializa un registro en kardex
             PenaltyEntity penalty = new PenaltyEntity(); // Inicializa una multa si aplica
 
             // Validar que la herramienta pertenezca al préstamo
-            if (!loan.getLoanDetails().stream()
-                    .anyMatch(detail -> detail.getTool().getId().equals(toolId))) {
-                throw new BusinessException("Tool ID " + toolId + " is not part of loan ID " + id);
-            }
+            validateToolBelongsToLoan(loan, toolId);
 
             // Actualizar el estado de la herramienta según la condición reportada
             switch (condition.toLowerCase()) {
@@ -249,25 +237,13 @@ public class LoanService {
 
     @Transactional
     public LoanDTO processPayment(@NotNull Long id, PaymentLoanRequestDTO dto) {
-        UserEntity customer = getUserById(dto.getCustomerId()); // Obtiene customer
-        LoanEntity loan = getLoanById(id); // Obtiene préstamo
+        UserEntity customer = getUserById(dto.getCustomerId());
+        LoanEntity loan = getLoanById(id);
 
-        // Validar que el préstamo pertenezca al cliente indicado
-        if (doesLoanBelongToCustomer(loan, customer.getId())) {
-            throw new BusinessException("Loan ID " + id + " does not belong to customer ID " + customer.getId());
-        }
-
-        // Validar que el estado del préstamo permita realizar el pago
-        if (isLoanStatusIn(loan, STATUS_LOAN_OVERDUE)) {
-            throw new BusinessException("Loan ID " + id + " is not in a payable status");
-        }
-
-        // Validar que el monto del pago coincida con el total adeudado (alquiler + multas)
-        if (!loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING)
-                .equals(BigDecimal.valueOf(dto.getPaymentAmount()).setScale(2, RoundingMode.CEILING))) {
-            throw new BusinessException("Payment amount does not match total due $" +
-                    loan.getTotalRental().add(loan.getTotalPenalties()).setScale(2, RoundingMode.CEILING));
-        }
+        // Validaciones de negocio - lanzan excepciones si no cumplen
+        validateLoanBelongsToCustomer(loan, customer.getId());
+        validateLoanIsPayable(loan);
+        validatePaymentAmount(loan, dto.getPaymentAmount());
 
         // Procesar el pago del préstamo y actualizar estados
         for (PenaltyEntity penalty : loan.getPenalties()) { // Por cada penalty asociada al préstamo
@@ -358,31 +334,43 @@ public class LoanService {
         return !loan.getCustomerUser().getId().equals(customerId);
     }
 
+    // TODO: Revisar uso de este metodo
     private boolean isLoanStatusIn(LoanEntity loan, String statuses) {
         return !statuses.contains(loan.getLoanStatus().getName());
     }
 
-    public boolean isCustomerEligibleForNewLoan(UserEntity customer) {
+    /**
+     * Valida si un cliente es elegible para un nuevo préstamo.
+     * Lanza BusinessException con mensaje específico si no cumple alguna regla.
+     *
+     * @param customer El cliente a validar
+     * @throws BusinessException si el cliente no es elegible (con razón específica)
+     */
+    private void validateCustomerEligibilityForNewLoan(UserEntity customer) {
         // Validar que el cliente esté activo y no tenga deudas pendientes
         if (customer.getUserStatus().getName().equals(STATUS_USER_WITH_DEBT)) {
             throw new BusinessException("Customer " + customer.getName() + " has outstanding debts");
         }
-        List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId()); // Lista de prestamos del cliente
-        List<Long> toolModelsInLoan = new ArrayList<>(); // Lista auxiliar para validar modelos de herramientas
+
+        List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId());
+        List<Long> toolModelsInLoan = new ArrayList<>();
 
         int vigentLoans = 0;
         for (LoanEntity loan : loans) {
             // Validar que no tenga préstamos atrasados
             if (loan.getDueDate().isBefore(LocalDateTime.now())) {
+                customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));
+                userRepository.saveAndFlush(customer);
                 throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
             }
-            // Error: No entra a loans con estatus vigente
+
+            // Contar préstamos vigentes y registrar modelos de herramientas en préstamos vigentes
             if (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
                 vigentLoans++;
                 toolModelsInLoan.add(loan.getLoanDetails().stream()
                         .map(detail -> detail.getTool().getModel().getId())
                         .findFirst()
-                        .orElse(-1L)); // Agregar modelo de herramienta del préstamo vigente
+                        .orElse(-1L));
             }
         }
 
@@ -390,7 +378,7 @@ public class LoanService {
         for (Long modelId : toolModelsInLoan) {
             if (toolModelsInLoan.stream().filter(id -> id.equals(modelId)).count() > 1) {
                 throw new BusinessException("Customer " + customer.getName() +
-                        "can't have more than one tool of the same model ID: " + modelId + " in different loans");
+                        " can't have more than one tool of the same model ID: " + modelId + " in different loans");
             }
         }
 
@@ -399,8 +387,79 @@ public class LoanService {
             throw new BusinessException("Customer " + customer.getName() +
                     " can't have more than " + MAX_VIGENT_LOANS + " active loans");
         }
+    }
 
-        return true;
+    /**
+     * Valida que un préstamo pertenezca al cliente indicado.
+     *
+     * @param loan El préstamo a validar
+     * @param customerId El ID del cliente
+     * @throws BusinessException si el préstamo no pertenece al cliente
+     */
+    private void validateLoanBelongsToCustomer(LoanEntity loan, Long customerId) {
+        if (!loan.getCustomerUser().getId().equals(customerId)) {
+            throw new BusinessException("Loan ID " + loan.getId() + " does not belong to customer ID " + customerId);
+        }
+    }
+
+    /**
+     * Valida que un préstamo esté en estado retornable (Vigente).
+     *
+     * @param loan El préstamo a validar
+     * @throws BusinessException si el préstamo no está en estado retornable
+     */
+    private void validateLoanIsReturnable(LoanEntity loan) {
+        if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
+            throw new BusinessException("Loan ID " + loan.getId() + " is not in a returnable status. Current status: " +
+                    loan.getLoanStatus().getName());
+        }
+    }
+
+    /**
+     * Valida que un préstamo esté en estado pagable (Atrasada).
+     *
+     * @param loan El préstamo a validar
+     * @throws BusinessException si el préstamo no está en estado pagable
+     */
+    private void validateLoanIsPayable(LoanEntity loan) {
+        if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_OVERDUE)) {
+            throw new BusinessException("Loan ID " + loan.getId() + " is not in a payable status. Current status: " +
+                    loan.getLoanStatus().getName());
+        }
+    }
+
+    /**
+     * Valida que una herramienta pertenezca al préstamo.
+     *
+     * @param loan El préstamo
+     * @param toolId El ID de la herramienta
+     * @throws BusinessException si la herramienta no pertenece al préstamo
+     */
+    private void validateToolBelongsToLoan(LoanEntity loan, Long toolId) {
+        boolean toolBelongsToLoan = loan.getLoanDetails().stream()
+                .anyMatch(detail -> detail.getTool().getId().equals(toolId));
+
+        if (!toolBelongsToLoan) {
+            throw new BusinessException("Tool ID " + toolId + " is not part of loan ID " + loan.getId());
+        }
+    }
+
+    /**
+     * Valida que el monto del pago coincida con el total adeudado.
+     *
+     * @param loan El préstamo
+     * @param paymentAmount El monto del pago
+     * @throws BusinessException si el monto no coincide
+     */
+    private void validatePaymentAmount(LoanEntity loan, double paymentAmount) {
+        BigDecimal totalDue = loan.getTotalRental()
+                .add(loan.getTotalPenalties())
+                .setScale(2, RoundingMode.CEILING);
+        BigDecimal payment = BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.CEILING);
+
+        if (!totalDue.equals(payment)) {
+            throw new BusinessException("Payment amount $" + payment + " does not match total due $" + totalDue);
+        }
     }
 
     /* Metodos Mapper */
