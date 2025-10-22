@@ -69,13 +69,13 @@ public class LoanService {
     @Autowired private UserStatusRepository userStatusRepository;
 
     public List<LoanDTO> getAllLoansSummary() {
-        return loanRepository.findAll().stream()
+        return loanRepository.findAllWithRelations().stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }
 
     public List<LoanDTO> getAllLoansByStatuses(List<String> statuses) {
-        return loanRepository.findByLoanStatusNameIn(statuses).stream()
+        return loanRepository.findByLoanStatusNameInWithRelations(statuses).stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }

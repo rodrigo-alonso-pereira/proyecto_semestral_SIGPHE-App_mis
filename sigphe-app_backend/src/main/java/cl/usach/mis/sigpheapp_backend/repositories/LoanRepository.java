@@ -4,6 +4,7 @@ import cl.usach.mis.sigpheapp_backend.entities.LoanEntity;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,21 @@ import java.util.Optional;
 
 @Repository
 public interface LoanRepository extends JpaRepository<LoanEntity, Long> {
-    List<LoanEntity> findAllById(@NotNull Long id);
-    List<LoanEntity> findByLoanStatusNameIn(@NotEmpty @NotNull List<String> statuses);
+    @Query("SELECT l FROM LoanEntity l " +
+            "JOIN FETCH l.loanStatus ls " +
+            "JOIN FETCH l.customerUser cu " +
+            "ORDER BY l.startDate DESC")
+    List<LoanEntity> findAllWithRelations();
+
+    @Query("SELECT l FROM LoanEntity l " +
+            "JOIN FETCH l.loanStatus ls " +
+            "JOIN FETCH l.customerUser cu " +
+            "WHERE ls.name IN :statuses " +
+            "ORDER BY l.startDate DESC")
+    List<LoanEntity> findByLoanStatusNameInWithRelations(@NotEmpty @NotNull List<String> statuses);
+
     List<LoanEntity> findAllByCustomerUserIdEquals(@NotNull Long id);
+
     List<LoanEntity> findAllByLoanStatusNameInAndStartDateBetweenOrderByStartDateDesc(
             @NotEmpty @NotNull List<String> statuses, LocalDateTime localDateTime, LocalDateTime now);
 }
