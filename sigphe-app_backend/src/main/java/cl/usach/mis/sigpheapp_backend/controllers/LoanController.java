@@ -30,6 +30,7 @@ public class LoanController {
         return ResponseEntity.ok(loans);
     }
 
+    // TODO: Cambiar a obtener préstamos por estado (parámetro de consulta)
     @GetMapping("/active")
     public ResponseEntity<List<LoanDTO>> getActiveLoans() {
         List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
@@ -37,6 +38,7 @@ public class LoanController {
         return ResponseEntity.ok(loans);
     }
 
+    // TODO: Cambiar a obtener préstamos por estado y rango de fechas (parámetros de consulta)
     @GetMapping("/active/date-range")
     public ResponseEntity<List<LoanDTO>> getAllLoansByStatusesAndDateRange(
             @Valid @RequestBody DateRangeRequestDTO request) {
