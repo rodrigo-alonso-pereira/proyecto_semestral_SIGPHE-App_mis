@@ -243,7 +243,6 @@ public class LoanService {
             loan.setTotalPenalties(loan.getTotalPenalties().add(penalty.getPenaltyAmount()
                     .setScale(2, RoundingMode.CEILING))); // Actualizar total de multas del préstamo
             toolRepository.save(tool); // Guardar el cambio de estado
-            //kardexRepository.save(kardexEntry); // Guardar el registro en kardex
         });
 
         // Cálculo de multas por retraso en la devolución si aplica
@@ -495,7 +494,8 @@ public class LoanService {
         for (Long modelId : toolModelsInLoan) {
             if (toolModelsInLoan.stream().filter(id -> id.equals(modelId)).count() > 1) {
                 throw new BusinessException("Customer " + customer.getName() +
-                        " can't have more than one tool of the same model ID: " + modelId + " in different loans");
+                        " can't have more than one tool of the same model ID: " + modelId +
+                        " in different loans");
             }
         }
 
@@ -528,8 +528,8 @@ public class LoanService {
      */
     private void validateLoanIsReturnable(LoanEntity loan) {
         if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
-            throw new BusinessException("Loan ID " + loan.getId() + " is not in a returnable status. Current status: " +
-                    loan.getLoanStatus().getName());
+            throw new BusinessException("Loan ID " + loan.getId() + " is not in a returnable status. " +
+                    "Current status: " + loan.getLoanStatus().getName());
         }
     }
 
@@ -541,8 +541,8 @@ public class LoanService {
      */
     private void validateLoanIsPayable(LoanEntity loan) {
         if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_OVERDUE)) {
-            throw new BusinessException("Loan ID " + loan.getId() + " is not in a payable status. Current status: " +
-                    loan.getLoanStatus().getName());
+            throw new BusinessException("Loan ID " + loan.getId() + " is not in a payable status. " +
+                    "Current status: " + loan.getLoanStatus().getName());
         }
     }
 
@@ -576,7 +576,8 @@ public class LoanService {
         BigDecimal payment = BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.CEILING);
 
         if (!totalDue.equals(payment)) {
-            throw new BusinessException("Payment amount $" + payment + " does not match total due $" + totalDue);
+            throw new BusinessException("Payment amount $" + payment + " does not match total due $"
+                    + totalDue);
         }
     }
 
