@@ -13,7 +13,6 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -449,15 +448,6 @@ public class LoanService {
         penalty.setPenaltyStatus(getPenaltyStatusByName(STATUS_PENALTY_ACTIVE));
         return penalty;
     };
-
-    private boolean doesLoanBelongToCustomer(LoanEntity loan, Long customerId) {
-        return !loan.getCustomerUser().getId().equals(customerId);
-    }
-
-    // TODO: Revisar uso de este metodo
-    private boolean isLoanStatusIn(LoanEntity loan, String statuses) {
-        return !statuses.contains(loan.getLoanStatus().getName());
-    }
 
     /**
      * Valida si un cliente es elegible para un nuevo préstamo.
