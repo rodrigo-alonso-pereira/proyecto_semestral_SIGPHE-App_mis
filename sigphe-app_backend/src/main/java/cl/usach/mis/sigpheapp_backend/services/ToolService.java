@@ -22,7 +22,18 @@ import java.util.Optional;
 @Service
 public class ToolService {
 
+    // Constantes de estados de herramientas
     private static final String STATUS_TOOL_AVAILABLE = "Disponible";
+    private static final String STATUS_TOOL_LOANED = "Prestada";
+    private static final String STATUS_TOOL_IN_REPAIR = "En Reparacion";
+    private static final String STATUS_TOOL_DECOMMISSIONED = "Dada de baja";
+
+    // Constantes de tipos de kardex
+    private static final String TYPE_KARDEX_ENTRY = "Ingreso";
+    private static final String TYPE_KARDEX_LOAN = "Prestamo";
+    private static final String TYPE_KARDEX_RETURN = "Devolucion";
+    private static final String TYPE_KARDEX_REPAIR = "Reparacion";
+    private static final String TYPE_KARDEX_DECOMMISSION = "Baja";
 
     @Autowired ToolRepository toolRepository;
     @Autowired ToolStatusRepository toolStatusRepository;
