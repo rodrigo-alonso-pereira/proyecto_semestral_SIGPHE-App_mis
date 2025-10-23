@@ -205,7 +205,7 @@ public class LoanService {
         LoanEntity loan = getLoanById(id);
 
         // Validaciones de negocio - lanzan excepciones si no cumplen
-        validateLoanBelongsToCustomer(loan, customer.getId());
+        validateLoanBelongsToCustomer(loan, customer);
         validateLoanIsReturnable(loan);
 
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
@@ -295,7 +295,7 @@ public class LoanService {
         LoanEntity loan = getLoanById(id);
 
         // Validaciones de negocio - lanzan excepciones si no cumplen
-        validateLoanBelongsToCustomer(loan, customer.getId());
+        validateLoanBelongsToCustomer(loan, customer);
         validateLoanIsPayable(loan);
         validatePaymentAmount(loan, dto.getPaymentAmount());
 
@@ -510,12 +510,13 @@ public class LoanService {
      * Valida que un préstamo pertenezca al cliente indicado.
      *
      * @param loan El préstamo a validar
-     * @param customerId El ID del cliente
+     * @param customer El cliente a validar
      * @throws BusinessException si el préstamo no pertenece al cliente
      */
-    private void validateLoanBelongsToCustomer(LoanEntity loan, Long customerId) {
-        if (!loan.getCustomerUser().getId().equals(customerId)) {
-            throw new BusinessException("Loan ID " + loan.getId() + " does not belong to customer ID " + customerId);
+    private void validateLoanBelongsToCustomer(LoanEntity loan, UserEntity customer) {
+        if (!loan.getCustomerUser().getId().equals(customer.getId())) {
+            throw new BusinessException("Loan ID " + loan.getId() + " does not belong to customer ID "
+                    + customer.getId() + ": " + customer.getName() );
         }
     }
 
