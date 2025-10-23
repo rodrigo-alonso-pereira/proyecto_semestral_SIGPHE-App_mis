@@ -44,18 +44,37 @@ public class ToolService {
     @Autowired KardexRepository kardexRepository;
     @Autowired KardexTypeRepository kardexTypeRepository;
 
+    // TODO: Solucionar problema N+1
+
+    /**
+     * Obtiene todas las herramientas
+     *
+     * @return Lista de ToolDTO
+     */
     public List<ToolDTO> getAllTools() {
         return toolRepository.findAll().stream()
                 .map(this::toToolDTO)
                 .toList();
     }
 
+    // TODO: Cambiar logica para obtener herramientas segun un estado solicitado
+    /**
+     * Obtiene todas las herramientas activas (Disponibles)
+     *
+     * @return Lista de ToolDTO
+     */
     public List<ToolDTO> getActiveTools() {
         return toolRepository.findAllByToolStatusIdEquals(getToolStatusByName(STATUS_TOOL_AVAILABLE).getId()).stream()
                 .map(this::toToolDTO)
                 .toList();
     }
 
+    /**
+     * Crea nuevas herramientas y agrega entradas al kardex
+     *
+     * @param dto Datos para crear herramientas
+     * @return Lista de ToolDTO creadas
+     */
     @Transactional
     public List<ToolDTO> createTool(CreateToolRequestDTO dto) {
         ToolCategoryEntity category = getToolCategoryById(dto.getToolCategoryId()); // Obtiene categoria
@@ -82,6 +101,13 @@ public class ToolService {
         return createdTools;
     }
 
+    /**
+     * Desactiva una herramienta y agrega una salida al kardex
+     *
+     * @param toolId ID de la herramienta a desactivar
+     * @param dto Datos para desactivar la herramienta
+     * @return ToolDTO desactivada
+     */
     @Transactional
     public ToolDTO deactivateTool(@NotNull Long toolId, DeactivateToolRequestDTO dto) {
         ToolEntity tool = getToolById(toolId);
@@ -97,11 +123,11 @@ public class ToolService {
         return toToolDTO(updatedTool);
     }
 
-    // TODO: Agregar MostUserToolDTO y desacoplar con la proyeccion
+
     /**
-     * Obtiene las herramientas mas usadas
+     * Obtiene las herramientas más usadas
      *
-     * @return Lista de proyecciones MostUsedToolProjection
+     * @return Lista de MostUsedToolDTO
      */
     public List<MostUsedToolDTO> getMostUsedTools() {
         List<MostUsedToolDTO> mostUsedTools = new ArrayList<>();
@@ -129,36 +155,86 @@ public class ToolService {
 
     /* Metodos auxiliares */
 
+    /**
+     * Obtiene una herramienta por su ID
+     *
+     * @param id ID de la herramienta
+     * @return ToolEntity
+     * @throws ResourceNotFoundException si la herramienta no existe
+     */
     private ToolEntity getToolById(Long id) {
         return toolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", id));
     }
 
+    /**
+     * Obtiene un estado de herramienta por su nombre
+     *
+     * @param name Nombre del estado
+     * @return ToolStatusEntity
+     * @throws ResourceNotFoundException si el estado no existe
+     */
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "name", name));
     }
 
+    /**
+     * Obtiene una categoria de herramienta por su ID
+     *
+     * @param id ID de la categoria
+     * @return ToolCategoryEntity
+     * @throws ResourceNotFoundException si la categoria no existe
+     */
     private ToolCategoryEntity getToolCategoryById(Long id) {
         return toolCategoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool Category", "id", id));
     }
 
+    /**
+     * Obtiene un usuario por su ID
+     *
+     * @param workerId ID del usuario
+     * @return UserEntity
+     * @throws ResourceNotFoundException si el usuario no existe
+     */
     private UserEntity getUserById(Long workerId) {
         return userRepository.findById(workerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", workerId));
     }
 
+    /**
+     * Obtiene un modelo por su ID
+     *
+     * @param id ID del modelo
+     * @return ModelEntity
+     * @throws ResourceNotFoundException si el modelo no existe
+     */
     private ModelEntity getModelById(Long id) {
         return modelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Model", "id", id));
     }
 
+    /**
+     * Obtiene un tipo de kardex por su nombre
+     *
+     * @param name Nombre del tipo de kardex
+     * @return KardexTypeEntity
+     * @throws ResourceNotFoundException si el tipo de kardex no existe
+     */
     private KardexTypeEntity getKardexTypeByName(String name) {
         return kardexTypeRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Kardex Type", "name", name));
     }
 
+    /**
+     * Agrega una entrada al kardex
+     *
+     * @param quantity Cantidad (positiva o negativa)
+     * @param tool Herramienta asociada
+     * @param type Tipo de kardex
+     * @param worker Usuario trabajador que realiza la accion
+     */
     private void addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
         KardexEntity kardexEntry = new KardexEntity();
         kardexEntry.setDateTime(LocalDateTime.now());
@@ -185,7 +261,12 @@ public class ToolService {
 
     /* Metodos Mapper */
 
-    // ToolEntity -> ToolDTO
+    /**
+     * Mapea una entidad ToolEntity a un DTO ToolDTO
+     *
+     * @param entity Entidad ToolEntity
+     * @return DTO ToolDTO
+     */
     private ToolDTO toToolDTO(ToolEntity entity) {
         Objects.requireNonNull(entity, "ToolEntity cannot be null");
         ToolDTO dto = new ToolDTO();
