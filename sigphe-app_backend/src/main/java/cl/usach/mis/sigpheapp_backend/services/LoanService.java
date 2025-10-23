@@ -614,14 +614,16 @@ public class LoanService {
         }
     }
 
-    /**  Válida si un préstamo está atrasado y actualiza el estado del cliente si es así.
+    /**
+     * Válida si un préstamo está atrasado y actualiza el estado del cliente si aplica.
      *
      * @param loan El préstamo a validar
      * @param customer El cliente asociado al préstamo
      * @throws BusinessException si el préstamo está atrasado
      */
     private void validateOverdueLoans(LoanEntity loan, UserEntity customer) {
-        if (loan.getDueDate().isBefore(LocalDateTime.now())) {
+        if (loan.getDueDate().isBefore(LocalDateTime.now()) &&
+                !(loan.getLoanStatus().getName().equals(STATUS_LOAN_FINISHED))) {
             userService.updateCostumerStatus(customer);
             throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
         }
