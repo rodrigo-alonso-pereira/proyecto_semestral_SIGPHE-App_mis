@@ -69,6 +69,7 @@ select
     l.total_rental as total,
     l.total_penalties as penalties,
     ls.name as loan_status,
+    u.id as customer_id,
     u.name as customer_name
 from loans l
 join users u on l.customer_user_id = u.id
@@ -76,9 +77,10 @@ join loan_statuses ls on l.loan_status_id = ls.id;
 
 -- Detalles de préstamos con herramienta y valor de renta en el momento del préstamo
 select
-    ld.id as id,
-    t.name as tool_name,
     l.id as loan_id,
+    ld.id as detail_id,
+    ld.tool_id as tool_id,
+    t.name as tool_name,
     ld.rental_value_at_time as rental_value
 from loans l
 join loan_details ld on l.id = ld.loan_id
@@ -86,11 +88,11 @@ join tools t on ld.tool_id = t.id;
 
 -- Penalidades con estado, tipo y usuario asociado
 select
-    p.id as id,
+    l.id as loan_id,
+    p.id as penalty_id,
     p.penalty_date as penalty_date,
     p.penalty_amount as amount,
     p.description as description,
-    l.id as loan_id,
     ps.name as penalty_status,
     pt.name as penalty_type
 from penalties p
