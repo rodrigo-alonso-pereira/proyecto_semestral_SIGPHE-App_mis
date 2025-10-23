@@ -52,9 +52,9 @@ public class ToolController {
     }
 
     @GetMapping("/most-borrowed/date-range")
-    public ResponseEntity<List<MostUsedToolProjection>> getMostBorrowedTools(
+    public ResponseEntity<List<MostUsedToolDTO>> getMostBorrowedTools(
             @Valid @RequestBody DateRangeRequestDTO request) {
-        List<MostUsedToolProjection> tools = toolService.getMostUsedToolsByDateRange(request.getStartDate(),
+        List<MostUsedToolDTO> tools = toolService.getMostUsedToolsByDateRange(request.getStartDate(),
                 request.getEndDate());
         return ResponseEntity.ok(tools);
     }
