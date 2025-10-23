@@ -25,7 +25,7 @@ public interface ToolRepository extends JpaRepository<ToolEntity, Long> {
             "join sigphe.brands b on m.brand_id = b.id  " +
             "group by ld.tool_id, t.id, m.id, b.id " +
             "order by usageCount desc " +
-            "limit 3",
+            "limit 5",
             nativeQuery = true)
     List<MostUsedToolProjection> findMostUsedTools();
 
@@ -43,7 +43,7 @@ public interface ToolRepository extends JpaRepository<ToolEntity, Long> {
             "where l.start_date between :startDate and :endDate " +
             "group by ld.tool_id, t.id, m.id, b.id " +
             "order by usageCount desc " +
-            "limit 3",
+            "limit 5",
             nativeQuery = true)
     List<MostUsedToolProjection> findMostUsedToolsBetweenDates(@NotNull LocalDateTime startDate,
                                                                @NotNull LocalDateTime endDate);
