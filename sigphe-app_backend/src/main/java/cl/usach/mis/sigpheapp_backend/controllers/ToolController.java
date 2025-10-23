@@ -1,9 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
-import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.*;
 import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
 import cl.usach.mis.sigpheapp_backend.services.ToolService;
 import jakarta.validation.Valid;
@@ -49,8 +46,8 @@ public class ToolController {
     }
 
     @GetMapping("/most-borrowed")
-    public ResponseEntity<List<MostUsedToolProjection>> getMostBorrowedTools() {
-        List<MostUsedToolProjection> tools = toolService.getMostUsedTools();
+    public ResponseEntity<List<MostUsedToolDTO>> getMostBorrowedTools() {
+        List<MostUsedToolDTO> tools = toolService.getMostUsedTools();
         return ResponseEntity.ok(tools);
     }
 

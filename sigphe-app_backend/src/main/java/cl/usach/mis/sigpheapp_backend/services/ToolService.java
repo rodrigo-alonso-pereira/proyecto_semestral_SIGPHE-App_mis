@@ -2,6 +2,7 @@ package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.MostUsedToolDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
@@ -97,8 +98,17 @@ public class ToolService {
     }
 
     // TODO: Agregar MostUserToolDTO y desacoplar con la proyeccion
-    public List<MostUsedToolProjection> getMostUsedTools() {
-        return toolRepository.findMostUsedTools();
+    /**
+     * Obtiene las herramientas mas usadas
+     *
+     * @return Lista de proyecciones MostUsedToolProjection
+     */
+    public List<MostUsedToolDTO> getMostUsedTools() {
+        List<MostUsedToolDTO> mostUsedTools = new ArrayList<>();
+        for (MostUsedToolProjection projection : toolRepository.findMostUsedTools()) {
+            mostUsedTools.add(toMostUsedToolDTO(projection));
+        }
+        return mostUsedTools;
     }
 
     // TODO: Agregar MostUserToolDTO y desacoplar con la proyeccion
@@ -182,6 +192,23 @@ public class ToolService {
         dto.setModel(Optional.ofNullable(entity.getModel())
                 .map(ModelEntity::getName)
                 .orElse("Unknown"));
+        return dto;
+    }
+
+    /**
+     * Mapea una proyeccion MostUsedToolProjection a un DTO MostUsedToolDTO
+     *
+     * @param projection Proyeccion MostUsedToolProjection
+     * @return DTO MostUsedToolDTO
+     */
+    private MostUsedToolDTO toMostUsedToolDTO(MostUsedToolProjection projection) {
+        Objects.requireNonNull(projection, "MostUsedToolProjection cannot be null");
+        MostUsedToolDTO dto = new MostUsedToolDTO();
+        dto.setToolId(projection.getToolId());
+        dto.setToolName(projection.getToolName());
+        dto.setToolModel(projection.getToolModel());
+        dto.setToolBrand(projection.getToolBrand());
+        dto.setUsageCount(projection.getUsageCount());
         return dto;
     }
 }
