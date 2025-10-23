@@ -84,17 +84,15 @@ public class ToolService {
     @Transactional
     public ToolDTO deactivateTool(@NotNull Long toolId, DeactivateToolRequestDTO dto) {
         ToolEntity tool = getToolById(toolId);
+        // TODO: Validar si el usuario es perfil trabajador
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene trabajador
 
-        // Solo se puede desactivar si la herramienta está "Disponible" o "En Reparacion"
-        if (!tool.getToolStatus().getName().equals("Disponible") &&
-            !tool.getToolStatus().getName().equals("En Reparacion")) {
-            throw new BusinessException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
-        }
+        isToolAvailableForDeactivation(tool); // Verifica si la herramienta puede ser desactivada
 
-        tool.setToolStatus(getToolStatusByName("Dada de baja")); // Cambia estado a Inactivo
+        tool.setToolStatus(getToolStatusByName(STATUS_TOOL_DECOMMISSIONED)); // tool -> Dada de baja
         ToolEntity updatedTool = toolRepository.save(tool);
-        addKardexEntry(-1, tool, getKardexTypeByName("Baja"), worker); // Agrega salida al kardex
+        // Agrega salida al kardex
+        addKardexEntry(-1, tool, getKardexTypeByName(TYPE_KARDEX_DECOMMISSION), worker);
         return toToolDTO(updatedTool);
     }
 
@@ -149,6 +147,19 @@ public class ToolService {
         kardexEntry.setKardexType(type);
         kardexEntry.setWorkerUser(worker);
         kardexRepository.save(kardexEntry);
+    }
+
+    /**
+     * Verifica si una herramienta puede ser desactivada
+     *
+     * @param tool Herramienta a verificar
+     * @throws BusinessException si la herramienta no puede ser desactivada
+     */
+    private void isToolAvailableForDeactivation(ToolEntity tool) {
+        String status = tool.getToolStatus().getName();
+        if (!status.equals(STATUS_TOOL_AVAILABLE) && !status.equals(STATUS_TOOL_IN_REPAIR)) {
+            throw new BusinessException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
+        }
     }
 
 
