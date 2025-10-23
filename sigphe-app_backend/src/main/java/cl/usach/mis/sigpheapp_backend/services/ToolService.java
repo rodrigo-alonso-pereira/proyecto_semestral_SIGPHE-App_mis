@@ -70,12 +70,12 @@ public class ToolService {
             newTool.setRentalValue(dto.getRentalValue());
             newTool.setToolCategory(category);
             newTool.setModel(model);
-            newTool.setToolStatus(getToolStatusByName("Disponible")); // Tool -> Disponible
+            newTool.setToolStatus(getToolStatusByName(STATUS_TOOL_AVAILABLE)); // Tool -> Disponible
             ToolEntity savedTool = toolRepository.save(newTool);
             createdTools.add(toToolDTO(savedTool));
 
             // Agrega entrada al kardex por cada herramienta creada
-            addKardexEntry(1, savedTool, getKardexTypeByName("Ingreso"), worker); // Agrega entrada al kardex
+            addKardexEntry(1, savedTool, getKardexTypeByName(TYPE_KARDEX_ENTRY), worker);
         }
 
         return createdTools;
