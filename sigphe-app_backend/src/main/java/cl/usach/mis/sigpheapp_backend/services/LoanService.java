@@ -312,14 +312,41 @@ public class LoanService {
         loan.setPaymentDate(LocalDateTime.now()); // Establecer la fecha de pago
         loan.setLoanStatus(getLoanStatusByName(STATUS_LOAN_FINISHED)); // Cambiar estado del préstamo
         loanRepository.save(loan); // Guardar el préstamo actualizado
-        customer.setUserStatus(getUserStatusByName(STATUS_USER_ACTIVE));// Cliente -> "Activo"
-        userRepository.save(customer); // Guardar el cliente actualizado
+
+        // Actualizar el estado del cliente si ya no tiene préstamos atrasados
+        if (!validateIfCustomerHasOverdueLoans(customer)) {
+            customer.setUserStatus(getUserStatusByName(STATUS_USER_ACTIVE));// Cliente -> "Activo"
+            userRepository.save(customer); // Guardar el cliente actualizado
+        }
         return toLoanDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
     // TODO: Hacer metodo para cambiar un prestamo por otro nuevo por error del operario
 
+    // TODO: Hacer metodo para buscar prestamos que esten atrasadas y cambiar el estado automaticamente
+
+    // TODO: Evaluar implementar estado Entregado para Loan cuando cliente devuelve
+    //  herramientas y Atrasado cuando se pasa la fecha de devolucion sin pagar
+
     /* Metodos auxiliares */
+
+    /**
+     * Válida si un cliente tiene préstamos atrasados.
+     *
+     * @param customer El cliente a validar
+     * @return true si el cliente tiene préstamos atrasados, false en caso contrario
+     */
+    private boolean validateIfCustomerHasOverdueLoans(UserEntity customer) {
+        List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId());
+        for (LoanEntity loan : loans) {
+            // Verificar si el préstamo está atrasado y en estado "Vigente" o "Atrasada"
+            if (loan.getDueDate().isBefore(LocalDateTime.now()) &&
+                    (loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE) ||
+                     loan.getLoanStatus().getName().equals(STATUS_LOAN_OVERDUE)))
+                return true; // El cliente tiene al menos un préstamo atrasado
+        }
+        return false; // El cliente no tiene préstamos atrasados
+    }
 
     /**
      * Obtiene una entidad LoanEntity por su ID.
