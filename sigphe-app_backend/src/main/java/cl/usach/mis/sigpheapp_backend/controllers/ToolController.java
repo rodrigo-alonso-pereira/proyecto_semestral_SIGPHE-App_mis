@@ -22,6 +22,7 @@ public class ToolController {
 
     @Autowired ToolService toolService;
 
+    // TODO: Solucionar problema N+1
     @GetMapping
     public ResponseEntity<List<ToolDTO>> getAll() {
         List<ToolDTO> tools = toolService.getAllTools();
