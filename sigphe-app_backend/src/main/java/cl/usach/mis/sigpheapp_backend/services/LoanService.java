@@ -248,6 +248,7 @@ public class LoanService {
         // Cálculo de multas por retraso en la devolución si aplica
         if (loan.getDueDate().isBefore(LocalDateTime.now())) { // Si la fecha actual es posterior a la fecha de vencimiento
             BigDecimal dailyRentalValue;
+
             // Evalúa que dias de alquiler sean mayor a 0
             if (Duration.between(loan.getStartDate(), loan.getDueDate()).toHours() <= 0) {
                 dailyRentalValue = loan.getTotalRental(); // Evitar division por cero
@@ -263,13 +264,18 @@ public class LoanService {
             long daysLate = (long) Math.ceil((double)
                     Duration.between(loan.getDueDate(), LocalDateTime.now()).toHours() / 24);
             if (daysLate <= 1) daysLate = 1; // Asegurar al menos un día de retraso
+
+            // Crear y calcular la multa por atraso
             PenaltyEntity latePenalty = createAndCalculatePenalty(TYPE_PENALTY_LATE,
                     (dailyRentalValue.multiply(BigDecimal.valueOf(daysLate)
                             .setScale(2, RoundingMode.CEILING)))); // Valor base = valorRentaDia * diasAtraso
+
             latePenalty.setLoan(loan); // Asociar la multa al préstamo
             penaltyRepository.save(latePenalty); // Guardar la multa
+
+            // TotalPenalties = Penalidades anteriores (si aplica) + multaAtraso
             loan.setTotalPenalties(loan.getTotalPenalties().add(latePenalty.getPenaltyAmount()
-                    .setScale(2, RoundingMode.CEILING))); // Actualizar total de multas del préstamo
+                    .setScale(2, RoundingMode.CEILING)));
         }
 
         loan.setReturnDate(LocalDateTime.now()); // Establecer la fecha de devolución
