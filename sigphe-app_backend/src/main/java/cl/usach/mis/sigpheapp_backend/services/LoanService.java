@@ -70,18 +70,37 @@ public class LoanService {
     @Autowired private UserStatusRepository userStatusRepository;
     @Autowired private UserService userService;
 
+    /**
+     * Obtiene un resumen de todos los préstamos.
+     *
+     * @return Lista de LoanDTO que representan los préstamos
+     */
     public List<LoanDTO> getAllLoansSummary() {
         return loanRepository.findAllWithRelations().stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene todos los préstamos que coinciden con los estados proporcionados.
+     *
+     * @param statuses Lista de nombres de estados de préstamo
+     * @return Lista de LoanDTO que representan los préstamos filtrados
+     */
     public List<LoanDTO> getAllLoansByStatuses(List<String> statuses) {
         return loanRepository.findByLoanStatusNameInWithRelations(statuses).stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene todos los préstamos que coinciden con los estados y rango de fechas proporcionados.
+     *
+     * @param statuses Lista de nombres de estados de préstamo
+     * @param startDate Fecha de inicio del rango
+     * @param endDate Fecha de fin del rango
+     * @return Lista de LoanDTO que representan los préstamos filtrados
+     */
     public List<LoanDTO> getAllLoansByStatusesAndDateRange(@NotEmpty @NotNull List<String> statuses,
                                                            @NotNull LocalDateTime startDate,
                                                            @NotNull LocalDateTime endDate) {
@@ -91,6 +110,13 @@ public class LoanService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Crea un nuevo préstamo basado en la información proporcionada.
+     *
+     * @param dto DTO que contiene la información para crear el préstamo
+     * @return LoanDTO que representa el préstamo creado
+     * @throws BusinessException si alguna validación de negocio falla
+     */
     @Transactional
     public LoanDTO createLoan(CreateLoanRequestDTO dto) {
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtener worker
@@ -165,8 +191,14 @@ public class LoanService {
         return toLoanDTO(finalLoan); // Convertir y retornar el DTO del préstamo creado
     }
 
-    // TODO: Evaluar cambios con metodos helper
-
+    /**
+     * Procesa la devolución de un préstamo.
+     *
+     * @param id ID del préstamo a devolver
+     * @param dto DTO que contiene la información para procesar la devolución
+     * @return LoanDTO que representa el préstamo actualizado
+     * @throws BusinessException si alguna validación de negocio falla
+     */
     @Transactional
     public LoanDTO processReturnLoan(@NotNull Long id, ReturnLoanRequestDTO dto) {
         UserEntity worker = getUserById(dto.getWorkerId());
@@ -237,6 +269,14 @@ public class LoanService {
         return toLoanDTO(loan); // Guardar y retornar el DTO del préstamo actualizado
     }
 
+    /**
+     * Procesa el pago de un préstamo.
+     *
+     * @param id ID del préstamo a pagar
+     * @param dto DTO que contiene la información para procesar el pago
+     * @return LoanDTO que representa el préstamo actualizado
+     * @throws BusinessException si alguna validación de negocio falla
+     */
     @Transactional
     public LoanDTO processPayment(@NotNull Long id, PaymentLoanRequestDTO dto) {
         UserEntity customer = getUserById(dto.getCustomerId());
@@ -264,51 +304,122 @@ public class LoanService {
 
     /* Metodos auxiliares */
 
+    /**
+     * Obtiene una entidad LoanEntity por su ID.
+     *
+     * @param loanId ID del préstamo
+     * @return LoanEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el préstamo
+     */
     private LoanEntity getLoanById(Long loanId) {
         return loanRepository.findById(loanId)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", loanId));
     }
 
+    /**
+     * Obtiene una entidad UserEntity por su ID.
+     *
+     * @param userId ID del usuario
+     * @return UserEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el usuario
+     */
     private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
+    /**
+     * Obtiene una entidad ToolEntity por su ID.
+     *
+     * @param toolId ID de la herramienta
+     * @return ToolEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra la herramienta
+     */
     private ToolEntity getToolById(Long toolId) {
         return toolRepository.findById(toolId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", toolId));
     }
 
+    /**
+     * Obtiene una entidad ToolStatusEntity por su nombre.
+     *
+     * @param name Nombre del estado de herramienta
+     * @return ToolStatusEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el estado
+     */
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "name", name));
     }
 
+    /**
+     * Obtiene una entidad LoanStatusEntity por su nombre.
+     *
+     * @param name Nombre del estado de préstamo
+     * @return LoanStatusEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el estado
+     */
     private LoanStatusEntity getLoanStatusByName(String name) {
         return loanStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan Status", "name", name));
     }
 
+    /**
+     * Obtiene una entidad KardexTypeEntity por su nombre.
+     *
+     * @param name Nombre del tipo de kardex
+     * @return KardexTypeEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el tipo
+     */
     private KardexTypeEntity getKardexTypeByName(String name) {
         return kardexTypeRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Kardex Type", "name", name));
     }
 
+    /**
+     * Obtiene una entidad PenaltyStatusEntity por su nombre.
+     *
+     * @param name Nombre del estado de multa
+     * @return PenaltyStatusEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el estado
+     */
     private PenaltyStatusEntity getPenaltyStatusByName(String name) {
         return penaltyStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Penalty Status", "name", name));
     }
 
+    /**
+     * Obtiene una entidad PenaltyTypeEntity por su nombre.
+     *
+     * @param name Nombre del tipo de multa
+     * @return PenaltyTypeEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el tipo
+     */
     private PenaltyTypeEntity getPenaltyTypeByName(String name) {
         return penaltyTypeRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Penalty Type", "name", name));
     }
 
+    /**
+     * Obtiene una entidad UserStatusEntity por su nombre.
+     *
+     * @param name Nombre del estado de usuario
+     * @return UserStatusEntity correspondiente
+     * @throws ResourceNotFoundException si no se encuentra el estado
+     */
     private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User Status", "name", name));
     }
 
+    /**
+     * Agrega una entrada al kardex.
+     *
+     * @param quantity Cantidad de herramientas (positiva o negativa)
+     * @param tool Herramienta asociada
+     * @param type Tipo de movimiento en kardex
+     * @param worker Usuario que realiza el movimiento
+     */
     private void addKardexEntry(int quantity, ToolEntity tool, KardexTypeEntity type, UserEntity worker) {
         KardexEntity kardexEntry = new KardexEntity();
         kardexEntry.setDateTime(LocalDateTime.now());
@@ -319,6 +430,13 @@ public class LoanService {
         kardexRepository.save(kardexEntry);
     }
 
+    /**
+     * Crea y calcula una multa basada en el tipo y valor proporcionados.
+     *
+     * @param penaltyTypeName Nombre del tipo de multa
+     * @param value Valor base para calcular la multa
+     * @return PenaltyEntity creada y calculada
+     */
     private PenaltyEntity createAndCalculatePenalty(String penaltyTypeName, BigDecimal value) {
         PenaltyEntity penalty = new PenaltyEntity();
         PenaltyTypeEntity penaltyType = getPenaltyTypeByName(penaltyTypeName);
@@ -473,7 +591,12 @@ public class LoanService {
 
     /* Metodos Mapper */
 
-    // LoanEntity -> LoanDTO
+    /**
+     * Convierte una entidad LoanEntity a su correspondiente DTO LoanDTO.
+     *
+     * @param loan La entidad LoanEntity a convertir
+     * @return El DTO LoanDTO resultante
+     */
     private LoanDTO toLoanDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
         LoanDTO dto = new LoanDTO();
