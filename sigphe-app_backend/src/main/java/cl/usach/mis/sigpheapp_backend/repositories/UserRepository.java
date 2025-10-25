@@ -21,9 +21,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "   u.email as userEmail, " +
             "   us.name as userStatus, " +
             "   ut.name as userType, " +
-            "   l.id as loanId, " +
-            "   ls.name as statusLoan, " +
-            "   l.due_date as dueDate " +
+            "   count(l.id) as totalOverdueLoans " +
             "from sigphe.users u " +
             "join sigphe.loans l on u.id = l.customer_user_id " +
             "join sigphe.loan_statuses ls on ls.id = l.loan_status_id " +
@@ -31,8 +29,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "join sigphe.user_types ut on ut.id = u.user_type_id " +
             "where (l.due_date between :startDate and :endDate) " +
             "and (ls.name = :statusLoanOverdue or ls.name = :statusLoanActive) " +
-            "order by l.due_date desc " +
-            "limit 3",
+            "group by u.name, u.email, us.name, ut.name " +
+            "order by totalOverdueLoans desc ",
             nativeQuery = true)
     List<ClientsWithDebtsProjection> findAllUserWithDebtsBetweenDates(@NotNull LocalDateTime startDate,
                                                                       @NotNull LocalDateTime endDate,

@@ -49,12 +49,12 @@ public class UserController {
     }
 
     @GetMapping("/with-debts/date-range")
-    public ResponseEntity<List<ClientsWithDebtsProjection>> getUsersWithDebts(
+    public ResponseEntity<List<ClientsWithDebtsDTO>> getUsersWithDebts(
             @Valid @RequestBody DateRangeRequestDTO request) {
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
-        List<ClientsWithDebtsProjection> users = userService.getAllUsersWithDebtsByDateRange(request.getStartDate(),
+        List<ClientsWithDebtsDTO> users = userService.getAllUsersWithDebtsByDateRange(request.getStartDate(),
                 request.getEndDate());
         return ResponseEntity.ok(users);
     }

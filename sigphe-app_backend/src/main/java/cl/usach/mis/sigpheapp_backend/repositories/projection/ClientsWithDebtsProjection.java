@@ -5,7 +5,5 @@ public interface ClientsWithDebtsProjection {
     String getUserEmail();
     String getUserStatus();
     String getUserType();
-    Long getLoanId();
-    String getStatusLoan();
-    String getDueDate();
+    Long getTotalOverdueLoans();
 }

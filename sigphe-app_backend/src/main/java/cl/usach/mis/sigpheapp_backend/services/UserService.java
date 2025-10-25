@@ -1,6 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
-import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.ClientsWithDebtsDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.entities.UserEntity;
 import cl.usach.mis.sigpheapp_backend.entities.UserStatusEntity;
@@ -70,10 +70,24 @@ public class UserService {
                 .toList();
     }
 
-    public List<ClientsWithDebtsProjection> getAllUsersWithDebtsByDateRange(@NotNull LocalDateTime startDate,
-                                                                            @NotNull LocalDateTime endDate) {
-        return userRepository.findAllUserWithDebtsBetweenDates(startDate, endDate,
-                        STATUS_LOAN_OVERDUE, STATUS_LOAN_ACTIVE);
+    /**
+     * Obtiene todos los usuarios con deudas en un rango de fechas.
+     *
+     * @param startDate Fecha de inicio del rango.
+     * @param endDate   Fecha de fin del rango.
+     * @return Lista de usuarios con deudas en el rango de fechas.
+     */
+    public List<ClientsWithDebtsDTO> getAllUsersWithDebtsByDateRange(@NotNull LocalDateTime startDate,
+                                                                     @NotNull LocalDateTime endDate) {
+        List<ClientsWithDebtsDTO> usersWithDebts = new ArrayList<>();
+        for (ClientsWithDebtsProjection projection : userRepository.findAllUserWithDebtsBetweenDates(
+                startDate,
+                endDate,
+                STATUS_LOAN_OVERDUE,
+                STATUS_LOAN_ACTIVE)) {
+            usersWithDebts.add(toClientsWithDebtsDTO(projection));
+        }
+        return usersWithDebts;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
