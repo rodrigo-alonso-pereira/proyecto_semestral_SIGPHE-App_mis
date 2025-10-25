@@ -62,7 +62,8 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // TODO: Revisar consulta para usuarios con deudas
+    // TODO: Refactorizar para igualar logica con UserService.getAllUsersWithDebtsByDateRange
+    //  decidir por una logica para los dos métodos
     /**
      * Obtiene todos los usuarios con deudas.
      *
