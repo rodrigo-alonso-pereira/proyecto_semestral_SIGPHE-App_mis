@@ -20,12 +20,24 @@ public class KardexService {
     @Autowired KardexRepository kardexRepository;
     @Autowired ToolRepository toolRepository;
 
+    /**
+     * Obtiene todas las entradas del kardex.
+     *
+     * @return Lista de KardexSummaryDTO que representan todas las entradas del kardex.
+     */
     public List<KardexSummaryDTO> getAllKardexEntries() {
         return kardexRepository.findAll().stream()
                 .map(this::toKardexDTO)
                 .toList();
     }
 
+    /**
+     * Obtiene las entradas del kardex para una herramienta específica.
+     *
+     * @param id ID de la herramienta.
+     * @return Lista de KardexSummaryDTO que representan las entradas del kardex para la herramienta especificada.
+     * @throws ResourceNotFoundException si la herramienta con el ID proporcionado no existe.
+     */
     public List<KardexSummaryDTO> getKardexEntriesByToolId(@NotNull Long id) {
         ToolEntity tool = getToolById(id);
         return kardexRepository.findAllByToolIdEqualsOrderByDateTimeDesc(tool.getId()).stream()
@@ -33,6 +45,13 @@ public class KardexService {
                 .toList();
     }
 
+    /**
+     * Obtiene las entradas del kardex dentro de un rango de fechas específico.
+     *
+     * @param startDate Fecha de inicio del rango.
+     * @param endDate Fecha de fin del rango.
+     * @return Lista de KardexSummaryDTO que representan las entradas del kardex dentro del rango de fechas especificado.
+     */
     public List<KardexSummaryDTO> getKardexEntriesByDateRange(@NotNull LocalDateTime startDate,
                                                               @NotNull LocalDateTime endDate) {
         return kardexRepository.findAllByDateTimeBetweenOrderByDateTimeDesc(startDate, endDate).stream()
@@ -40,6 +59,15 @@ public class KardexService {
                 .toList();
     }
 
+    /**
+     * Obtiene las entradas del kardex para una herramienta específica dentro de un rango de fechas.
+     *
+     * @param id ID de la herramienta.
+     * @param startDate Fecha de inicio del rango.
+     * @param endDate Fecha de fin del rango.
+     * @return Lista de KardexSummaryDTO que representan las entradas del kardex para la herramienta especificada dentro del rango de fechas.
+     * @throws ResourceNotFoundException si la herramienta con el ID proporcionado no existe.
+     */
     public List<KardexSummaryDTO> getKardexEntriesByToolIdAndDateRange(@NotNull Long id,
                                                                        @NotNull LocalDateTime startDate,
                                                                        @NotNull LocalDateTime endDate) {
@@ -50,12 +78,27 @@ public class KardexService {
     }
 
     /* Metodos auxiliares */
+
+    /**
+     * Obtiene una herramienta por su ID.
+     *
+     * @param id ID de la herramienta.
+     * @return ToolEntity correspondiente al ID proporcionado.
+     * @throws ResourceNotFoundException si la herramienta con el ID proporcionado no existe.
+     */
     private ToolEntity getToolById(Long id) {
         return toolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", id));
     }
 
     /* Mapper Layer */
+
+    /**
+     * Convierte una entidad KardexEntity a un DTO KardexSummaryDTO.
+     *
+     * @param kardex Entidad KardexEntity a convertir.
+     * @return KardexSummaryDTO correspondiente a la entidad proporcionada.
+     */
     private KardexSummaryDTO toKardexDTO(KardexEntity kardex) {
         Objects.requireNonNull(kardex, "KardexEntity cannot be null");
         KardexSummaryDTO dto = new KardexSummaryDTO();
