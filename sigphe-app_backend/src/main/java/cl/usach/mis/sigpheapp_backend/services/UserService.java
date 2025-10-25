@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,6 +33,7 @@ public class UserService {
     private static final String STATUS_LOAN_ACTIVE = "Vigente";
     private static final String STATUS_LOAN_OVERDUE = "Atrasada";
 
+    // Constantes de tipos de usuario
     private static final String TYPE_USER_COSTUMER = "Cliente";
     private static final String TYPE_USER_WORKER = "Trabajador";
 
@@ -39,33 +41,62 @@ public class UserService {
     @Autowired UserStatusRepository userStatusRepository;
     @Autowired UserTypeRepository userTypeRepository;
 
+    /**
+     * Obtiene todos los usuarios.
+     *
+     * @return Lista de usuarios.
+     */
     public List<UserSummaryDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toUserDTO)
                 .toList();
     }
 
+    /**
+     * Obtiene todos los clientes.
+     *
+     * @return Lista de clientes.
+     */
     public List<UserSummaryDTO> getAllCostumers() {
-        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_COSTUMER).getId()).stream()
+        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_COSTUMER)
+                .getId()).stream()
                 .map(this::toUserDTO)
                 .toList();
     }
 
+    /**
+     * Obtiene todos los clientes activos.
+     *
+     * @return Lista de clientes activos.
+     */
     public List<UserSummaryDTO> getActiveCostumers() {
         return userRepository.findAllByUserTypeIdEqualsAndUserStatusIdEquals(
-                getUserTypeByName(TYPE_USER_COSTUMER).getId(), getUserStatusByName(STATUS_USER_ACTIVE).getId()).stream()
+                getUserTypeByName(TYPE_USER_COSTUMER).getId(), getUserStatusByName(STATUS_USER_ACTIVE)
+                .getId()).stream()
                 .map(this::toUserDTO)
                 .toList();
     }
 
+    /**
+     * Obtiene todos los empleados.
+     *
+     * @return Lista de empleados.
+     */
     public List<UserSummaryDTO> getAllEmployees() {
-        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_WORKER).getId()).stream()
+        return userRepository.findAllByUserTypeIdEquals(getUserTypeByName(TYPE_USER_WORKER)
+                .getId()).stream()
                 .map(this::toUserDTO)
                 .toList();
     }
 
+    /**
+     * Obtiene todos los usuarios con deudas.
+     *
+     * @return Lista de usuarios con deudas.
+     */
     public List<UserSummaryDTO> getAllUsersWithDebts() {
-        return userRepository.findAllByUserStatusIdEquals(getUserStatusByName(STATUS_USER_WITH_DEBT).getId()).stream()
+        return userRepository.findAllByUserStatusIdEquals(getUserStatusByName(STATUS_USER_WITH_DEBT)
+                .getId()).stream()
                 .map(this::toUserDTO)
                 .toList();
     }
@@ -90,6 +121,11 @@ public class UserService {
         return usersWithDebts;
     }
 
+    /**
+     * Actualiza el estado de un cliente a "Con Deuda".
+     *
+     * @param customer Cliente a actualizar.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateCostumerStatus(UserEntity customer) {
         customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));
@@ -98,16 +134,34 @@ public class UserService {
 
     /* Metodos auxiliares */
 
+    /**
+     * Obtiene el estado de usuario por nombre.
+     *
+     * @param name Nombre del estado de usuario.
+     * @return Entidad de estado de usuario.
+     */
     private UserStatusEntity getUserStatusByName(String name) {
         return userStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User Status", "name", name));
     }
 
+    /**
+     * Obtiene el tipo de usuario por nombre.
+     *
+     * @param name Nombre del tipo de usuario.
+     * @return Entidad de tipo de usuario.
+     */
     private UserTypeEntity getUserTypeByName(String name) {
         return userTypeRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User Type", "name", name));
     }
 
+    /**
+     * Obtiene un usuario por su ID.
+     *
+     * @param userId ID del usuario.
+     * @return Entidad de usuario.
+     */
     private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -115,7 +169,12 @@ public class UserService {
 
     /* Mapper Layer */
 
-    // UserEntity -> UserSummaryDTO
+    /**
+     * Mapea una entidad de usuario a un DTO de resumen de usuario.
+     *
+     * @param user Entidad de usuario.
+     * @return DTO de resumen de usuario.
+     */
     private UserSummaryDTO toUserDTO(UserEntity user) {
         Objects.requireNonNull(user, "UserEntity cannot be null");
         UserSummaryDTO dto = new UserSummaryDTO();
@@ -128,6 +187,22 @@ public class UserService {
         dto.setUserType(Optional.ofNullable(user.getUserType())
                 .map(UserTypeEntity::getName)
                 .orElse("Unknown"));
+        return dto;
+    }
+
+    /**
+     * Mapea una proyección de usuarios con deudas a un DTO de usuarios con deudas.
+     *
+     * @param projection Proyección de usuarios con deudas.
+     * @return DTO de usuarios con deudas.
+     */
+    private ClientsWithDebtsDTO toClientsWithDebtsDTO(ClientsWithDebtsProjection projection) {
+        ClientsWithDebtsDTO dto = new ClientsWithDebtsDTO();
+        dto.setUserName(projection.getUserName());
+        dto.setUserEmail(projection.getUserEmail());
+        dto.setUserStatus(projection.getUserStatus());
+        dto.setUserType(projection.getUserType());
+        dto.setTotalOverdueLoans(projection.getTotalOverdueLoans());
         return dto;
     }
 }
