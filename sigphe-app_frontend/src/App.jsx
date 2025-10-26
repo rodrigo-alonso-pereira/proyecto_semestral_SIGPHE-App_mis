@@ -10,16 +10,21 @@ import NotFound from "./components/NotFound";
 
 function App() {
   return (
-    <Router>
+    <Router> {/* Gestor de rutas */}
       <div className="container">
         <Navbar></Navbar>
         <Routes>
+          {/* Rutas de home */}
           <Route path="/" element={<Home/>} />
           <Route path="/home" element={<Home/>} />
+          {/* Rutas de loans */}
           <Route path="/loan/list" element={<LoanList/>} />
           <Route path="/loan/add" element={<AddLoan/>} />
+          {/* Rutas de tools */}
           <Route path="/tool/list" element={<ToolList/>} />
+          {/* Rutas de kardex */}
           <Route path="/kardex/list" element={<KardexList/>} />
+          {/* Ruta 404 */}
           <Route path="*" element={<NotFound/>} />
         </Routes>
       </div>
