@@ -11,12 +11,15 @@ import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 
+{/* Componente de tipo funcion que muestra la lista de prestamos */}
 const LoanList = () => {
-  const [loans, setLoans] = useState([]);
+  {/* variable de estado -> [loans, setLoans] */}
+  const [loans, setLoans] = useState([]); {/* hook de estado para almacenar los prestamos */}
 
+  {/* Hook de navegacion entre paginas */}
   const navigate = useNavigate();
 
-  // Función para formatear fechas
+  {/* Función para formatear fechas */}
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     
@@ -29,7 +32,7 @@ const LoanList = () => {
     return `${day}/${month}/${year} ${hours}:00`;
   };
 
-  // Función para formatear valores monetarios
+  {/* Función para formatear valores monetarios */}
   const formatCurrency = (value) => {
     if (!value || value === 0) return '$0';
     
@@ -42,6 +45,7 @@ const LoanList = () => {
     }).format(number);
   };
 
+  {/* Función para inicializar el componente y cargar los prestamos */}
   const init = () => {
     loanService
       .getAll()
@@ -57,10 +61,12 @@ const LoanList = () => {
       });
   };
 
+  {/* Hook de efecto para cargar los prestamos al montar el componente */}
   useEffect(() => {
     init();
   }, []);
 
+  {/* Retorna el renderizado del componente */}
   return (
     <TableContainer component={Paper}>
       <br />
@@ -107,6 +113,7 @@ const LoanList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
+          {/* Itera sobre los prestamos y crea una fila por cada uno */}
           {loans.map((loan) => (
             <TableRow
               key={loan.id}
