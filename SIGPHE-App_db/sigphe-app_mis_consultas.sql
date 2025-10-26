@@ -43,20 +43,6 @@ join tool_categories tc on t.tool_category_id = tc.id
 join tool_statuses ts on t.tool_status_id = ts.id
 join models m on t.model_id = m.id;
 
--- Kardex
-select
-    k.id as id,
-    k.date_time as date_register,
-    t.id as tool_id,
-    t.name as tool_name,
-    k.quantity as quantity,
-    kt.name as kardex_type,
-    u.name as worker_name
-from kardex k
-join tools t on k.tool_id = t.id
-join kardex_types kt on k.kardex_type_id = kt.id
-join users u on k.worker_user_id = u.id;
-
 -- Loans
 select
     l.id as id,
@@ -98,6 +84,24 @@ join penalty_statuses ps on p.penalty_status_id = ps.id
 join penalty_types pt on p.penalty_type_id = pt.id
 join loans l on p.loan_id = l.id;
 
+-- Kardex
+select
+    k.id as id,
+    k.date_time as date_register,
+    t.id as tool_id,
+    t.name as tool_name,
+    k.quantity as quantity,
+    kt.name as kardex_type,
+    u.name as worker_name
+from kardex k
+         join tools t on k.tool_id = t.id
+         join kardex_types kt on k.kardex_type_id = kt.id
+         join users u on k.worker_user_id = u.id;
+
+---------------------------------
+-- CONSULTAS USADAS EN BACKEND
+---------------------------------
+
 -- Herramientas más prestadas en general
 select t.id as id, t.name as tool_name, m.name as model, b.name as brand, count(ld.tool_id) as quantity
 from loan_details ld
@@ -129,7 +133,7 @@ where l.due_date between '2025-09-20T23:25:11.271' and '2025-10-25T23:25:11.271'
 order by l.due_date desc;
 -- limit 3;
 
--- contar por cliente la cantidad de prestamos activos (vigentes y atrasados) que esten atrasados
+-- contar por cliente la cantidad de préstamos activos (vigentes y atrasados) que esten atrasados
 select u.name as userName, u.email as userEmail, us.name as userStatus, ut.name as userType, count(l.id) as totalOverdueLoans
 from users u
     join loans l on u.id = l.customer_user_id
