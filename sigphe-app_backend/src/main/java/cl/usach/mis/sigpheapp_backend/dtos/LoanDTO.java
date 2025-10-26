@@ -12,11 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class LoanDTO {
     private Long id;
-    private LocalDateTime startDate, returnDate;
-    private LocalDateTime dueDate;
-    private LocalDateTime paymentDate;
-    private BigDecimal totalAmount;
-    private BigDecimal totalPenalties;
-    private String loanStatus;
-    private String customerName;
+    private LocalDateTime startDate, returnDate, dueDate, paymentDate;
+    private BigDecimal totalAmount, totalPenalties;
+    private String loanStatus, customerName;
 }
