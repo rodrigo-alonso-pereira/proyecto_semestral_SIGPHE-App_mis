@@ -26,7 +26,7 @@ public class KardexService {
      * @return Lista de KardexSummaryDTO que representan todas las entradas del kardex.
      */
     public List<KardexSummaryDTO> getAllKardexEntries() {
-        return kardexRepository.findAll().stream()
+        return kardexRepository.findAllByOrderByDateTimeDesc().stream()
                 .map(this::toKardexDTO)
                 .toList();
     }
@@ -40,7 +40,7 @@ public class KardexService {
      */
     public List<KardexSummaryDTO> getKardexEntriesByToolId(@NotNull Long id) {
         ToolEntity tool = getToolById(id);
-        return kardexRepository.findAllByToolIdEqualsOrderByDateTimeDesc(tool.getId()).stream()
+        return kardexRepository.findAllByToolIdOrderByDateTimeDesc(tool.getId()).stream()
                 .map(this::toKardexDTO)
                 .toList();
     }
