@@ -10,6 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import AssignmentReturnedIcon from '@mui/icons-material/AssignmentReturned';
 
 const LoanList = () => {
   const [loans, setLoans] = useState([]);
@@ -61,6 +62,11 @@ const LoanList = () => {
     init();
   }, []);
 
+  const handleReturnLoan = (id) => {
+    console.log("Retornando préstamo con id:", id);
+    navigate(`/loan/return/${id}`);
+  };
+
   return (
     <TableContainer component={Paper}>
       <br />
@@ -104,6 +110,9 @@ const LoanList = () => {
             <TableCell align="left" sx={{ fontWeight: "bold" }}>
               Nombre del cliente
             </TableCell>
+            <TableCell align="left" sx={{ fontWeight: "bold" }}>
+              Acciones
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -120,6 +129,21 @@ const LoanList = () => {
               <TableCell align="right">{formatCurrency(loan.totalPenalties)}</TableCell>
               <TableCell align="center">{loan.loanStatus}</TableCell>
               <TableCell align="center">{loan.customerName}</TableCell>
+              <TableCell>
+                <Button
+                  variant="contained"
+                  color="info"
+                  size="small"
+                  onClick={() => handleReturnLoan(loan.id)}
+                  style={{ marginLeft: "0.5rem" }}
+                  startIcon={<AssignmentReturnedIcon />}
+                >
+                  Retornar
+                </Button>
+
+                
+              </TableCell>
+              
             </TableRow>
           ))}
         </TableBody>

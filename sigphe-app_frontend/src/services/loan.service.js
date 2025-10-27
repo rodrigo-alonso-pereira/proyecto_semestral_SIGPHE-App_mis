@@ -17,6 +17,11 @@ const getActiveLoansDateRange = data => {
     return httpClient.get("/api/v1/loans/active/date-range", data);
 }
 
+// Obtener prestamo con sus detalles
+const getLoanDetails = id => {
+    return httpClient.get(`/api/v1/loans/${id}/detail`);
+}
+
 // Crear un nuevo préstamo
 const create = data => {
     return httpClient.post("/api/v1/loans", data);
@@ -32,4 +37,4 @@ const makePayment = (id, data) => {
     return httpClient.put(`/api/v1/loans/${id}/payment`, data);
 }
 
-export default { getAll, create, getActiveLoans, getActiveLoansDateRange, returnLoan, makePayment };
+export default { getAll, create, getActiveLoans, getActiveLoansDateRange, getLoanDetails, returnLoan, makePayment };
