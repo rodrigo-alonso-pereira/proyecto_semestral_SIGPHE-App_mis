@@ -1,9 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
-import cl.usach.mis.sigpheapp_backend.dtos.CreateLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.LoanDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.PaymentLoanRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.ReturnLoanRequestDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.*;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
 import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
@@ -59,6 +56,7 @@ public class LoanService {
     @Autowired private LoanRepository loanRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private LoanStatusRepository loanStatusRepository;
+    @Autowired private LoanDetailRepository loanDetailRepository;
     @Autowired private ToolRepository toolRepository;
     @Autowired private ToolStatusRepository toolStatusRepository;
     @Autowired private KardexTypeRepository kardexTypeRepository;
@@ -107,6 +105,26 @@ public class LoanService {
                         startDate, endDate).stream()
                 .map(this::toLoanDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtiene los detalles de un préstamo por su ID.
+     *
+     * @param id ID del préstamo
+     * @return LoanDetailDTO que representa los detalles del préstamo
+     * @throws ResourceNotFoundException si no se encuentra el préstamo
+     */
+    public LoanDetailDTO getLoanDetailById(@NotNull Long id) {
+        LoanEntity loan = getLoanById(id); // Obtener la entidad Loan
+        List<LoanDetailEntity> loanDetails = getLoanDetailsByLoanId(id); // Obtener detalles del préstamo
+        List<ToolDTO> tools = new ArrayList<>();
+        for (LoanDetailEntity detail : loanDetails) {
+            // Aprovechar el fetch eager de LoanDetail -> Tool (@ManyToOne) para evitar consultas adicionales
+            tools.add(toToolDTO(detail.getTool())); // Obtiene el DTO de la herramienta asociada al detalle
+        }
+        LoanDetailDTO loanDetailDTO = toLoanDetailDTO(loan); // Convierte LoanEntity a LoanDetailDTO
+        loanDetailDTO.setTools(tools);
+        return loanDetailDTO;
     }
 
     /**
@@ -384,6 +402,10 @@ public class LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", toolId));
     }
 
+    private List<LoanDetailEntity> getLoanDetailsByLoanId(Long loanId) {
+        return loanDetailRepository.findAllByLoanIdEquals(loanId);
+    }
+
     /**
      * Obtiene una entidad ToolStatusEntity por su nombre.
      *
@@ -640,6 +662,58 @@ public class LoanService {
     private LoanDTO toLoanDTO(LoanEntity loan) {
         Objects.requireNonNull(loan, "LoanEntity cannot be null");
         LoanDTO dto = new LoanDTO();
+        dto.setId(loan.getId());
+        dto.setStartDate(loan.getStartDate());
+        dto.setReturnDate(loan.getReturnDate());
+        dto.setDueDate(loan.getDueDate());
+        dto.setPaymentDate(loan.getPaymentDate());
+        dto.setTotalAmount(loan.getTotalRental());
+        dto.setTotalPenalties(loan.getTotalPenalties());
+        // loanStatus y customerName pueden ser null, por eso se usa Optional
+        dto.setLoanStatus(Optional.ofNullable(loan.getLoanStatus())
+                .map(LoanStatusEntity::getName)
+                .orElse("Unknown"));
+        dto.setCustomerName(Optional.ofNullable(loan.getCustomerUser())
+                .map(UserEntity::getName)
+                .orElse("Unknown"));
+        return dto;
+    }
+
+    /**
+     * Convierte una entidad ToolEntity a su correspondiente DTO ToolDTO.
+     *
+     * @param tool La entidad ToolEntity a convertir
+     * @return El DTO ToolDTO resultante
+     */
+    private ToolDTO toToolDTO(ToolEntity tool) {
+        Objects.requireNonNull(tool, "ToolEntity cannot be null");
+        ToolDTO dto = new ToolDTO();
+        dto.setId(tool.getId());
+        dto.setName(tool.getName());
+        dto.setRentalValue(tool.getRentalValue());
+        dto.setReplacementValue(tool.getReplacementValue());
+        // category, model y status pueden ser null, por eso se usa Optional
+        dto.setCategory(Optional.ofNullable(tool.getToolCategory())
+                .map(ToolCategoryEntity::getName)
+                .orElse("Unknown"));
+        dto.setModel(Optional.ofNullable(tool.getModel())
+                .map(ModelEntity::getName)
+                .orElse("Unknown"));
+        dto.setStatus(Optional.ofNullable(tool.getToolStatus())
+                .map(ToolStatusEntity::getName)
+                .orElse("Unknown"));
+        return dto;
+    }
+
+    /**
+     * Convierte una entidad LoanEntity a su correspondiente DTO LoanDetailDTO.
+     *
+     * @param loan La entidad LoanEntity a convertir
+     * @return El DTO LoanDetailDTO resultante
+     */
+    private LoanDetailDTO toLoanDetailDTO(LoanEntity loan) {
+        Objects.requireNonNull(loan, "LoanEntity cannot be null");
+        LoanDetailDTO dto = new LoanDetailDTO();
         dto.setId(loan.getId());
         dto.setStartDate(loan.getStartDate());
         dto.setReturnDate(loan.getReturnDate());
