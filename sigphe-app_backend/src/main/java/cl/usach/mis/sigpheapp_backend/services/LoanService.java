@@ -117,13 +117,15 @@ public class LoanService {
     public LoanDetailDTO getLoanDetailById(@NotNull Long id) {
         LoanEntity loan = getLoanById(id); // Obtener la entidad Loan
         List<LoanDetailEntity> loanDetails = getLoanDetailsByLoanId(id); // Obtener detalles del préstamo
+        UserEntity customer = loan.getCustomerUser(); // Obtener el cliente asociado al préstamo
         List<ToolDTO> tools = new ArrayList<>();
         for (LoanDetailEntity detail : loanDetails) {
             // Aprovechar el fetch eager de LoanDetail -> Tool (@ManyToOne) para evitar consultas adicionales
             tools.add(toToolDTO(detail.getTool())); // Obtiene el DTO de la herramienta asociada al detalle
         }
         LoanDetailDTO loanDetailDTO = toLoanDetailDTO(loan); // Convierte LoanEntity a LoanDetailDTO
-        loanDetailDTO.setTools(tools);
+        loanDetailDTO.setTools(tools); // Asigna la lista de herramientas al DTO
+        loanDetailDTO.setCustomer(toUserLoanDTO(customer)); // Asigna el cliente al DTO
         return loanDetailDTO;
     }
 
@@ -725,9 +727,21 @@ public class LoanService {
         dto.setLoanStatus(Optional.ofNullable(loan.getLoanStatus())
                 .map(LoanStatusEntity::getName)
                 .orElse("Unknown"));
-        dto.setCustomerName(Optional.ofNullable(loan.getCustomerUser())
-                .map(UserEntity::getName)
-                .orElse("Unknown"));
+        return dto;
+    }
+
+    /**
+     * Convierte una entidad UserEntity a su correspondiente DTO UserLoanDTO.
+     *
+     * @param customer La entidad UserEntity a convertir
+     * @return El DTO UserLoanDTO resultante
+     */
+    private UserLoanDTO toUserLoanDTO(UserEntity customer) {
+        Objects.requireNonNull(customer, "UserEntity cannot be null");
+        UserLoanDTO dto = new UserLoanDTO();
+        dto.setId(customer.getId());
+        dto.setName(customer.getName());
+        dto.setEmail(customer.getEmail());
         return dto;
     }
 }

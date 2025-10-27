@@ -15,6 +15,7 @@ public class LoanDetailDTO {
     private Long id;
     private LocalDateTime startDate, returnDate, dueDate, paymentDate;
     private BigDecimal totalAmount, totalPenalties;
-    private String loanStatus, customerName;
+    private String loanStatus;
+    private UserLoanDTO customer;
     private List<ToolDTO> tools;
 }
