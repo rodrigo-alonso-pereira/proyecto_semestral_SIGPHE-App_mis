@@ -96,7 +96,9 @@ select
 from kardex k
          join tools t on k.tool_id = t.id
          join kardex_types kt on k.kardex_type_id = kt.id
-         join users u on k.worker_user_id = u.id;
+         join users u on k.worker_user_id = u.id
+order by k.date_time desc;
+
 
 ---------------------------------
 -- CONSULTAS USADAS EN BACKEND
