@@ -51,6 +51,12 @@ public class LoanController {
         return ResponseEntity.ok(loans);
     }
 
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<LoanDetailDTO> getLoanDetailById(@PathVariable @NotNull Long id) {
+        LoanDetailDTO loan = loanService.getLoanDetailById(id);
+        return ResponseEntity.ok(loan);
+    }
+
     @PostMapping
     public ResponseEntity<LoanDTO> createLoan(@Valid @RequestBody CreateLoanRequestDTO request) {
         LoanDTO createdLoan = loanService.createLoan(request);

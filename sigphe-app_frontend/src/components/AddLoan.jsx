@@ -9,8 +9,6 @@ import MenuItem from "@mui/material/MenuItem";
 import SaveIcon from "@mui/icons-material/Save";
 import toolService from "../services/tool.service";
 import userService from "../services/user.service";
-import Select from "@mui/material/Select";
-import Chip from "@mui/material/Chip";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -216,7 +214,7 @@ const AddLoan = () => {
         </FormControl>
       </Box>
       <hr style={{ width: '100%', marginTop: '2rem' }} />
-      <Link to="/employee/list">Volver a lista de Prestamos</Link>
+      <Link to="/loan/list">Volver a lista de Prestamos</Link>
     </Box>
   );
 };
