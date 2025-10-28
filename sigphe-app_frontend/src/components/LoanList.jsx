@@ -19,15 +19,10 @@ import CheckIcon from "@mui/icons-material/Check";
 
 {/* Componente de tipo funcion que muestra la lista de prestamos */}
 const LoanList = () => {
-<<<<<<< HEAD
-  {/* variable de estado -> [loans, setLoans] */}
-  const [loans, setLoans] = useState([]); {/* hook de estado para almacenar los prestamos */}
-=======
   const [loans, setLoans] = useState([]);
   const [customers, setCustomers] = useState([]);
 
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
->>>>>>> improve-frontend
 
   {/* Hook de navegacion entre paginas */}
   const navigate = useNavigate();
@@ -35,20 +30,20 @@ const LoanList = () => {
   {/* Función para formatear fechas */}
   const formatDate = (dateString) => {
     if (!dateString) return "-";
-    
+
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, "0");
-    
+
     return `${day}/${month}/${year} ${hours}:00`;
   };
 
   {/* Función para formatear valores monetarios */}
   const formatCurrency = (value) => {
     if (!value || value === 0) return "$0";
-    
+
     const number = parseFloat(value);
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
@@ -89,9 +84,6 @@ const LoanList = () => {
     init();
   }, []);
 
-<<<<<<< HEAD
-  {/* Retorna el renderizado del componente */}
-=======
   const handleReturnLoan = (id) => {
     console.log("Retornando préstamo con id:", id);
     navigate(`/loan/return/${id}`);
@@ -155,7 +147,6 @@ const LoanList = () => {
     }
   };
 
->>>>>>> improve-frontend
   return (
     <TableContainer component={Paper}>
       {showSuccessAlert && (
