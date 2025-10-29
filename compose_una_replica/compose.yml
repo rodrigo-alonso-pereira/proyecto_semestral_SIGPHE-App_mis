@@ -1,0 +1,22 @@
+# Docker Compose: Configuracion para una instancia de SIGPHE-App
+
+services:
+  frontend:
+    container_name: sigphe-app_frontend
+    image: rodrigoalonsocl/sigphe-app_frontend:latest
+    ports:
+      - "8070:80"
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    container_name: sigphe-app_backend
+    image: rodrigoalonsocl/sigphe-app_backend:latest
+    ports:
+      - "8090:8090"
+    environment:
+      - DB_HOST=192.168.1.11
+    deploy:
+      restart_policy:
+        condition: on-failure
