@@ -6,15 +6,11 @@ import Divider from "@mui/material/Divider";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import PaidIcon from "@mui/icons-material/Paid";
-import CalculateIcon from "@mui/icons-material/Calculate";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import DiscountIcon from "@mui/icons-material/Discount";
-import HailIcon from "@mui/icons-material/Hail";
-import MedicationLiquidIcon from "@mui/icons-material/MedicationLiquid";
-import MoreTimeIcon from "@mui/icons-material/MoreTime";
 import HomeIcon from "@mui/icons-material/Home";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import BuildIcon from "@mui/icons-material/Build";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { useNavigate } from "react-router-dom";
 
 export default function Sidemenu({ open, toggleDrawer }) {
@@ -34,28 +30,28 @@ export default function Sidemenu({ open, toggleDrawer }) {
 
         <ListItemButton onClick={() => navigate("/loan/list")}>
           <ListItemIcon>
-            <PeopleAltIcon />
+            <HandshakeIcon />
           </ListItemIcon>
           <ListItemText primary="Prestamos" />
         </ListItemButton>
 
         <ListItemButton onClick={() => navigate("/tool/list")}>
           <ListItemIcon>
-            <MoreTimeIcon />
+            <BuildIcon />
           </ListItemIcon>
           <ListItemText primary="Herramientas" />
         </ListItemButton>
 
         <ListItemButton onClick={() => navigate("/Kardex/list")}>
           <ListItemIcon>
-            <PaidIcon />
+            <InventoryIcon />
           </ListItemIcon>
           <ListItemText primary="Registro movimientos herramientas" />
         </ListItemButton>
 
-        <ListItemButton onClick={() => navigate("/reporte/list")}>
+        <ListItemButton onClick={() => navigate("/report/list")}>
           <ListItemIcon>
-            <CalculateIcon />
+            <AssessmentIcon />
           </ListItemIcon>
           <ListItemText primary="Reporte de Prestamos" />
         </ListItemButton>
