@@ -323,27 +323,37 @@ const KardexList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {kardexs.map((kardex) => (
-            <TableRow
-              key={kardex.id}
-              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-            >
-              <TableCell align="center">
-                {formatDate(kardex.registrationDate)}
+          {kardexs.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} align="center" sx={{ padding: 4 }}>
+                <Alert severity="info">
+                  No hay datos para los filtros seleccionados
+                </Alert>
               </TableCell>
-              <TableCell align="center">{kardex.quantity}</TableCell>
-              <TableCell align="center">{kardex.toolId}</TableCell>
-              <TableCell align="center">{kardex.toolName}</TableCell>
-              <TableCell align="center">
-                <Chip
-                  label={kardex.kardexTypeName}
-                  color={getStatusColor(kardex.kardexTypeName)}
-                  size="small"
-                />
-              </TableCell>
-              <TableCell align="center">{kardex.workerName}</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            kardexs.map((kardex) => (
+              <TableRow
+                key={kardex.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell align="center">
+                  {formatDate(kardex.registrationDate)}
+                </TableCell>
+                <TableCell align="center">{kardex.quantity}</TableCell>
+                <TableCell align="center">{kardex.toolId}</TableCell>
+                <TableCell align="center">{kardex.toolName}</TableCell>
+                <TableCell align="center">
+                  <Chip
+                    label={kardex.kardexTypeName}
+                    color={getStatusColor(kardex.kardexTypeName)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="center">{kardex.workerName}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       </TableContainer>

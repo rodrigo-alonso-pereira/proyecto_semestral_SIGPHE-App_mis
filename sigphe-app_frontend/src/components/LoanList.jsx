@@ -10,9 +10,12 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import AssignmentReturnedIcon from "@mui/icons-material/AssignmentReturned";
 import PaidIcon from "@mui/icons-material/Paid";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Chip from "@mui/material/Chip";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
@@ -26,6 +29,7 @@ const LoanList = () => {
   const [customers, setCustomers] = useState([]);
 
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showingActiveOnly, setShowingActiveOnly] = useState(false);
 
   {
     /* Hook de navegacion entre paginas */
@@ -71,6 +75,7 @@ const LoanList = () => {
       .then((response) => {
         console.log("Mostrando listado de todos los prestamos.", response.data);
         setLoans(response.data);
+        setShowingActiveOnly(false);
       })
       .catch((error) => {
         console.log(
@@ -87,6 +92,23 @@ const LoanList = () => {
       })
       .catch((error) => {
         console.log("Error al cargar clientes:", error);
+      });
+  };
+
+  // Función para cargar solo préstamos activos
+  const loadActiveLoans = () => {
+    loanService
+      .getActiveLoans()
+      .then((response) => {
+        console.log("Mostrando listado de préstamos activos.", response.data);
+        setLoans(response.data);
+        setShowingActiveOnly(true);
+      })
+      .catch((error) => {
+        console.log(
+          "Se ha producido un error al intentar mostrar listado de préstamos activos.",
+          error
+        );
       });
   };
 
@@ -190,19 +212,43 @@ const LoanList = () => {
         </Alert>
       )}
       <br />
-      <Link
-        to="/loan/add"
-        style={{ textDecoration: "none", marginBottom: "1rem" }}
-      >
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddCircleRoundedIcon />}
-        >
-          Añadir Prestamo
-        </Button>
-      </Link>
-      <br /> <br />
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
+        <Link to="/loan/add" style={{ textDecoration: "none" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddCircleRoundedIcon />}
+          >
+            Añadir Prestamo
+          </Button>
+        </Link>
+        
+        {!showingActiveOnly ? (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<FilterListIcon />}
+            onClick={loadActiveLoans}
+          >
+            Mostrar Préstamos Activos
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<RefreshIcon />}
+            onClick={init}
+          >
+            Mostrar Todos los Préstamos
+          </Button>
+        )}
+      </Box>
+      {showingActiveOnly && (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          Mostrando solo préstamos activos (Vigente o Atrasado)
+        </Alert>
+      )}
+      <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>

@@ -9,13 +9,18 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 const ToolList = () => {
   const [tools, setTools] = useState([]);
+  const [showingActiveOnly, setShowingActiveOnly] = useState(false);
 
   const navigate = useNavigate();
 
@@ -41,10 +46,28 @@ const ToolList = () => {
           response.data
         );
         setTools(response.data);
+        setShowingActiveOnly(false);
       })
       .catch((error) => {
         console.log(
           "Se ha producido un error al intentar mostrar listado de todas las herramientas.",
+          error
+        );
+      });
+  };
+
+  // Función para cargar solo herramientas activas
+  const loadActiveTools = () => {
+    toolService
+      .getActiveTools()
+      .then((response) => {
+        console.log("Mostrando listado de herramientas activas.", response.data);
+        setTools(response.data);
+        setShowingActiveOnly(true);
+      })
+      .catch((error) => {
+        console.log(
+          "Se ha producido un error al intentar mostrar listado de herramientas activas.",
           error
         );
       });
@@ -99,19 +122,43 @@ const ToolList = () => {
   return (
     <TableContainer component={Paper}>
       <br />
-      <Link
-        to="/tool/add"
-        style={{ textDecoration: "none", marginBottom: "1rem" }}
-      >
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddCircleRoundedIcon />}
-        >
-          Añadir Herramienta
-        </Button>
-      </Link>
-      <br /> <br />
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
+        <Link to="/tool/add" style={{ textDecoration: "none" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddCircleRoundedIcon />}
+          >
+            Añadir Herramienta
+          </Button>
+        </Link>
+        
+        {!showingActiveOnly ? (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<FilterListIcon />}
+            onClick={loadActiveTools}
+          >
+            Mostrar Herramientas Activas
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<RefreshIcon />}
+            onClick={init}
+          >
+            Mostrar Todas las Herramientas
+          </Button>
+        )}
+      </Box>
+      {showingActiveOnly && (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          Mostrando solo herramientas activas (Disponible)
+        </Alert>
+      )}
+      <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>

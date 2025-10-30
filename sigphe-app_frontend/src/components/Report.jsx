@@ -314,35 +314,45 @@ const ReportList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {loans.map((loan) => (
-            <TableRow
-              key={loan.id}
-              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-            >
-              <TableCell align="center">{formatDate(loan.startDate)}</TableCell>
-              <TableCell align="center">
-                {formatDate(loan.returnDate)}
+          {loans.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} align="center" sx={{ padding: 4 }}>
+                <Alert severity="info">
+                  No hay datos para los filtros seleccionados
+                </Alert>
               </TableCell>
-              <TableCell align="center">{formatDate(loan.dueDate)}</TableCell>
-              <TableCell align="center">
-                {formatDate(loan.paymentDate)}
-              </TableCell>
-              <TableCell align="center">
-                {formatCurrency(loan.totalAmount)}
-              </TableCell>
-              <TableCell align="center">
-                {formatCurrency(loan.totalPenalties)}
-              </TableCell>
-              <TableCell align="center">
-                <Chip
-                  label={loan.loanStatus}
-                  color={getStatusColor(loan.loanStatus)}
-                  size="small"
-                />
-              </TableCell>
-              <TableCell align="center">{loan.customerName}</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            loans.map((loan) => (
+              <TableRow
+                key={loan.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell align="center">{formatDate(loan.startDate)}</TableCell>
+                <TableCell align="center">
+                  {formatDate(loan.returnDate)}
+                </TableCell>
+                <TableCell align="center">{formatDate(loan.dueDate)}</TableCell>
+                <TableCell align="center">
+                  {formatDate(loan.paymentDate)}
+                </TableCell>
+                <TableCell align="center">
+                  {formatCurrency(loan.totalAmount)}
+                </TableCell>
+                <TableCell align="center">
+                  {formatCurrency(loan.totalPenalties)}
+                </TableCell>
+                <TableCell align="center">
+                  <Chip
+                    label={loan.loanStatus}
+                    color={getStatusColor(loan.loanStatus)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="center">{loan.customerName}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       <br />
@@ -366,23 +376,33 @@ const ReportList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {customers.map((customer) => (
-            <TableRow
-              key={customer.id}
-              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-            >
-              <TableCell align="center">{customer.name}</TableCell>
-              <TableCell align="center">{customer.email}</TableCell>
-              <TableCell align="center">
-                <Chip
-                  label={customer.status}
-                  color={getStatusClientColor(customer.status)}
-                  size="small"
-                />
+          {customers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} align="center" sx={{ padding: 4 }}>
+                <Alert severity="info">
+                  No hay datos para los filtros seleccionados
+                </Alert>
               </TableCell>
-              <TableCell align="center">{customer.totalOverdueLoans}</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            customers.map((customer) => (
+              <TableRow
+                key={customer.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell align="center">{customer.name}</TableCell>
+                <TableCell align="center">{customer.email}</TableCell>
+                <TableCell align="center">
+                  <Chip
+                    label={customer.status}
+                    color={getStatusClientColor(customer.status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="center">{customer.totalOverdueLoans}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       <br />
@@ -409,18 +429,28 @@ const ReportList = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {tools.map((tool) => (
-            <TableRow
-              key={tool.id}
-              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-            >
-              <TableCell align="center">{tool.id}</TableCell>
-              <TableCell align="center">{tool.name}</TableCell>
-              <TableCell align="center">{tool.brand}</TableCell>
-              <TableCell align="center">{tool.model}</TableCell>
-              <TableCell align="center">{tool.usageCount}</TableCell>
+          {tools.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ padding: 4 }}>
+                <Alert severity="info">
+                  No hay datos para los filtros seleccionados
+                </Alert>
+              </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            tools.map((tool) => (
+              <TableRow
+                key={tool.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell align="center">{tool.id}</TableCell>
+                <TableCell align="center">{tool.name}</TableCell>
+                <TableCell align="center">{tool.brand}</TableCell>
+                <TableCell align="center">{tool.model}</TableCell>
+                <TableCell align="center">{tool.usageCount}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
       </TableContainer>
