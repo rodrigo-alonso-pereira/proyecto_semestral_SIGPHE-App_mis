@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ToolModelsDTO {
     private Long id;
-    private String modelName;
+    private String name;
 }

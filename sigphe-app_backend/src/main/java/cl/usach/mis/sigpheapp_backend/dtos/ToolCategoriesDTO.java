@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ToolCategoriesDTO {
     private Long id;
-    private String categoryName;
+    private String name;
 }

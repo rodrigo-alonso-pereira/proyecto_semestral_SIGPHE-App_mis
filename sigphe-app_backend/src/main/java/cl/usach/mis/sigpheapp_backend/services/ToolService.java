@@ -397,7 +397,7 @@ public class ToolService {
         Objects.requireNonNull(entity, "ToolStatusEntity cannot be null");
         ToolStatusDTO dto = new ToolStatusDTO();
         dto.setId(entity.getId());
-        dto.setStatusName(entity.getName());
+        dto.setName(entity.getName());
         return dto;
     }
 
@@ -405,7 +405,7 @@ public class ToolService {
         Objects.requireNonNull(entity, "ToolCategoryEntity cannot be null");
         ToolCategoriesDTO dto = new ToolCategoriesDTO();
         dto.setId(entity.getId());
-        dto.setCategoryName(entity.getName());
+        dto.setName(entity.getName());
         return dto;
     }
 
@@ -413,7 +413,7 @@ public class ToolService {
         Objects.requireNonNull(entity, "ModelEntity cannot be null");
         ToolModelsDTO dto = new ToolModelsDTO();
         dto.setId(entity.getId());
-        dto.setModelName(entity.getName());
+        dto.setName(entity.getName());
         return dto;
     }
 }

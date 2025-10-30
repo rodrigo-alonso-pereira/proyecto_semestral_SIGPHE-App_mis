@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ToolStatusDTO {
     private Long id;
-    private String statusName;
+    private String name;
 }
