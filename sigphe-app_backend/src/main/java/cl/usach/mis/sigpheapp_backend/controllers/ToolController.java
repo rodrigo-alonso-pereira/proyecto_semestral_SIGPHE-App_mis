@@ -1,7 +1,6 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.*;
-import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
 import cl.usach.mis.sigpheapp_backend.services.ToolService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -100,9 +99,10 @@ public class ToolController {
         return ResponseEntity.created(URI.create("/api/v1/tools")).body(createdTools);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<ToolDTO> updateTool(@Valid @RequestBody UpdateToolRequestDTO request) {
-        ToolDTO updatedTool = toolService.updateTool(request);
+    @PutMapping("/{id}/update")
+    public ResponseEntity<ToolDTO> updateTool(@PathVariable @NotNull Long id,
+                                              @Valid @RequestBody UpdateToolRequestDTO request) {
+        ToolDTO updatedTool = toolService.updateTool(id, request);
         return ResponseEntity.ok(updatedTool);
     }
 

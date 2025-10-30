@@ -50,7 +50,7 @@ public class ToolService {
      * @return Lista de ToolDTO
      */
     public List<ToolDTO> getAllTools() {
-        return toolRepository.findAll().stream()
+        return toolRepository.findAllByOrderByIdDesc().stream()
                 .map(this::toToolDTO)
                 .toList();
     }
@@ -149,8 +149,8 @@ public class ToolService {
      * @param dto Datos para actualizar la herramienta
      * @return ToolDTO actualizada
      */
-    public ToolDTO updateTool(@Valid UpdateToolRequestDTO dto) {
-        ToolEntity tool = getToolEntityById(dto.getId());
+    public ToolDTO updateTool(@NotNull Long id, @Valid UpdateToolRequestDTO dto) {
+        ToolEntity tool = getToolEntityById(id);
         ToolCategoryEntity category = getToolCategoryById(dto.getToolCategoryId());
         ModelEntity model = getModelById(dto.getModelId());
         UserEntity worker = getUserById(dto.getWorkerId());

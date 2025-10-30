@@ -12,9 +12,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class UpdateToolRequestDTO {
 
-    @NotNull(message = "Tool ID is required")
-    private Long id;
-
     @NotNull(message = "Name is required")
     private String name;
 

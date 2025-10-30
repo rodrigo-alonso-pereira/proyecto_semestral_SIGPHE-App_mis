@@ -49,4 +49,6 @@ public interface ToolRepository extends JpaRepository<ToolEntity, Long> {
                                                                @NotNull LocalDateTime endDate);
 
     List<ToolEntity> findAllByToolStatusIdEquals(@NotNull Long toolStatusId);
+
+    List<ToolEntity> findAllByOrderByIdDesc();
 }
