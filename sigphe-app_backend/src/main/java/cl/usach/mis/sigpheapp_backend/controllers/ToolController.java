@@ -43,24 +43,45 @@ public class ToolController {
         return ResponseEntity.ok(tools);
     }
 
+    /**
+     * Obtiene los estados de las herramientas.
+     *
+     * @return Lista de estados de herramientas.
+     */
     @GetMapping("/status")
     public ResponseEntity<List<ToolStatusDTO>> getToolStatuses() {
         List<ToolStatusDTO> toolStatuses = toolService.getToolStatuses();
         return ResponseEntity.ok(toolStatuses);
     }
 
+    /**
+     * Obtiene las categorías de las herramientas.
+     *
+     * @return Lista de categorías de herramientas.
+     */
     @GetMapping("/category")
     public ResponseEntity<List<ToolCategoriesDTO>> getToolCategories() {
         List<ToolCategoriesDTO> toolCategories = toolService.getToolCategories();
         return ResponseEntity.ok(toolCategories);
     }
 
+    /**
+     * Obtiene los modelos de las herramientas.
+     *
+     * @return Lista de modelos de herramientas.
+     */
     @GetMapping("/model")
     public ResponseEntity<List<ToolModelsDTO>> getToolModels() {
         List<ToolModelsDTO> toolModels = toolService.getToolModels();
         return ResponseEntity.ok(toolModels);
     }
 
+    /**
+     * Obtiene una herramienta por su ID.
+     *
+     * @param id ID de la herramienta.
+     * @return Herramienta encontrada.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ToolDTO> getToolById(@PathVariable @NotNull Long id) {
         ToolDTO tool = toolService.getToolById(id);
