@@ -21,6 +21,7 @@ select * from penalties p;
 -- Users
 select
     u.id as id,
+    u.national_id as national_id,
     u.name as user_name,
     u.email as user_email,
     us.name as user_status,
