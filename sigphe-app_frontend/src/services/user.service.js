@@ -30,4 +30,15 @@ const getUserWithDebtsDateRange = (startDate, endDate) => {
     return httpClient.get(`/api/v1/users/with-debts/date-range?startDate=${startDate}&endDate=${endDate}`);
 }
 
-export default { getAll, getCostumers, getActiveCostumers, getEmployees, getUserWithDebts, getUserWithDebtsDateRange };
+// Crear un nuevo usuario
+const create = data => {
+    return httpClient.post("/api/v1/users", data);
+}
+
+// Obtener todos los tipos de usuarios
+const getUserTypes = () => {
+    return httpClient.get("/api/v1/users/types");
+}
+
+export default { getAll, getCostumers, getActiveCostumers, getEmployees, getUserWithDebts, 
+    getUserWithDebtsDateRange, create, getUserTypes };

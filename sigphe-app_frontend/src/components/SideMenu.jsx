@@ -10,6 +10,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import BuildIcon from "@mui/icons-material/Build";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import PeopleIcon from "@mui/icons-material/People";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import { useNavigate } from "react-router-dom";
 
@@ -54,6 +55,13 @@ export default function Sidemenu({ open, toggleDrawer }) {
             <AssessmentIcon />
           </ListItemIcon>
           <ListItemText primary="Reporte de Prestamos" />
+        </ListItemButton>
+
+        <ListItemButton onClick={() => navigate("/user/list")}>
+          <ListItemIcon>
+            <PeopleIcon />
+          </ListItemIcon>
+          <ListItemText primary="Usuarios" />
         </ListItemButton>
       </List>
     </Box>
