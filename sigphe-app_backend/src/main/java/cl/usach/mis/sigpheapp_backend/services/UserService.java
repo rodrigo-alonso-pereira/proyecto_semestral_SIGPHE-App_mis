@@ -94,11 +94,14 @@ public class UserService {
      *
      * @return Lista de usuarios con deudas.
      */
-    public List<UserSummaryDTO> getAllUsersWithDebts() {
-        return userRepository.findAllByUserStatusIdEquals(getUserStatusByName(STATUS_USER_WITH_DEBT)
-                .getId()).stream()
-                .map(this::toUserDTO)
-                .toList();
+    public List<ClientsWithDebtsDTO> getAllUsersWithDebts() {
+        List<ClientsWithDebtsDTO> usersWithDebts = new ArrayList<>();
+        for (ClientsWithDebtsProjection projection : userRepository.findAllUserWithDebts(
+                STATUS_LOAN_OVERDUE,
+                STATUS_LOAN_ACTIVE)) {
+            usersWithDebts.add(toClientsWithDebtsDTO(projection));
+        }
+        return usersWithDebts;
     }
 
     /**
@@ -198,10 +201,10 @@ public class UserService {
      */
     private ClientsWithDebtsDTO toClientsWithDebtsDTO(ClientsWithDebtsProjection projection) {
         ClientsWithDebtsDTO dto = new ClientsWithDebtsDTO();
-        dto.setUserName(projection.getUserName());
-        dto.setUserEmail(projection.getUserEmail());
-        dto.setUserStatus(projection.getUserStatus());
-        dto.setUserType(projection.getUserType());
+        dto.setName(projection.getUserName());
+        dto.setEmail(projection.getUserEmail());
+        dto.setStatus(projection.getUserStatus());
+        dto.setType(projection.getUserType());
         dto.setTotalOverdueLoans(projection.getTotalOverdueLoans());
         return dto;
     }

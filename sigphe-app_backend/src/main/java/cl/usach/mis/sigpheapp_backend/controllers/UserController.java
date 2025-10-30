@@ -62,16 +62,14 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // TODO: Refactorizar para igualar logica con UserService.getAllUsersWithDebtsByDateRange
-    //  decidir por una logica para los dos métodos
     /**
      * Obtiene todos los usuarios con deudas.
      *
      * @return Lista de usuarios con deudas.
      */
     @GetMapping("/with-debts")
-    public ResponseEntity<List<UserSummaryDTO>> getUsersWithDebts() {
-        List<UserSummaryDTO> users = userService.getAllUsersWithDebts();
+    public ResponseEntity<List<ClientsWithDebtsDTO>> getUsersWithDebts() {
+        List<ClientsWithDebtsDTO> users = userService.getAllUsersWithDebts();
         return ResponseEntity.ok(users);
     }
 

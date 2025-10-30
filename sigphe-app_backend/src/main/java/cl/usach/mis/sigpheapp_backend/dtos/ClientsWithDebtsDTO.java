@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClientsWithDebtsDTO {
-    private String userName;
-    private String userEmail;
-    private String userStatus;
-    private String userType;
+    private String name;
+    private String email;
+    private String status;
+    private String type;
     private Long totalOverdueLoans;
 }
