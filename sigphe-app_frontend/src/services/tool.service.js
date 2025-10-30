@@ -16,8 +16,8 @@ const getMostBorrowedTools = () => {
 }
 
 // Obtener herramientas más prestadas en un rango de fechas
-const getMostBorrowedToolsDateRange = data => {
-    return httpClient.get("/api/v1/tools/most-borrowed/date-range", data);
+const getMostBorrowedToolsDateRange = (startDate, endDate) => {
+    return httpClient.get(`/api/v1/tools/most-borrowed/date-range?startDate=${startDate}&endDate=${endDate}`);
 }
 
 // Obtener los estados de herramientas

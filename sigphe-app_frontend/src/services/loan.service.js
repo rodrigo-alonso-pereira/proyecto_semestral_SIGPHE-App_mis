@@ -13,8 +13,8 @@ const getActiveLoans = () => {
 }
 
 // Obtener préstamos activos en un rango de fechas
-const getActiveLoansDateRange = data => {
-    return httpClient.get("/api/v1/loans/active/date-range", data);
+const getActiveLoansDateRange = (startDate, endDate) => {
+    return httpClient.get(`/api/v1/loans/active/date-range?startDate=${startDate}&endDate=${endDate}`);
 }
 
 // Obtener prestamo con sus detalles

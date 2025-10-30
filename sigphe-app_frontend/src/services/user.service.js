@@ -26,8 +26,8 @@ const getUserWithDebts =  () => {
 }
 
 // Obtener usuarios con deudas en un rango de fechas
-const getUserWithDebtsDateRange = data => {
-    return httpClient.get("/api/v1/users/with-debts", data);
+const getUserWithDebtsDateRange = (startDate, endDate) => {
+    return httpClient.get(`/api/v1/users/with-debts/date-range?startDate=${startDate}&endDate=${endDate}`);
 }
 
 export default { getAll, getCostumers, getActiveCostumers, getEmployees, getUserWithDebts, getUserWithDebtsDateRange };

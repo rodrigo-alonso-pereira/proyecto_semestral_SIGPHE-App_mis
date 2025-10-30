@@ -11,9 +11,16 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
 import CheckIcon from "@mui/icons-material/Check";
+import SearchIcon from "@mui/icons-material/Search";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 {
   /* Componente de tipo funcion que muestra la lista de prestamos */
@@ -24,6 +31,11 @@ const ReportList = () => {
   const [tools, setTools] = useState([]); // Lista de herramientas mas prestadas
 
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  
+  // Estados para el filtro de fechas
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   // Hook de navegacion entre paginas
   const navigate = useNavigate();
@@ -56,10 +68,8 @@ const ReportList = () => {
     }).format(number);
   };
 
-  {
-    /* Función para inicializar el componente y cargar los prestamos */
-  }
-  const init = () => {
+  // Función para cargar datos sin filtro (todos los datos)
+  const loadAllData = () => {
     loanService
       .getActiveLoans()
       .then((response) => {
@@ -95,6 +105,77 @@ const ReportList = () => {
       .catch((error) => {
         console.log("Error al cargar herramientas más prestadas:", error);
       });
+  };
+
+  // Función para cargar datos filtrados por rango de fechas
+  const loadFilteredData = (start, end) => {
+    // Formatear fechas al formato que espera el backend: YYYY-MM-DDTHH:MM:SS
+    const startDateFormatted = start.format("YYYY-MM-DDTHH:mm:ss");
+    const endDateFormatted = end.format("YYYY-MM-DDTHH:mm:ss");
+
+    console.log("Filtrando con rango de fechas:", {
+      startDate: startDateFormatted,
+      endDate: endDateFormatted
+    });
+
+    loanService
+      .getActiveLoansDateRange(startDateFormatted, endDateFormatted)
+      .then((response) => {
+        console.log("Préstamos filtrados cargados:", response.data);
+        setLoans(response.data);
+      })
+      .catch((error) => {
+        console.log("Error al cargar préstamos filtrados:", error);
+      });
+
+    userService
+      .getUserWithDebtsDateRange(startDateFormatted, endDateFormatted)
+      .then((response) => {
+        console.log("Clientes con deudas filtrados cargados:", response.data);
+        setCustomers(response.data);
+      })
+      .catch((error) => {
+        console.log("Error al cargar clientes filtrados:", error);
+      });
+
+    toolService
+      .getMostBorrowedToolsDateRange(startDateFormatted, endDateFormatted)
+      .then((response) => {
+        console.log("Herramientas más prestadas filtradas cargadas:", response.data);
+        setTools(response.data);
+      })
+      .catch((error) => {
+        console.log("Error al cargar herramientas filtradas:", error);
+      });
+  };
+
+  // Función para aplicar el filtro
+  const handleFilter = () => {
+    if (!startDate || !endDate) {
+      alert("Por favor, seleccione ambas fechas (inicio y fin).");
+      return;
+    }
+
+    if (startDate.isAfter(endDate)) {
+      alert("La fecha de inicio debe ser anterior a la fecha de fin.");
+      return;
+    }
+
+    setIsFiltering(true);
+    loadFilteredData(startDate, endDate);
+  };
+
+  // Función para limpiar el filtro
+  const handleClearFilter = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setIsFiltering(false);
+    loadAllData();
+  };
+
+  // Función de inicialización
+  const init = () => {
+    loadAllData();
   };
 
   // Función para obtener el color según el estado del préstamo
@@ -134,7 +215,7 @@ const ReportList = () => {
   }, []);
 
   return (
-    <TableContainer component={Paper}>
+    <div>
       {showSuccessAlert && (
         <Alert
           icon={<CheckIcon fontSize="inherit" />}
@@ -145,9 +226,64 @@ const ReportList = () => {
           Préstamo pagado con éxito.
         </Alert>
       )}
-      <br />
-      <h2 style={{ textAlign: "center" }}>Listado de Préstamos Activos</h2>
-      <br />
+
+      {/* Filtro de rango de fechas */}
+      <Paper sx={{ padding: 3, marginBottom: 3 }}>
+        <h3 style={{ marginTop: 0 }}>Filtrar Reportes por Rango de Fechas</h3>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <DateTimePicker
+              label="Fecha de Inicio"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              sx={{ flex: 1, minWidth: 250 }}
+            />
+            <DateTimePicker
+              label="Fecha de Fin"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              sx={{ flex: 1, minWidth: 250 }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SearchIcon />}
+              onClick={handleFilter}
+              sx={{ height: 56 }}
+            >
+              Filtrar
+            </Button>
+            {isFiltering && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<RefreshIcon />}
+                onClick={handleClearFilter}
+                sx={{ height: 56 }}
+              >
+                Limpiar Filtro
+              </Button>
+            )}
+          </Box>
+        </LocalizationProvider>
+        {isFiltering && (
+          <Alert severity="info" sx={{ marginTop: 2 }}>
+            Mostrando datos filtrados desde {startDate?.format("DD/MM/YYYY HH:mm")} hasta {endDate?.format("DD/MM/YYYY HH:mm")}
+          </Alert>
+        )}
+      </Paper>
+
+      <TableContainer component={Paper}>
+        <br />
+        <h2 style={{ textAlign: "center" }}>Listado de Préstamos Activos</h2>
+        <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -287,7 +423,8 @@ const ReportList = () => {
           ))}
         </TableBody>
       </Table>
-    </TableContainer>
+      </TableContainer>
+    </div>
   );
 };
 
