@@ -101,6 +101,17 @@ public class ToolService {
     }
 
     /**
+     * Obtiene una herramienta por su ID
+     *
+     * @param id ID de la herramienta
+     * @return ToolDTO
+     */
+    public ToolDTO getToolById(@NotNull Long id) {
+        ToolEntity tool = getToolEntityById(id);
+        return toToolDTO(tool);
+    }
+
+    /**
      * Crea nuevas herramientas y agrega entradas al kardex
      *
      * @param dto Datos para crear herramientas
@@ -139,7 +150,7 @@ public class ToolService {
      * @return ToolDTO actualizada
      */
     public ToolDTO updateTool(@Valid UpdateToolRequestDTO dto) {
-        ToolEntity tool = getToolById(dto.getId());
+        ToolEntity tool = getToolEntityById(dto.getId());
         ToolCategoryEntity category = getToolCategoryById(dto.getToolCategoryId());
         ModelEntity model = getModelById(dto.getModelId());
         UserEntity worker = getUserById(dto.getWorkerId());
@@ -178,7 +189,7 @@ public class ToolService {
      */
     @Transactional
     public ToolDTO deactivateTool(@NotNull Long toolId, DeactivateToolRequestDTO dto) {
-        ToolEntity tool = getToolById(toolId);
+        ToolEntity tool = getToolEntityById(toolId);
         // TODO: Validar si el usuario es perfil trabajador
         UserEntity worker = getUserById(dto.getWorkerId()); // Obtiene trabajador
 
@@ -230,7 +241,7 @@ public class ToolService {
      * @return ToolEntity
      * @throws ResourceNotFoundException si la herramienta no existe
      */
-    private ToolEntity getToolById(Long id) {
+    private ToolEntity getToolEntityById(Long id) {
         return toolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool", "id", id));
     }

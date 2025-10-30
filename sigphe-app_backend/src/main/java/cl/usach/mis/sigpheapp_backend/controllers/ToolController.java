@@ -61,6 +61,12 @@ public class ToolController {
         return ResponseEntity.ok(toolModels);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ToolDTO> getToolById(@PathVariable @NotNull Long id) {
+        ToolDTO tool = toolService.getToolById(id);
+        return ResponseEntity.ok(tool);
+    }
+
     /**
      * Crea una nueva herramienta.
      *
