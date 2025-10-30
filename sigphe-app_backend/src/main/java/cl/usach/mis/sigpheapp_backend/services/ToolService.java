@@ -379,10 +379,10 @@ public class ToolService {
     private MostUsedToolDTO toMostUsedToolDTO(MostUsedToolProjection projection) {
         Objects.requireNonNull(projection, "MostUsedToolProjection cannot be null");
         MostUsedToolDTO dto = new MostUsedToolDTO();
-        dto.setToolId(projection.getToolId());
-        dto.setToolName(projection.getToolName());
-        dto.setToolModel(projection.getToolModel());
-        dto.setToolBrand(projection.getToolBrand());
+        dto.setId(projection.getToolId());
+        dto.setName(projection.getToolName());
+        dto.setModel(projection.getToolModel());
+        dto.setBrand(projection.getToolBrand());
         dto.setUsageCount(projection.getUsageCount());
         return dto;
     }

@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MostUsedToolDTO {
-    private Long toolId;
-    private String toolName;
-    private String toolModel;
-    private String toolBrand;
+    private Long id;
+    private String name;
+    private String model;
+    private String brand;
     private Long usageCount;
 }
