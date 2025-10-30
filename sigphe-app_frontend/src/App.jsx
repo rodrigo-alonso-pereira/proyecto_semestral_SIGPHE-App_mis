@@ -7,6 +7,7 @@ import LoanList from "./components/LoanList";
 import ToolList from "./components/ToolList";
 import AddEditTool from "./components/AddEditTool";
 import KardexList from "./components/KardexList";
+import Report from "./components/Report";
 import Navbar from "./components/Navbar";
 import NotFound from "./components/NotFound";
 
@@ -29,6 +30,8 @@ function App() {
           <Route path="/tool/edit/:id" element={<AddEditTool/>} />
           {/* Rutas de kardex */}
           <Route path="/kardex/list" element={<KardexList/>} />
+          {/* Rutas de reportes */}
+          <Route path="/report/list" element={<Report/>} />
           {/* Ruta 404 */}
           <Route path="*" element={<NotFound/>} />
         </Routes>

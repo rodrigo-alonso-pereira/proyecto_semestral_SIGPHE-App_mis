@@ -9,6 +9,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -68,14 +69,30 @@ const ToolList = () => {
         workerId: 1, // ID del empleado que realiza la desactivación (debe ser dinámico en una app real)
       };
       toolService
-      .deactivateTool(id, data)
-      .then((response) => {
-        console.log("Herramienta desactivada:", response.data);
-        init(); // Recargar la lista de herramientas después de la desactivación
-      })
-      .catch((error) => {
-        console.log("Error al desactivar herramienta:", error);
-      });
+        .deactivateTool(id, data)
+        .then((response) => {
+          console.log("Herramienta desactivada:", response.data);
+          init(); // Recargar la lista de herramientas después de la desactivación
+        })
+        .catch((error) => {
+          console.log("Error al desactivar herramienta:", error);
+        });
+    }
+  };
+
+  // Función para obtener el color según el estado del préstamo
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Disponible":
+        return "success"; // Verde
+      case "En Reparacion":
+        return "warning"; // Naranja
+      case "Prestada":
+        return "info"; // Azul
+      case "Dada de baja":
+        return "default"; // Gris
+      default:
+        return "default";
     }
   };
 
@@ -139,7 +156,13 @@ const ToolList = () => {
                 {formatCurrency(tool.replacementValue)}
               </TableCell>
               <TableCell align="center">{tool.category}</TableCell>
-              <TableCell align="center">{tool.status}</TableCell>
+              <TableCell align="center">
+                <Chip
+                  label={tool.status}
+                  color={getStatusColor(tool.status)}
+                  size="small"
+                />
+              </TableCell>
               <TableCell align="center">{tool.model}</TableCell>
               <TableCell>
                 <Button
