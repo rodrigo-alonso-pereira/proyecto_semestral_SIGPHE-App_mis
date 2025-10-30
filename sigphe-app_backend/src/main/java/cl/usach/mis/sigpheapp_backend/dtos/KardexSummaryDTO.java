@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class KardexSummaryDTO {
     private LocalDateTime registrationDate;
     private int quantity;
+    private Long toolId;
     private String toolName;
     private String kardexTypeName;
     private String workerName;

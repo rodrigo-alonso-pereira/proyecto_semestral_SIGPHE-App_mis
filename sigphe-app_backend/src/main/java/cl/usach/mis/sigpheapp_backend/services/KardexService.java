@@ -104,6 +104,7 @@ public class KardexService {
         KardexSummaryDTO dto = new KardexSummaryDTO();
         dto.setRegistrationDate(kardex.getDateTime());
         dto.setQuantity(kardex.getQuantity());
+        dto.setToolId(kardex.getTool().getId());
         dto.setToolName(kardex.getTool().getName());
         dto.setKardexTypeName(kardex.getKardexType().getName());
         dto.setWorkerName(kardex.getWorkerUser().getName());

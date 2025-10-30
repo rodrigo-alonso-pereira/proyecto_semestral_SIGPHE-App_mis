@@ -42,30 +42,40 @@ public class KardexController {
     /**
      * Obtiene las entradas del kardex dentro de un rango de fechas específico.
      *
-     * @param request DateRangeRequestDTO que contiene la fecha de inicio y la fecha de fin del rango.
+     * @param startDate Fecha de inicio del rango (formato ISO_LOCAL_DATE_TIME).
+     * @param endDate Fecha de fin del rango (formato ISO_LOCAL_DATE_TIME).
      * @return ResponseEntity que contiene una lista de KardexSummaryDTO que representan las entradas del kardex dentro del rango de fechas especificado.
      */
     @GetMapping("/date-range")
-    public ResponseEntity<List<KardexSummaryDTO>> getAllByDateRange(@Valid @RequestBody DateRangeRequestDTO request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+    public ResponseEntity<List<KardexSummaryDTO>> getAllByDateRange(@RequestParam String startDate,
+                                                                    @RequestParam String endDate) {
+        java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+        java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
-        return ResponseEntity.ok(kardexService.getKardexEntriesByDateRange(request.getStartDate(), request.getEndDate()));
+        return ResponseEntity.ok(kardexService.getKardexEntriesByDateRange(start, end));
     }
 
     /**
      * Obtiene las entradas del kardex para una herramienta específica dentro de un rango de fechas.
      *
      * @param id ID de la herramienta.
-     * @param request DateRangeRequestDTO que contiene la fecha de inicio y la fecha de fin del rango.
+     * @param startDate Fecha de inicio del rango (formato ISO_LOCAL_DATE_TIME).
+     * @param endDate Fecha de fin del rango (formato ISO_LOCAL_DATE_TIME).
      * @return ResponseEntity que contiene una lista de KardexSummaryDTO que representan las entradas del kardex para la herramienta especificada dentro del rango de fechas.
      */
     @GetMapping("/tool/{id}/history/date-range")
     public ResponseEntity<List<KardexSummaryDTO>> getToolHistoryByDateRange(@PathVariable @NotNull Long id,
-                                                                            @Valid @RequestBody DateRangeRequestDTO request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+                                                                            @RequestParam String startDate,
+                                                                            @RequestParam String endDate) {
+        java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+        java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
-        return ResponseEntity.ok(kardexService.getKardexEntriesByToolIdAndDateRange(id, request.getStartDate(), request.getEndDate()));
+        return ResponseEntity.ok(kardexService.getKardexEntriesByToolIdAndDateRange(id, start, end));
     }
 }
