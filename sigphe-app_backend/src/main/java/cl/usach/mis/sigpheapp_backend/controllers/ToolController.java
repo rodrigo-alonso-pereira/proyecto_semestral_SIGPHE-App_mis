@@ -55,6 +55,12 @@ public class ToolController {
         return ResponseEntity.created(URI.create("/api/v1/tools")).body(createdTools);
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<ToolDTO> updateTool(@Valid @RequestBody UpdateToolRequestDTO request) {
+        ToolDTO updatedTool = toolService.updateTool(request);
+        return ResponseEntity.ok(updatedTool);
+    }
+
     /**
      * Actualiza una herramienta existente.
      *

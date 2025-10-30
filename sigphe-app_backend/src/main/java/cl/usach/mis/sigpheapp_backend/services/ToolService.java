@@ -1,14 +1,12 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
-import cl.usach.mis.sigpheapp_backend.dtos.CreateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.DeactivateToolRequestDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.MostUsedToolDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.ToolDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.*;
 import cl.usach.mis.sigpheapp_backend.entities.*;
 import cl.usach.mis.sigpheapp_backend.exceptions.BusinessException;
 import cl.usach.mis.sigpheapp_backend.exceptions.ResourceNotFoundException;
 import cl.usach.mis.sigpheapp_backend.repositories.*;
 import cl.usach.mis.sigpheapp_backend.repositories.projection.MostUsedToolProjection;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -102,6 +100,43 @@ public class ToolService {
     }
 
     /**
+     * Actualiza una herramienta existente y agrega entradas al kardex si es necesario
+     *
+     * @param dto Datos para actualizar la herramienta
+     * @return ToolDTO actualizada
+     */
+    public ToolDTO updateTool(@Valid UpdateToolRequestDTO dto) {
+        ToolEntity tool = getToolById(dto.getId());
+        ToolCategoryEntity category = getToolCategoryById(dto.getToolCategoryId());
+        ModelEntity model = getModelById(dto.getModelId());
+        UserEntity worker = getUserById(dto.getWorkerId());
+        ToolStatusEntity status = getToolStatusById(dto.getToolStatusId());
+        if (tool.getToolStatus().getName().equals(STATUS_TOOL_LOANED) ||
+                tool.getToolStatus().getName().equals(STATUS_TOOL_DECOMMISSIONED)) {
+            throw new BusinessException("Tool status cannot be changed when it is 'Prestada' or 'Dada de baja'.");
+        } else if (status.getName().equals(STATUS_TOOL_LOANED) ||
+                status.getName().equals(STATUS_TOOL_DECOMMISSIONED)) {
+            throw new BusinessException("Tool status cannot be set to 'Prestada' or 'Dada de baja' via update.");
+        }
+
+        tool.setName(dto.getName());
+        tool.setReplacementValue(dto.getReplacementValue());
+        tool.setRentalValue(dto.getRentalValue());
+        tool.setToolCategory(category);
+        tool.setModel(model);
+        tool.setToolStatus(status);
+        ToolEntity updatedTool = toolRepository.save(tool);
+
+        if (status.getName().equals(STATUS_TOOL_AVAILABLE)) {
+            addKardexEntry(1, updatedTool, getKardexTypeByName(TYPE_KARDEX_ENTRY), worker);
+        } else if (status.getName().equals(STATUS_TOOL_IN_REPAIR)) {
+            addKardexEntry(-1, updatedTool, getKardexTypeByName(TYPE_KARDEX_REPAIR), worker);
+        }
+
+        return toToolDTO(updatedTool);
+    }
+
+    /**
      * Desactiva una herramienta y agrega una salida al kardex
      *
      * @param toolId ID de la herramienta a desactivar
@@ -177,6 +212,11 @@ public class ToolService {
     private ToolStatusEntity getToolStatusByName(String name) {
         return toolStatusRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "name", name));
+    }
+
+    private ToolStatusEntity getToolStatusById(Long id) {
+        return toolStatusRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tool Status", "id", id));
     }
 
     /**
