@@ -1,6 +1,8 @@
 package cl.usach.mis.sigpheapp_backend.services;
 
 import cl.usach.mis.sigpheapp_backend.dtos.ClientsWithDebtsDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.CreateUserDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.UserTypeDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.entities.UserEntity;
 import cl.usach.mis.sigpheapp_backend.entities.UserStatusEntity;
@@ -135,6 +137,39 @@ public class UserService {
         userRepository.save(customer);
     }
 
+    /**
+     * Crea un nuevo usuario.
+     *
+     * @param user Datos del usuario a crear.
+     * @return Resumen del usuario creado.
+     */
+    @Transactional
+    public UserSummaryDTO createUser(CreateUserDTO user) {
+        UserEntity newUser = new UserEntity();
+        newUser.setNationalId(user.getNationalId());
+        newUser.setName(user.getName());
+        newUser.setEmail(user.getEmail());
+        newUser.setRegistrationDate((LocalDateTime.now()));
+        newUser.setUserType(getUserTypeById(user.getUserTypeId()));
+        newUser.setUserStatus(getUserStatusByName(STATUS_USER_ACTIVE));
+
+        UserEntity savedUser = userRepository.save(newUser);
+        return toUserDTO(savedUser);
+    }
+
+    /**
+     * Obtiene todos los tipos de usuario.
+     *
+     * @return Lista de tipos de usuario.
+     */
+    public List<UserTypeDTO> getAllUserTypes() {
+        return userTypeRepository.findAll().stream()
+                .map(this::toUserTypeDTO)
+                .toList();
+    }
+
+
+
     /* Metodos auxiliares */
 
     /**
@@ -157,6 +192,11 @@ public class UserService {
     private UserTypeEntity getUserTypeByName(String name) {
         return userTypeRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User Type", "name", name));
+    }
+
+    private UserTypeEntity getUserTypeById(Long userTypeId) {
+        return userTypeRepository.findById(userTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("User Type", "id", userTypeId));
     }
 
     /**
@@ -206,6 +246,20 @@ public class UserService {
         dto.setStatus(projection.getUserStatus());
         dto.setType(projection.getUserType());
         dto.setTotalOverdueLoans(projection.getTotalOverdueLoans());
+        return dto;
+    }
+
+    /**
+     * Mapea una entidad de tipo de usuario a un DTO de tipo de usuario.
+     *
+     * @param type Entidad de tipo de usuario.
+     * @return DTO de tipo de usuario.
+     */
+    private UserTypeDTO toUserTypeDTO(UserTypeEntity type) {
+        Objects.requireNonNull(type, "UserTypeEntity cannot be null");
+        UserTypeDTO dto = new UserTypeDTO();
+        dto.setId(type.getId());
+        dto.setName(type.getName());
         return dto;
     }
 }

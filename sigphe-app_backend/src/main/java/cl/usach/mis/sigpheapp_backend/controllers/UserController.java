@@ -1,6 +1,8 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.ClientsWithDebtsDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.CreateUserDTO;
+import cl.usach.mis.sigpheapp_backend.dtos.UserTypeDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,5 +92,17 @@ public class UserController {
         }
         List<ClientsWithDebtsDTO> users = userService.getAllUsersWithDebtsByDateRange(start, end);
         return ResponseEntity.ok(users);
+    }
+
+    @PostMapping
+    public ResponseEntity<UserSummaryDTO> createUser(@RequestBody CreateUserDTO user) {
+        UserSummaryDTO createdUser = userService.createUser(user);
+        return ResponseEntity.ok(createdUser);
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<List<UserTypeDTO>> getUserTypes() {
+        List<UserTypeDTO> userTypes = userService.getAllUserTypes();
+        return ResponseEntity.ok(userTypes);
     }
 }
