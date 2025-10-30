@@ -94,7 +94,7 @@ const ReturnPayLoan = () => {
     }
     
     if (!workerId) {
-      alert("Por favor, seleccione un trabajador para procesar el retorno.");
+      alert("Por favor, seleccione un empleado para procesar el retorno.");
       return;
     }
     
@@ -124,9 +124,7 @@ const ReturnPayLoan = () => {
       });
   };
 
-  {
-    /* Función para manejar el cambio de condición de una herramienta */
-  }
+  // Función para manejar el cambio de condición de una herramienta
   const handleToolConditionChange = (toolId, condition) => {
     setToolConditions((prevConditions) => ({
       ...prevConditions,

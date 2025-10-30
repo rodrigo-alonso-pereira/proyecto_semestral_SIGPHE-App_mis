@@ -53,6 +53,32 @@ const ToolList = () => {
     init();
   }, []);
 
+  const handleEdit = (id) => {
+    console.log("Editando herramienta con id:", id);
+    navigate(`/tool/edit/${id}`);
+  };
+
+  const handleDelete = (id) => {
+    console.log("Desactivando herramienta con id:", id);
+    const confirmDeactivate = window.confirm(
+      "¿Está seguro que desea retornar esta herramienta?"
+    );
+    if (confirmDeactivate) {
+      const data = {
+        workerId: 1, // ID del empleado que realiza la desactivación (debe ser dinámico en una app real)
+      };
+      toolService
+      .deactivateTool(id, data)
+      .then((response) => {
+        console.log("Herramienta desactivada:", response.data);
+        init(); // Recargar la lista de herramientas después de la desactivación
+      })
+      .catch((error) => {
+        console.log("Error al desactivar herramienta:", error);
+      });
+    }
+  };
+
   return (
     <TableContainer component={Paper}>
       <br />
@@ -72,6 +98,9 @@ const ToolList = () => {
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
+            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+              SKU
+            </TableCell>
             <TableCell align="center" sx={{ fontWeight: "bold" }}>
               Nombre
             </TableCell>
@@ -101,9 +130,14 @@ const ToolList = () => {
               key={tool.id}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
             >
+              <TableCell align="center">{tool.id}</TableCell>
               <TableCell align="center">{tool.name}</TableCell>
-              <TableCell align="center">{formatCurrency(tool.rentalValue)}</TableCell>
-              <TableCell align="center">{formatCurrency(tool.replacementValue)}</TableCell>
+              <TableCell align="center">
+                {formatCurrency(tool.rentalValue)}
+              </TableCell>
+              <TableCell align="center">
+                {formatCurrency(tool.replacementValue)}
+              </TableCell>
               <TableCell align="center">{tool.category}</TableCell>
               <TableCell align="center">{tool.status}</TableCell>
               <TableCell align="center">{tool.model}</TableCell>
@@ -112,24 +146,27 @@ const ToolList = () => {
                   variant="contained"
                   color="info"
                   size="small"
-                  status="disabled"
                   onClick={() => handleEdit(tool.id)}
                   style={{ marginLeft: "0.5rem" }}
                   startIcon={<EditIcon />}
+                  disabled={
+                    tool.status === "Prestada" || tool.status === "Dada de baja"
+                  }
                 >
                   Editar
                 </Button>
-
                 <Button
                   variant="contained"
                   color="error"
                   size="small"
-                  status="disabled"
                   onClick={() => handleDelete(tool.id)}
                   style={{ marginLeft: "0.5rem" }}
                   startIcon={<DeleteIcon />}
+                  disabled={
+                    tool.status === "Prestada" || tool.status === "Dada de baja"
+                  }
                 >
-                  Eliminar
+                  Desactivar
                 </Button>
               </TableCell>
             </TableRow>

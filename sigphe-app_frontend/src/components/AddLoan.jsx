@@ -209,7 +209,7 @@ const AddLoan = () => {
               fontSize: { xs: '0.9rem', md: '1rem' }
             }}
           >
-            Grabar
+            Guardar Préstamo
           </Button>
         </FormControl>
       </Box>

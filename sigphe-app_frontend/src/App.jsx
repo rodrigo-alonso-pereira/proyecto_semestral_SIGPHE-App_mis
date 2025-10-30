@@ -5,6 +5,7 @@ import AddLoan from "./components/AddLoan";
 import ReturnPayLoan from "./components/ReturnPayLoan";
 import LoanList from "./components/LoanList";
 import ToolList from "./components/ToolList";
+import AddEditTool from "./components/AddEditTool";
 import KardexList from "./components/KardexList";
 import Navbar from "./components/Navbar";
 import NotFound from "./components/NotFound";
@@ -24,6 +25,8 @@ function App() {
           <Route path="/loan/return/:id" element={<ReturnPayLoan/>} />
           {/* Rutas de tools */}
           <Route path="/tool/list" element={<ToolList/>} />
+          <Route path="/tool/add" element={<AddEditTool/>} />
+          <Route path="/tool/edit/:id" element={<AddEditTool/>} />
           {/* Rutas de kardex */}
           <Route path="/kardex/list" element={<KardexList/>} />
           {/* Ruta 404 */}
