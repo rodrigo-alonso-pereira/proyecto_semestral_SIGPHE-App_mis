@@ -134,14 +134,21 @@ public class ToolController {
     /**
      * Obtiene las herramientas más prestadas en un rango de fechas.
      *
-     * @param request Rango de fechas.
+     * @param startDate Fecha de inicio del rango.
+     * @param endDate   Fecha de fin del rango.
      * @return Lista de herramientas más prestadas en el rango de fechas.
      */
     @GetMapping("/most-borrowed/date-range")
     public ResponseEntity<List<MostUsedToolDTO>> getMostBorrowedTools(
-            @Valid @RequestBody DateRangeRequestDTO request) {
-        List<MostUsedToolDTO> tools = toolService.getMostUsedToolsByDateRange(request.getStartDate(),
-                request.getEndDate());
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+        java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+        }
+        List<MostUsedToolDTO> tools = toolService.getMostUsedToolsByDateRange(start, end);
         return ResponseEntity.ok(tools);
     }
 }

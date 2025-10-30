@@ -1,10 +1,8 @@
 package cl.usach.mis.sigpheapp_backend.controllers;
 
 import cl.usach.mis.sigpheapp_backend.dtos.ClientsWithDebtsDTO;
-import cl.usach.mis.sigpheapp_backend.dtos.DateRangeRequestDTO;
 import cl.usach.mis.sigpheapp_backend.dtos.UserSummaryDTO;
 import cl.usach.mis.sigpheapp_backend.services.UserService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -76,17 +74,21 @@ public class UserController {
     /**
      * Obtiene todos los usuarios con deudas en un rango de fechas.
      *
-     * @param request Rango de fechas.
+     * @param startDate Fecha de inicio del rango.
+     * @param endDate Fecha de fin del rango.
      * @return Lista de usuarios con deudas en el rango de fechas.
      */
     @GetMapping("/with-debts/date-range")
     public ResponseEntity<List<ClientsWithDebtsDTO>> getUsersWithDebts(
-            @Valid @RequestBody DateRangeRequestDTO request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+        java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
-        List<ClientsWithDebtsDTO> users = userService.getAllUsersWithDebtsByDateRange(request.getStartDate(),
-                request.getEndDate());
+        List<ClientsWithDebtsDTO> users = userService.getAllUsersWithDebtsByDateRange(start, end);
         return ResponseEntity.ok(users);
     }
 }

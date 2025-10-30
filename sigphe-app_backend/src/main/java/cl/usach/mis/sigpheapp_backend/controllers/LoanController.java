@@ -41,13 +41,16 @@ public class LoanController {
     // TODO: Cambiar a obtener préstamos por estado y rango de fechas (parámetros de consulta)
     @GetMapping("/active/date-range")
     public ResponseEntity<List<LoanDTO>> getAllLoansByStatusesAndDateRange(
-            @Valid @RequestBody DateRangeRequestDTO request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+        java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
         List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
         List<LoanDTO> loans = loanService.getAllLoansByStatusesAndDateRange(statuses,
-                request.getStartDate(), request.getEndDate());
+                start, end);
         return ResponseEntity.ok(loans);
     }
 
