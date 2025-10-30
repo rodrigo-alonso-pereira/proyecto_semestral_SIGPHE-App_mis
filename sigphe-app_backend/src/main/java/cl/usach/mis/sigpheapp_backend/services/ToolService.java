@@ -68,6 +68,39 @@ public class ToolService {
     }
 
     /**
+     * Obtiene todos los estados de herramientas
+     *
+     * @return Lista de ToolStatusDTO
+     */
+    public List<ToolStatusDTO> getToolStatuses() {
+        return toolStatusRepository.findAll().stream()
+                .map(this::toToolStatusDTO)
+                .toList();
+    }
+
+    /**
+     * Obtiene todas las categorias de herramientas
+     *
+     * @return Lista de ToolCategoriesDTO
+     */
+    public List<ToolCategoriesDTO> getToolCategories() {
+        return toolCategoryRepository.findAll().stream()
+                .map(this::toToolCategoryDTO)
+                .toList();
+    }
+
+    /**
+     * Obtiene todos los modelos de herramientas
+     *
+     * @return Lista de ToolModelsDTO
+     */
+    public List<ToolModelsDTO> getToolModels() {
+        return modelRepository.findAll().stream()
+                .map(this::toModelDTO)
+                .toList();
+    }
+
+    /**
      * Crea nuevas herramientas y agrega entradas al kardex
      *
      * @param dto Datos para crear herramientas
@@ -340,6 +373,36 @@ public class ToolService {
         dto.setToolModel(projection.getToolModel());
         dto.setToolBrand(projection.getToolBrand());
         dto.setUsageCount(projection.getUsageCount());
+        return dto;
+    }
+
+    /**
+     * Mapea una entidad ToolStatusEntity a un DTO ToolStatusDTO
+     *
+     * @param entity Entidad ToolStatusEntity
+     * @return DTO ToolStatusDTO
+     */
+    private ToolStatusDTO toToolStatusDTO(ToolStatusEntity entity) {
+        Objects.requireNonNull(entity, "ToolStatusEntity cannot be null");
+        ToolStatusDTO dto = new ToolStatusDTO();
+        dto.setId(entity.getId());
+        dto.setStatusName(entity.getName());
+        return dto;
+    }
+
+    private ToolCategoriesDTO toToolCategoryDTO(ToolCategoryEntity entity) {
+        Objects.requireNonNull(entity, "ToolCategoryEntity cannot be null");
+        ToolCategoriesDTO dto = new ToolCategoriesDTO();
+        dto.setId(entity.getId());
+        dto.setCategoryName(entity.getName());
+        return dto;
+    }
+
+    private ToolModelsDTO toModelDTO(ModelEntity entity) {
+        Objects.requireNonNull(entity, "ModelEntity cannot be null");
+        ToolModelsDTO dto = new ToolModelsDTO();
+        dto.setId(entity.getId());
+        dto.setModelName(entity.getName());
         return dto;
     }
 }

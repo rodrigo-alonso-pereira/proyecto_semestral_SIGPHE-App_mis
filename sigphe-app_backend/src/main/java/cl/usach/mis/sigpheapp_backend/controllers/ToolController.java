@@ -43,6 +43,24 @@ public class ToolController {
         return ResponseEntity.ok(tools);
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<List<ToolStatusDTO>> getToolStatuses() {
+        List<ToolStatusDTO> toolStatuses = toolService.getToolStatuses();
+        return ResponseEntity.ok(toolStatuses);
+    }
+
+    @GetMapping("/category")
+    public ResponseEntity<List<ToolCategoriesDTO>> getToolCategories() {
+        List<ToolCategoriesDTO> toolCategories = toolService.getToolCategories();
+        return ResponseEntity.ok(toolCategories);
+    }
+
+    @GetMapping("/model")
+    public ResponseEntity<List<ToolModelsDTO>> getToolModels() {
+        List<ToolModelsDTO> toolModels = toolService.getToolModels();
+        return ResponseEntity.ok(toolModels);
+    }
+
     /**
      * Crea una nueva herramienta.
      *
