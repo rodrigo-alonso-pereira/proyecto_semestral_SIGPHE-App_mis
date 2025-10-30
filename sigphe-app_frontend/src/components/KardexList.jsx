@@ -8,6 +8,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import EditIcon from "@mui/icons-material/Edit";
@@ -20,14 +21,14 @@ const KardexList = () => {
 
   // Función para formatear fechas
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    
+    if (!dateString) return "-";
+
     const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    
+    const hours = date.getHours().toString().padStart(2, "0");
+
     return `${day}/${month}/${year} ${hours}:00`;
   };
 
@@ -49,6 +50,24 @@ const KardexList = () => {
       });
   };
 
+  // Función para obtener el color según el estado del préstamo
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Ingreso":
+        return "success"; // Verde
+      case "Prestamo":
+        return "primary"; // Azul
+      case "Reparacion":
+        return "warning"; // Naranja
+      case "Devolucion":
+        return "secondary"; // Azul
+      case "Baja":
+        return "default"; // Gris
+      default:
+        return "default";
+    }
+  };
+
   useEffect(() => {
     init();
   }, []);
@@ -56,7 +75,7 @@ const KardexList = () => {
   return (
     <TableContainer component={Paper}>
       <br />
-      <br /> 
+      <br />
       <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
@@ -84,10 +103,18 @@ const KardexList = () => {
               key={kardex.id}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
             >
-              <TableCell align="center">{formatDate(kardex.registrationDate)}</TableCell>
+              <TableCell align="center">
+                {formatDate(kardex.registrationDate)}
+              </TableCell>
               <TableCell align="center">{kardex.quantity}</TableCell>
               <TableCell align="center">{kardex.toolName}</TableCell>
-              <TableCell align="center">{kardex.kardexTypeName}</TableCell>
+              <TableCell align="center">
+                <Chip
+                  label={kardex.kardexTypeName}
+                  color={getStatusColor(kardex.kardexTypeName)}
+                  size="small"
+                />
+              </TableCell>
               <TableCell align="center">{kardex.workerName}</TableCell>
             </TableRow>
           ))}

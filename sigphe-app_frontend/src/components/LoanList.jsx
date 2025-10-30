@@ -13,21 +13,28 @@ import Button from "@mui/material/Button";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import AssignmentReturnedIcon from "@mui/icons-material/AssignmentReturned";
 import PaidIcon from "@mui/icons-material/Paid";
+import Chip from "@mui/material/Chip";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
 import CheckIcon from "@mui/icons-material/Check";
 
-{/* Componente de tipo funcion que muestra la lista de prestamos */}
+{
+  /* Componente de tipo funcion que muestra la lista de prestamos */
+}
 const LoanList = () => {
   const [loans, setLoans] = useState([]);
   const [customers, setCustomers] = useState([]);
 
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
-  {/* Hook de navegacion entre paginas */}
+  {
+    /* Hook de navegacion entre paginas */
+  }
   const navigate = useNavigate();
 
-  {/* Función para formatear fechas */}
+  {
+    /* Función para formatear fechas */
+  }
   const formatDate = (dateString) => {
     if (!dateString) return "-";
 
@@ -40,7 +47,9 @@ const LoanList = () => {
     return `${day}/${month}/${year} ${hours}:00`;
   };
 
-  {/* Función para formatear valores monetarios */}
+  {
+    /* Función para formatear valores monetarios */
+  }
   const formatCurrency = (value) => {
     if (!value || value === 0) return "$0";
 
@@ -53,7 +62,9 @@ const LoanList = () => {
     }).format(number);
   };
 
-  {/* Función para inicializar el componente y cargar los prestamos */}
+  {
+    /* Función para inicializar el componente y cargar los prestamos */
+  }
   const init = () => {
     loanService
       .getAll()
@@ -79,7 +90,9 @@ const LoanList = () => {
       });
   };
 
-  {/* Hook de efecto para cargar los prestamos al montar el componente */}
+  {
+    /* Hook de efecto para cargar los prestamos al montar el componente */
+  }
   useEffect(() => {
     init();
   }, []);
@@ -146,6 +159,23 @@ const LoanList = () => {
         });
     }
   };
+
+  // Función para obtener el color según el estado del préstamo
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Vigente":
+        return "success"; // Verde
+      case "Atrasada":
+        return "warning"; // Naranja
+      case "Retornado":
+        return "info"; // Azul
+      case "Finalizado":
+        return "default"; // Gris
+      default:
+        return "default";
+    }
+  };
+
 
   return (
     <TableContainer component={Paper}>
@@ -226,7 +256,13 @@ const LoanList = () => {
               <TableCell align="right">
                 {formatCurrency(loan.totalPenalties)}
               </TableCell>
-              <TableCell align="center">{loan.loanStatus}</TableCell>
+              <TableCell align="center">
+                <Chip
+                  label={loan.loanStatus}
+                  color={getStatusColor(loan.loanStatus)}
+                  size="small"
+                />
+              </TableCell>
               <TableCell align="center">{loan.customerName}</TableCell>
               <TableCell>
                 <Button
