@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import kardexService from "../services/kardex.service";
 import toolService from "../services/tool.service";
+import Breadcrumb from "./Breadcrumb";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -11,11 +12,13 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Alert from "@mui/material/Alert";
+import Tooltip from "@mui/material/Tooltip";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -252,10 +255,11 @@ const KardexList = () => {
   }, []);
 
   return (
-    <div>
+    <Box sx={{ mx: '20px', marginBottom: '20px', bgcolor: 'background.paper' }}>
+      <Breadcrumb />
       {/* Filtros */}
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
-        <h3 style={{ marginTop: 0 }}>Filtrar Kardex</h3>
+        <Typography variant="h5" sx={{ marginTop: 0, fontWeight: 600 }}>Filtrar Kardex</Typography>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box
             sx={{
@@ -316,23 +320,27 @@ const KardexList = () => {
             </FormControl>
           </Box>
           <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<SearchIcon />}
-              onClick={handleFilter}
-            >
-              Filtrar
-            </Button>
-            {isFiltering && (
+            <Tooltip title="Aplicar filtros de búsqueda" arrow>
               <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<RefreshIcon />}
-                onClick={handleClearFilter}
+                variant="contained"
+                color="primary"
+                startIcon={<SearchIcon />}
+                onClick={handleFilter}
               >
-                Limpiar Filtro
+                Filtrar
               </Button>
+            </Tooltip>
+            {isFiltering && (
+              <Tooltip title="Quitar filtros y mostrar todos los registros" arrow>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleClearFilter}
+                >
+                  Limpiar Filtro
+                </Button>
+              </Tooltip>
             )}
           </Box>
         </LocalizationProvider>
@@ -344,9 +352,11 @@ const KardexList = () => {
       </Paper>
 
       <TableContainer component={Paper}>
-        <br />
-        <h2 style={{ textAlign: "center" }}>Registro de Movimientos de Herramientas</h2>
-        <br />
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Registro de Movimientos de Herramientas
+          </Typography>
+        </Box>
         <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -406,7 +416,7 @@ const KardexList = () => {
         </TableBody>
       </Table>
       </TableContainer>
-    </div>
+    </Box>
   );
 };
 

@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import loanService from "../services/loan.service";
+import Breadcrumb from "./Breadcrumb";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import SaveIcon from "@mui/icons-material/Save";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Chip from "@mui/material/Chip";
 import toolService from "../services/tool.service";
 import userService from "../services/user.service";
@@ -178,26 +183,24 @@ const AddLoan = () => {
   }, []);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      component="form"
-      sx={{ 
-        maxWidth: { xs: '95%', sm: '600px', md: '700px' },
-        margin: '0 auto',
-        padding: { xs: 2, md: 3 }
-      }}
-    >
-      <h3> {titleLoanForm} </h3>
-      <hr style={{ width: '100%' }} />
-      <Box 
-        component="form" 
-        sx={{ 
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
+    <Box sx={{ mx: '20px', bgcolor: 'background.paper', py: 3 }}>
+      <Paper
+        sx={{
+          maxWidth: { xs: "95%", sm: "600px", md: "700px" },
+          margin: "0 auto",
+          padding: { xs: 3, md: 4 },
+        }}
+      >
+        <Breadcrumb />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, textAlign: 'center', mb: 3 }}>
+          {titleLoanForm}
+        </Typography>
+        <Box 
+          component="form" 
+          sx={{ 
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
           gap: 3
         }}
       >
@@ -312,23 +315,33 @@ const AddLoan = () => {
         )}
 
         <FormControl>
-          <Button
-            variant="contained"
-            color="info"
-            onClick={(e) => saveLoan(e)}
-            startIcon={<SaveIcon />}
-            sx={{ 
-              marginTop: 2,
-              padding: { xs: '10px 20px', md: '12px 24px' },
-              fontSize: { xs: '0.9rem', md: '1rem' }
-            }}
-          >
-            Guardar Préstamo
-          </Button>
+          <Tooltip title="Guardar el nuevo préstamo en el sistema" arrow>
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => saveLoan(e)}
+              startIcon={<SaveIcon />}
+              sx={{ 
+                marginTop: 2,
+                padding: { xs: '10px 20px', md: '12px 24px' },
+                fontSize: { xs: '0.9rem', md: '1rem' }
+              }}
+            >
+              Guardar Préstamo
+            </Button>
+          </Tooltip>
         </FormControl>
       </Box>
-      <hr style={{ width: '100%', marginTop: '2rem' }} />
-      <Link to="/loan/list">Volver a lista de Prestamos</Link>
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Link to="/loan/list" style={{ textDecoration: 'none' }}>
+          <Tooltip title="Cancelar y volver al listado de préstamos" arrow>
+            <Button variant="text" color="primary" startIcon={<ArrowBackIcon />}>
+              Volver a lista de Prestamos
+            </Button>
+          </Tooltip>
+        </Link>
+      </Box>
+      </Paper>
     </Box>
   );
 };

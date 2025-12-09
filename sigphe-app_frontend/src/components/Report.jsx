@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import loanService from "../services/loan.service";
 import userService from "../services/user.service";
 import toolService from "../services/tool.service";
+import Breadcrumb from "./Breadcrumb";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -12,9 +13,11 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
+import Tooltip from "@mui/material/Tooltip";
 import CheckIcon from "@mui/icons-material/Check";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -267,7 +270,8 @@ const ReportList = () => {
   }, []);
 
   return (
-    <div>
+    <Box sx={{ mx: '20px', marginBottom: '20px', bgcolor: 'background.paper' }}>
+      <Breadcrumb />
       {showSuccessAlert && (
         <Alert
           icon={<CheckIcon fontSize="inherit" />}
@@ -281,7 +285,7 @@ const ReportList = () => {
 
       {/* Filtro de rango de fechas */}
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
-        <h3 style={{ marginTop: 0 }}>Filtrar reportes por rango de fechas</h3>
+        <Typography variant="h5" sx={{ marginTop: 0, fontWeight: 600 }}>Filtrar reportes por rango de fechas</Typography>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box
             sx={{
@@ -303,25 +307,29 @@ const ReportList = () => {
               onChange={(newValue) => setEndDate(newValue)}
               sx={{ flex: 1, minWidth: 250 }}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<SearchIcon />}
-              onClick={handleFilter}
-              sx={{ height: 56 }}
-            >
-              Filtrar
-            </Button>
-            {isFiltering && (
+            <Tooltip title="Aplicar filtro de fechas a los reportes" arrow>
               <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<RefreshIcon />}
-                onClick={handleClearFilter}
+                variant="contained"
+                color="primary"
+                startIcon={<SearchIcon />}
+                onClick={handleFilter}
                 sx={{ height: 56 }}
               >
-                Limpiar Filtro
+                Filtrar
               </Button>
+            </Tooltip>
+            {isFiltering && (
+              <Tooltip title="Quitar filtro y mostrar todos los datos" arrow>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleClearFilter}
+                  sx={{ height: 56 }}
+                >
+                  Limpiar Filtro
+                </Button>
+              </Tooltip>
             )}
           </Box>
         </LocalizationProvider>
@@ -333,9 +341,11 @@ const ReportList = () => {
       </Paper>
 
       <TableContainer component={Paper}>
-        <br />
-        <h2 style={{ textAlign: "center" }}>Listado de préstamos activos</h2>
-        <br />
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Listado de préstamos activos
+          </Typography>
+        </Box>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -408,9 +418,15 @@ const ReportList = () => {
           )}
         </TableBody>
       </Table>
-      <br />
-      <h2 style={{ textAlign: "center" }}>Listado de clientes con mas atrasos</h2>
-      <br />
+      </TableContainer>
+
+      {/* Segundo listado - Clientes con más atrasos */}
+      <TableContainer component={Paper} sx={{ marginTop: 4 }}>
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Typography variant="h4" component="h2" sx={{ fontWeight: 600 }}>
+          Listado de clientes con más atrasos
+        </Typography>
+      </Box>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -459,9 +475,15 @@ const ReportList = () => {
           )}
         </TableBody>
       </Table>
-      <br />
-      <h2 style={{ textAlign: "center" }}>Listado de herramientas mas prestadas</h2>
-      <br />
+      </TableContainer>
+
+      {/* Tercer listado - Herramientas más prestadas */}
+      <TableContainer component={Paper} sx={{ marginTop: 4 }}>
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Typography variant="h4" component="h2" sx={{ fontWeight: 600 }}>
+          Listado de herramientas más prestadas
+        </Typography>
+      </Box>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -508,7 +530,7 @@ const ReportList = () => {
         </TableBody>
       </Table>
       </TableContainer>
-    </div>
+    </Box>
   );
 };
 

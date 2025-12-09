@@ -3,11 +3,6 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* Forzar siempre modo claro */
-  color-scheme: light;
-  color: #213547;
-  background-color: #ffffff;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,9 +22,6 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  /* Forzar fondo blanco */
-  background-color: #ffffff;
-  color: #213547;
 }
 
 h1 {

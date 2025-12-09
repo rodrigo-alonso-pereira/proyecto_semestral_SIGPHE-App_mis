@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import Breadcrumb from "./Breadcrumb";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import SaveIcon from "@mui/icons-material/Save";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import toolService from "../services/tool.service";
 import userService from "../services/user.service";
 import Swal from "sweetalert2";
@@ -351,29 +356,27 @@ const AddEditTool = () => {
   ]);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      component="form"
-      sx={{
-        maxWidth: { xs: "95%", sm: "600px", md: "700px" },
-        margin: "0 auto",
-        padding: { xs: 2, md: 3 },
-      }}
-    >
-      <h3> {titleToolForm} </h3>
-      <hr style={{ width: "100%" }} />
-      <Box
-        component="form"
+    <Box sx={{ mx: '20px', bgcolor: 'background.paper', py: 3 }}>
+      <Paper
         sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
+          maxWidth: { xs: "95%", sm: "600px", md: "700px" },
+          margin: "0 auto",
+          padding: { xs: 3, md: 4 },
         }}
       >
+        <Breadcrumb />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, textAlign: 'center', mb: 3 }}>
+          {titleToolForm}
+        </Typography>
+        <Box
+          component="form"
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
         <FormControl fullWidth>
           <TextField
             id="toolName"
@@ -533,23 +536,33 @@ const AddEditTool = () => {
         </FormControl>
 
         <FormControl>
-          <Button
-            variant="contained"
-            color="info"
-            onClick={(e) => saveTool(e)}
-            startIcon={<SaveIcon />}
-            sx={{
-              marginTop: 2,
-              padding: { xs: "10px 20px", md: "12px 24px" },
-              fontSize: { xs: "0.9rem", md: "1rem" },
-            }}
-          >
-            Guardar Herramienta
-          </Button>
+          <Tooltip title="Guardar la herramienta en el sistema" arrow>
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => saveTool(e)}
+              startIcon={<SaveIcon />}
+              sx={{
+                marginTop: 2,
+                padding: { xs: "10px 20px", md: "12px 24px" },
+                fontSize: { xs: "0.9rem", md: "1rem" },
+              }}
+            >
+              Guardar Herramienta
+            </Button>
+          </Tooltip>
         </FormControl>
       </Box>
-      <hr style={{ width: "100%", marginTop: "2rem" }} />
-      <Link to="/tool/list">Volver a la lista de herramientas</Link>
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Link to="/tool/list" style={{ textDecoration: 'none' }}>
+          <Tooltip title="Cancelar y volver al listado de herramientas" arrow>
+            <Button variant="text" color="primary" startIcon={<ArrowBackIcon />}>
+              Volver a la lista de herramientas
+            </Button>
+          </Tooltip>
+        </Link>
+      </Box>
+      </Paper>
     </Box>
   );
 };

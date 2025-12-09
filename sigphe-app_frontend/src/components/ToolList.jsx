@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toolService from "../services/tool.service";
+import Breadcrumb from "./Breadcrumb";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -10,8 +11,10 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
+import Tooltip from "@mui/material/Tooltip";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -189,37 +192,49 @@ const ToolList = () => {
   };
 
   return (
-    <TableContainer component={Paper}>
-      <br />
-      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
+    <Box sx={{ mx: '20px', marginBottom: '20px', bgcolor: 'background.paper' }}>
+      <Breadcrumb />
+      <TableContainer component={Paper}>
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Listado de Herramientas
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginY: 2 }}>
         <Link to="/tool/add" style={{ textDecoration: "none" }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddCircleRoundedIcon />}
-          >
-            Añadir Herramienta
-          </Button>
+          <Tooltip title="Registrar una nueva herramienta" arrow>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleRoundedIcon />}
+            >
+              Añadir Herramienta
+            </Button>
+          </Tooltip>
         </Link>
         
         {!showingActiveOnly ? (
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<FilterListIcon />}
-            onClick={loadActiveTools}
-          >
-            Mostrar Herramientas Activas
-          </Button>
+          <Tooltip title="Filtrar solo herramientas activas (Disponible y En Reparación)" arrow>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<FilterListIcon />}
+              onClick={loadActiveTools}
+            >
+              Mostrar Herramientas Activas
+            </Button>
+          </Tooltip>
         ) : (
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<RefreshIcon />}
-            onClick={init}
-          >
-            Mostrar Todas las Herramientas
-          </Button>
+          <Tooltip title="Mostrar todas las herramientas sin filtro" arrow>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<RefreshIcon />}
+              onClick={init}
+            >
+              Mostrar Todas las Herramientas
+            </Button>
+          </Tooltip>
         )}
       </Box>
       {showingActiveOnly && (
@@ -282,36 +297,45 @@ const ToolList = () => {
               </TableCell>
               <TableCell align="center">{tool.model}</TableCell>
               <TableCell style={{ display: 'flex', gap: '0.5rem' }}>
-                <Button
-                  variant="contained"
-                  color="info"
-                  size="small"
-                  onClick={() => handleEdit(tool.id)}
-                  startIcon={<EditIcon />}
-                  disabled={
-                    tool.status === "Prestada" || tool.status === "Dada de baja"
-                  }
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() => handleDelete(tool.id)}
-                  startIcon={<DeleteIcon />}
-                  disabled={
-                    tool.status === "Prestada" || tool.status === "Dada de baja"
-                  }
-                >
-                  Desactivar
-                </Button>
+                <Tooltip title="Editar los datos de la herramienta" arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="info"
+                      size="small"
+                      onClick={() => handleEdit(tool.id)}
+                      startIcon={<EditIcon />}
+                      disabled={
+                        tool.status === "Prestada" || tool.status === "Dada de baja"
+                      }
+                    >
+                      Editar
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Dar de baja la herramienta" arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => handleDelete(tool.id)}
+                      startIcon={<DeleteIcon />}
+                      disabled={
+                        tool.status === "Prestada" || tool.status === "Dada de baja"
+                      }
+                    >
+                      Desactivar
+                    </Button>
+                  </span>
+                </Tooltip>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+    </Box>
   );
 };
 

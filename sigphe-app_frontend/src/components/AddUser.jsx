@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Breadcrumb from "./Breadcrumb";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import SaveIcon from "@mui/icons-material/Save";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import userService from "../services/user.service";
 import Swal from "sweetalert2";
 
@@ -220,29 +225,27 @@ const AddUser = () => {
   }, []);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      component="form"
-      sx={{
-        maxWidth: { xs: "95%", sm: "600px", md: "700px" },
-        margin: "0 auto",
-        padding: { xs: 2, md: 3 },
-      }}
-    >
-      <h3> {titleUserForm} </h3>
-      <hr style={{ width: "100%" }} />
-      <Box
-        component="form"
+    <Box sx={{ mx: '20px', bgcolor: 'background.paper', py: 3 }}>
+      <Paper
         sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
+          maxWidth: { xs: "95%", sm: "600px", md: "700px" },
+          margin: "0 auto",
+          padding: { xs: 3, md: 4 },
         }}
       >
+        <Breadcrumb />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, textAlign: 'center', mb: 3 }}>
+          {titleUserForm}
+        </Typography>
+        <Box
+          component="form"
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
         <FormControl fullWidth>
           <TextField
             id="nationalId"
@@ -303,23 +306,33 @@ const AddUser = () => {
         </FormControl>
 
         <FormControl>
-          <Button
-            variant="contained"
-            color="info"
-            onClick={(e) => saveUser(e)}
-            startIcon={<SaveIcon />}
-            sx={{
-              marginTop: 2,
-              padding: { xs: "10px 20px", md: "12px 24px" },
-              fontSize: { xs: "0.9rem", md: "1rem" },
-            }}
-          >
-            Guardar Usuario
-          </Button>
+          <Tooltip title="Guardar el nuevo usuario en el sistema" arrow>
+            <Button
+              variant="contained"
+              color="info"
+              onClick={(e) => saveUser(e)}
+              startIcon={<SaveIcon />}
+              sx={{
+                marginTop: 2,
+                padding: { xs: "10px 20px", md: "12px 24px" },
+                fontSize: { xs: "0.9rem", md: "1rem" },
+              }}
+            >
+              Guardar Usuario
+            </Button>
+          </Tooltip>
         </FormControl>
       </Box>
-      <hr style={{ width: "100%", marginTop: "2rem" }} />
-      <Link to="/user/list">Volver a lista de usuarios</Link>
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Link to="/user/list" style={{ textDecoration: 'none' }}>
+          <Tooltip title="Cancelar y volver al listado de usuarios" arrow>
+            <Button variant="text" color="primary" startIcon={<ArrowBackIcon />}>
+              Volver a lista de usuarios
+            </Button>
+          </Tooltip>
+        </Link>
+      </Box>
+      </Paper>
     </Box>
   );
 };

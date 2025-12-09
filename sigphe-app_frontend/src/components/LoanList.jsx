@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import loanService from "../services/loan.service";
+import Breadcrumb from "./Breadcrumb";
 import userService from "../services/user.service";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -11,6 +12,7 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import AssignmentReturnedIcon from "@mui/icons-material/AssignmentReturned";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -21,6 +23,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import InfoIcon from "@mui/icons-material/Info";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import Chip from "@mui/material/Chip";
+import Tooltip from "@mui/material/Tooltip";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
 import CheckIcon from "@mui/icons-material/Check";
@@ -246,37 +249,49 @@ const LoanList = () => {
 
 
   return (
-    <TableContainer component={Paper}>
-      <br />
-      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
+    <Box sx={{ mx: '20px', marginBottom: '20px', bgcolor: 'background.paper' }}>
+      <Breadcrumb />
+      <TableContainer component={Paper}>
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Listado de Préstamos
+          </Typography>
+        </Box>
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginY: 2 }}>
         <Link to="/loan/add" style={{ textDecoration: "none" }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddCircleRoundedIcon />}
-          >
-            Añadir Prestamo
-          </Button>
+          <Tooltip title="Crear un nuevo préstamo" arrow>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleRoundedIcon />}
+            >
+              Añadir Prestamo
+            </Button>
+          </Tooltip>
         </Link>
         
         {!showingActiveOnly ? (
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<FilterListIcon />}
-            onClick={loadActiveLoans}
-          >
-            Mostrar Préstamos Activos
-          </Button>
+          <Tooltip title="Filtrar solo préstamos activos (Vigente y Atrasada)" arrow>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<FilterListIcon />}
+              onClick={loadActiveLoans}
+            >
+              Mostrar Préstamos Activos
+            </Button>
+          </Tooltip>
         ) : (
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<RefreshIcon />}
-            onClick={init}
-          >
-            Mostrar Todos los Préstamos
-          </Button>
+          <Tooltip title="Mostrar todos los préstamos sin filtro" arrow>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<RefreshIcon />}
+              onClick={init}
+            >
+              Mostrar Todos los Préstamos
+            </Button>
+          </Tooltip>
         )}
       </Box>
       {showingActiveOnly && (
@@ -348,42 +363,51 @@ const LoanList = () => {
               </TableCell>
               <TableCell align="center">{loan.customerName}</TableCell>
               <TableCell>
-                <Button
-                  variant="contained"
-                  color="info"
-                  size="small"
-                  onClick={() => handleReturnLoan(loan.id)}
-                  style={{ marginLeft: "0.5rem" }}
-                  startIcon={<AssignmentReturnedIcon />}
-                  disabled={
-                    loan.returnDate ||
-                    loan.loanStatus === "Retornado" ||
-                    loan.loanStatus === "Finalizado"
-                  }
-                >
-                  Retornar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  onClick={() => handlePayLoan(loan.id)}
-                  style={{ marginLeft: "0.5rem" }}
-                  startIcon={<PaidIcon />}
-                  disabled={
-                    loan.loanStatus === "Vigente" ||
-                    loan.loanStatus === "Finalizado" ||
-                    customers.length === 0
-                  }
-                >
-                  Pagar
-                </Button>
+                <Tooltip title="Registrar la devolución de la herramienta" arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="info"
+                      size="small"
+                      onClick={() => handleReturnLoan(loan.id)}
+                      style={{ marginLeft: "0.5rem" }}
+                      startIcon={<AssignmentReturnedIcon />}
+                      disabled={
+                        loan.returnDate ||
+                        loan.loanStatus === "Retornado" ||
+                        loan.loanStatus === "Finalizado"
+                      }
+                    >
+                      Retornar
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Registrar el pago de prestamos" arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      onClick={() => handlePayLoan(loan.id)}
+                      style={{ marginLeft: "0.5rem" }}
+                      startIcon={<PaidIcon />}
+                      disabled={
+                        loan.loanStatus === "Vigente" ||
+                        loan.loanStatus === "Finalizado" ||
+                        customers.length === 0
+                      }
+                    >
+                      Pagar
+                    </Button>
+                  </span>
+                </Tooltip>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+    </Box>
   );
 };
 

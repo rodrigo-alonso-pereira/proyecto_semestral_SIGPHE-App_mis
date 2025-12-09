@@ -1,21 +1,14 @@
 #root {
-  width: 80%;
-  margin: 2rem auto 0;
+  width: 100%;
+  margin: 0;
   padding: 0;
-  text-align: center;
+  min-height: 100vh;
 }
 
-/* Agregar sombra a los contenedores principales */
 .container {
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Mejorar sombra de componentes Paper de Material-UI */
-.MuiPaper-root {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  min-height: 100vh;
+  margin-left: 260px;
+  padding-top: 64px;
 }
 
 .logo {

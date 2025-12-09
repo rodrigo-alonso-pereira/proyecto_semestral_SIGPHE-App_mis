@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import userService from "../services/user.service";
+import Breadcrumb from "./Breadcrumb";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -10,7 +11,9 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
+import Tooltip from "@mui/material/Tooltip";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import PersonIcon from "@mui/icons-material/Person";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
@@ -101,20 +104,27 @@ const UserList = () => {
   };
 
   return (
-    <TableContainer component={Paper}>
-      <br />
-      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddCircleRoundedIcon />}
-          component={Link}
-          to="/user/add"
-        >
-          Añadir Usuario
-        </Button>
-      </Box>
-      <br />
+    <Box sx={{ mx: '20px', bgcolor: 'background.paper' }}>
+      <Breadcrumb />
+      <TableContainer component={Paper}>
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Listado de Usuarios
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginY: 2 }}>
+          <Tooltip title="Registrar un nuevo usuario" arrow>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleRoundedIcon />}
+              component={Link}
+              to="/user/add"
+            >
+              Añadir Usuario
+            </Button>
+          </Tooltip>
+        </Box>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
@@ -173,6 +183,7 @@ const UserList = () => {
         </TableBody>
       </Table>
     </TableContainer>
+    </Box>
   );
 };
 
