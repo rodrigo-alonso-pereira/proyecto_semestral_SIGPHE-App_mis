@@ -160,14 +160,14 @@ public class LoanService {
 
             // Validar que la herramienta esté disponible
             if (!tool.getToolStatus().getName().equals(STATUS_TOOL_AVAILABLE)) {
-                throw new BusinessException("Tool with ID " + toolId + " is not available");
+                throw new BusinessException("La herramienta con ID " + toolId + " no está disponible");
             }
 
             // Validar que no se puede tener más de un mismo modelo en el mismo préstamo
             toolModelsInLoan.add(tool.getModel().getId());
             if (toolModelsInLoan.stream().filter(id -> id.equals(tool.getModel().getId())).count() > 1) {
-                throw new BusinessException("Cannot have more than one tool of the same model '" +
-                        tool.getModel().getName() + "' in a single loan");
+                throw new BusinessException("No se puede tener más de una herramienta del mismo modelo '" +
+                        tool.getModel().getName() + "' en un solo préstamo");
             }
 
             // Calcular el valor del alquiler de herramienta actual
@@ -258,7 +258,7 @@ public class LoanService {
                     addKardexEntry(-1, tool, getKardexTypeByName(TYPE_KARDEX_DECOMMISSION), worker); // -1 -> perdida
                     break;
                 default:
-                    throw new BusinessException("Invalid tool condition: " + condition);
+                    throw new BusinessException("Condición de herramienta inválida: " + condition);
             };
             loan.setTotalPenalties(loan.getTotalPenalties().add(penalty.getPenaltyAmount()
                     .setScale(2, RoundingMode.CEILING))); // Actualizar total de multas del préstamo
@@ -527,7 +527,7 @@ public class LoanService {
     private void validateCustomerEligibilityForNewLoan(UserEntity customer) {
         // Validar que el cliente esté activo y no tenga deudas pendientes
         if (customer.getUserStatus().getName().equals(STATUS_USER_WITH_DEBT)) {
-            throw new BusinessException("Customer " + customer.getName() + " has outstanding debts");
+            throw new BusinessException("El cliente " + customer.getName() + " tiene deudas pendientes");
         }
 
         List<LoanEntity> loans = loanRepository.findAllByCustomerUserIdEquals(customer.getId());
@@ -550,16 +550,16 @@ public class LoanService {
         // Validar que no se puede tener más de un mismo modelo en préstamos vigentes
         for (Long modelId : toolModelsInLoan) {
             if (toolModelsInLoan.stream().filter(id -> id.equals(modelId)).count() > 1) {
-                throw new BusinessException("Customer " + customer.getName() +
-                        " can't have more than one tool of the same model ID: " + modelId +
-                        " in different loans");
+                throw new BusinessException("El cliente " + customer.getName() +
+                        " no puede tener más de una herramienta del mismo modelo ID: " + modelId +
+                        " en diferentes préstamos");
             }
         }
 
         // Validar cantidad máxima de préstamos vigentes no exceda el límite
         if (vigentLoans >= MAX_VIGENT_LOANS) {
-            throw new BusinessException("Customer " + customer.getName() +
-                    " can't have more than " + MAX_VIGENT_LOANS + " active loans");
+            throw new BusinessException("El cliente " + customer.getName() +
+                    " no puede tener más de " + MAX_VIGENT_LOANS + " préstamos activos");
         }
     }
 
@@ -572,7 +572,7 @@ public class LoanService {
      */
     private void validateLoanBelongsToCustomer(LoanEntity loan, UserEntity customer) {
         if (!loan.getCustomerUser().getId().equals(customer.getId())) {
-            throw new BusinessException("Loan ID " + loan.getId() + " does not belong to customer ID "
+            throw new BusinessException("El préstamo ID " + loan.getId() + " no pertenece al cliente ID "
                     + customer.getId() + ": " + customer.getName() );
         }
     }
@@ -585,8 +585,8 @@ public class LoanService {
      */
     private void validateLoanIsReturnable(LoanEntity loan) {
         if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
-            throw new BusinessException("Loan ID " + loan.getId() + " is not in a returnable status. " +
-                    "Current status: " + loan.getLoanStatus().getName());
+            throw new BusinessException("El préstamo ID " + loan.getId() + " no está en estado retornable. " +
+                    "Estado actual: " + loan.getLoanStatus().getName());
         }
     }
 
@@ -598,8 +598,8 @@ public class LoanService {
      */
     private void validateLoanIsPayable(LoanEntity loan) {
         if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_OVERDUE)) {
-            throw new BusinessException("Loan ID " + loan.getId() + " is not in a payable status. " +
-                    "Current status: " + loan.getLoanStatus().getName());
+            throw new BusinessException("El préstamo ID " + loan.getId() + " no está en estado pagable. " +
+                    "Estado actual: " + loan.getLoanStatus().getName());
         }
     }
 
@@ -615,7 +615,7 @@ public class LoanService {
                 .anyMatch(detail -> detail.getTool().getId().equals(toolId));
 
         if (!toolBelongsToLoan) {
-            throw new BusinessException("Tool ID " + toolId + " is not part of loan ID " + loan.getId());
+            throw new BusinessException("La herramienta ID " + toolId + " no es parte del préstamo ID " + loan.getId());
         }
     }
 
@@ -633,7 +633,7 @@ public class LoanService {
         BigDecimal payment = BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.CEILING);
 
         if (!totalDue.equals(payment)) {
-            throw new BusinessException("Payment amount $" + payment + " does not match total due $"
+            throw new BusinessException("El monto del pago $" + payment + " no coincide con el total adeudado $"
                     + totalDue);
         }
     }
@@ -649,7 +649,7 @@ public class LoanService {
         if (loan.getDueDate().isBefore(LocalDateTime.now()) &&
                 !(loan.getLoanStatus().getName().equals(STATUS_LOAN_FINISHED))) {
             userService.updateCostumerStatus(customer);
-            throw new BusinessException("Customer " + customer.getName() + " has overdue loans");
+            throw new BusinessException("El cliente " + customer.getName() + " tiene préstamos atrasados");
         }
     }
 

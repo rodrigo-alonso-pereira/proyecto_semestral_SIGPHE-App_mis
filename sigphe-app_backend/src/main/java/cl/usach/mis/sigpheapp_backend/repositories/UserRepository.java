@@ -56,4 +56,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     List<UserEntity> findAllByUserTypeIdEquals(@NotNull Long id);
     List<UserEntity> findAllByUserTypeIdEqualsAndUserStatusIdEquals(@NotNull Long id, @NotNull Long id1);
+
+    UserEntity findByNationalId(String nationalId);
 }

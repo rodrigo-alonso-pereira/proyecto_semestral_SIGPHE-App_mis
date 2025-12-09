@@ -13,13 +13,13 @@ import java.util.Map;
 @AllArgsConstructor
 public class ReturnLoanRequestDTO {
 
-    @NotNull(message = "Worker ID is required")
+    @NotNull(message = "El ID del trabajador es requerido")
     private Long workerId;
 
-    @NotNull(message = "Customer ID is required")
+    @NotNull(message = "El ID del cliente es requerido")
     private Long customerId;
 
-    @NotNull(message = "Tool conditions are required")
-    @NotEmpty(message = "Tool conditions cannot be empty")
+    @NotNull(message = "Las condiciones de las herramientas son requeridas")
+    @NotEmpty(message = "Las condiciones de las herramientas no pueden estar vacías")
     private Map<Long, String> toolConditions;
 }

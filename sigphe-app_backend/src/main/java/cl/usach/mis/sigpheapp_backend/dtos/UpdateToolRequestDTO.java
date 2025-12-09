@@ -12,24 +12,24 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class UpdateToolRequestDTO {
 
-    @NotNull(message = "Name is required")
+    @NotNull(message = "El nombre es requerido")
     private String name;
 
-    @NotNull(message = "Replacement value is required")
+    @NotNull(message = "El valor de reemplazo es requerido")
     private BigDecimal replacementValue;
 
-    @NotNull(message = "Rental value is required")
+    @NotNull(message = "El valor de alquiler es requerido")
     private BigDecimal rentalValue;
 
-    @NotNull(message = "Tool category ID is required")
+    @NotNull(message = "El ID de categoría de herramienta es requerido")
     private Long toolCategoryId;
 
-    @NotNull(message = "Model ID is required")
+    @NotNull(message = "El ID del modelo es requerido")
     private Long modelId;
 
-    @NotNull(message = "Tool status ID is required")
+    @NotNull(message = "El ID del estado de herramienta es requerido")
     private Long toolStatusId;
 
-    @NotNull(message = "Worker ID is required")
+    @NotNull(message = "El ID del trabajador es requerido")
     private Long workerId;
 }

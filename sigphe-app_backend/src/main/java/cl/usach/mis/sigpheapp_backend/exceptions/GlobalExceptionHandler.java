@@ -27,11 +27,11 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException ex,
             HttpServletRequest request) {
 
-        logger.error("Resource not found: {}", ex.getMessage());
+        logger.error("Recurso no encontrado: {}", ex.getMessage());
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                "Recurso No Encontrado",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -45,11 +45,11 @@ public class GlobalExceptionHandler {
             BusinessException ex,
             HttpServletRequest request) {
 
-        logger.error("Business rule violation: {}", ex.getMessage());
+        logger.error("Violación de regla de negocio: {}", ex.getMessage());
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
+                "Conflicto con Reglas de Negocio",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -74,11 +74,11 @@ public class GlobalExceptionHandler {
                 .map(entry -> entry.getKey() + ": " + entry.getValue())
                 .collect(Collectors.joining(", "));
 
-        logger.error("Validation failed: {}", errorMessage);
+        logger.error("Validación fallida: {}", errorMessage);
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                "Validation Failed",
+                "Error de Validación",
                 errorMessage,
                 request.getRequestURI()
         );
@@ -96,11 +96,11 @@ public class GlobalExceptionHandler {
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining(", "));
 
-        logger.error("Constraint violation: {}", errorMessage);
+        logger.error("Violación de restricción: {}", errorMessage);
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                "Constraint Violation",
+                "Violación de Restricción",
                 errorMessage,
                 request.getRequestURI()
         );
@@ -114,11 +114,11 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             HttpServletRequest request) {
 
-        logger.error("Illegal argument: {}", ex.getMessage());
+        logger.error("Argumento ilegal: {}", ex.getMessage());
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Solicitud Incorrecta",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -132,12 +132,12 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
-        logger.error("Unexpected error occurred: ", ex);
+        logger.error("Error inesperado: ", ex);
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "An unexpected error occurred. Please contact support.",
+                "Error Interno del Servidor",
+                "Ocurrió un error inesperado. Por favor contacte a soporte.",
                 request.getRequestURI()
         );
 

@@ -153,6 +153,12 @@ public class UserService {
         newUser.setUserType(getUserTypeById(user.getUserTypeId()));
         newUser.setUserStatus(getUserStatusByName(STATUS_USER_ACTIVE));
 
+        // Validar que no exista otro usuario con el mismo RUT
+        UserEntity existingUser = userRepository.findByNationalId(user.getNationalId());
+        if (existingUser != null) {
+            throw new IllegalArgumentException("Ya existe un usuario con el mismo RUT: " + user.getNationalId());
+        }
+
         UserEntity savedUser = userRepository.save(newUser);
         return toUserDTO(savedUser);
     }
@@ -171,6 +177,14 @@ public class UserService {
 
 
     /* Metodos auxiliares */
+
+    private UserEntity getUserByNationalId(String nationalId) {
+        UserEntity user = userRepository.findByNationalId(nationalId);
+        if (user == null) {
+            throw new ResourceNotFoundException("Usuario", "RUT", nationalId);
+        }
+        return user;
+    }
 
     /**
      * Obtiene el estado de usuario por nombre.

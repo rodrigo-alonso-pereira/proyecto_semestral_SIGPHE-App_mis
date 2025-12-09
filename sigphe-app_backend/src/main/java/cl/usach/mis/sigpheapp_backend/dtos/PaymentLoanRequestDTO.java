@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentLoanRequestDTO {
 
-    @NotNull(message = "Customer ID is required")
+    @NotNull(message = "El ID del cliente es requerido")
     private Long customerId;
 
-    @NotNull(message = "Payment amount is required")
+    @NotNull(message = "El monto del pago es requerido")
     private Double paymentAmount;
 
 }

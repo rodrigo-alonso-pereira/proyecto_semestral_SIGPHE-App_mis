@@ -46,7 +46,7 @@ public class LoanController {
         java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
         java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+            throw new IllegalArgumentException("La fecha de inicio debe ser anterior o igual a la fecha de fin.");
         }
         List<String> statuses = Arrays.asList(STATUS_LOAN_ACTIVE, STATUS_LOAN_OVERDUE);
         List<LoanDTO> loans = loanService.getAllLoansByStatusesAndDateRange(statuses,

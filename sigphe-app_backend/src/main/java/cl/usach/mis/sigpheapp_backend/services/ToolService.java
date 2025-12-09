@@ -157,10 +157,10 @@ public class ToolService {
         ToolStatusEntity status = getToolStatusById(dto.getToolStatusId());
         if (tool.getToolStatus().getName().equals(STATUS_TOOL_LOANED) ||
                 tool.getToolStatus().getName().equals(STATUS_TOOL_DECOMMISSIONED)) {
-            throw new BusinessException("Tool status cannot be changed when it is 'Prestada' or 'Dada de baja'.");
+            throw new BusinessException("El estado de la herramienta no puede cambiarse cuando está 'Prestada' o 'Dada de baja'.");
         } else if (status.getName().equals(STATUS_TOOL_LOANED) ||
                 status.getName().equals(STATUS_TOOL_DECOMMISSIONED)) {
-            throw new BusinessException("Tool status cannot be set to 'Prestada' or 'Dada de baja' via update.");
+            throw new BusinessException("El estado de la herramienta no puede establecerse como 'Prestada' o 'Dada de baja' mediante actualización.");
         }
 
         tool.setName(dto.getName());
@@ -338,7 +338,7 @@ public class ToolService {
     private void isToolAvailableForDeactivation(ToolEntity tool) {
         String status = tool.getToolStatus().getName();
         if (!status.equals(STATUS_TOOL_AVAILABLE) && !status.equals(STATUS_TOOL_IN_REPAIR)) {
-            throw new BusinessException("Tool must be 'Disponible' or 'En Reparacion' to be deactivated.");
+            throw new BusinessException("La herramienta debe estar 'Disponible' o 'En Reparación' para ser desactivada.");
         }
     }
 

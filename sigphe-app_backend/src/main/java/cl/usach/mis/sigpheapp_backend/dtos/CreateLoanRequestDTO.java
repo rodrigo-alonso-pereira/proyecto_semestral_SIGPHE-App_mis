@@ -15,18 +15,18 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateLoanRequestDTO {
 
-    @Future(message = "Due date must be in the future")
-    @NotNull(message = "Due date is required")
+    @Future(message = "La fecha de vencimiento debe ser en el futuro")
+    @NotNull(message = "La fecha de vencimiento es requerida")
     private LocalDateTime dueDate;
 
-    @NotNull(message = "Customer ID is required")
+    @NotNull(message = "El ID del cliente es requerido")
     private Long customerId;
 
-    @NotNull(message = "Worker ID is required")
+    @NotNull(message = "El ID del trabajador es requerido")
     private Long workerId;
 
-    @NotNull(message = "Tool IDs cannot be null")
-    @NotEmpty(message = "At least one tool ID is required")
+    @NotNull(message = "Los IDs de herramientas no pueden ser nulos")
+    @NotEmpty(message = "Se requiere al menos un ID de herramienta")
     private List<Long> toolIds;
 
 }

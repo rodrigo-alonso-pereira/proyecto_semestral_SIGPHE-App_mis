@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class DateRangeRequestDTO {
 
-    @NotNull(message = "Start date is required")
+    @NotNull(message = "La fecha de inicio es requerida")
     private LocalDateTime startDate;
 
-    @NotNull(message = "End date is required")
+    @NotNull(message = "La fecha de fin es requerida")
     private LocalDateTime endDate;
 }

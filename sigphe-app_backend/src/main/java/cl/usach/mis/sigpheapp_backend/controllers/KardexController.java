@@ -53,7 +53,7 @@ public class KardexController {
         java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
 
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+            throw new IllegalArgumentException("La fecha de inicio debe ser anterior o igual a la fecha de fin.");
         }
         return ResponseEntity.ok(kardexService.getKardexEntriesByDateRange(start, end));
     }
@@ -74,7 +74,7 @@ public class KardexController {
         java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
 
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date must be before or equal to end date.");
+            throw new IllegalArgumentException("La fecha de inicio debe ser anterior o igual a la fecha de fin.");
         }
         return ResponseEntity.ok(kardexService.getKardexEntriesByToolIdAndDateRange(id, start, end));
     }

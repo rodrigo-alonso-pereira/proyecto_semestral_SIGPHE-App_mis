@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DeactivateToolRequestDTO {
 
-    @NotNull(message = "Worker ID is required")
+    @NotNull(message = "El ID del trabajador es requerido")
     private Long workerId;
 }
