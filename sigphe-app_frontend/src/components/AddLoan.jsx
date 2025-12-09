@@ -7,11 +7,14 @@ import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import SaveIcon from "@mui/icons-material/Save";
+import Chip from "@mui/material/Chip";
 import toolService from "../services/tool.service";
 import userService from "../services/user.service";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import Swal from "sweetalert2";
 
 const AddLoan = () => {
   const [tools, setTools] = useState([]); // Lista de herramientas activas
@@ -62,24 +65,111 @@ const AddLoan = () => {
       });
   };
 
+  // Función para manejar la selección de herramientas
+  const handleToolSelection = (toolId) => {
+    if (!toolIds.includes(toolId)) {
+      setToolIds([...toolIds, toolId]);
+    }
+  };
+
+  // Función para eliminar una herramienta seleccionada
+  const handleRemoveTool = (toolIdToRemove) => {
+    setToolIds(toolIds.filter(id => id !== toolIdToRemove));
+  };
+
   const saveLoan = (e) => {
     e.preventDefault();
-
-    const formattedDueDate = dueDate ? dueDate.toISOString() : null; // Formatear la fecha a ISO 8601
-    const loan = { dueDate: formattedDueDate, customerId, workerId, toolIds };
-    //Crear nuevo prestamo
-    loanService
-      .create(loan)
-      .then((response) => {
-        console.log("Prestamo ha sido añadido.", response.data);
-        navigate("/loan/list");
-      })
-      .catch((error) => {
-        console.log(
-          "Ha ocurrido un error al intentar crear nuevo prestamo.",
-          error
-        );
+    
+    // Validaciones antes de confirmar
+    if (!dueDate) {
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Por favor, ingrese la fecha de devolución.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
       });
+      return;
+    }
+
+    if (!customerId || customerId === 0) {
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Por favor, seleccione un cliente.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    if (!workerId || workerId === 0) {
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Por favor, seleccione un trabajador.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    if (!toolIds || toolIds.length === 0) {
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Por favor, seleccione al menos una herramienta.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+    
+    // Mostrar alerta de confirmación con SweetAlert2
+    Swal.fire({
+      title: '¿Desea guardar el préstamo?',
+      text: 'Se creará un nuevo registro de préstamo',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, guardar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Formatear la fecha manteniendo la hora local (horario Chile)
+        const formattedDueDate = dueDate ? dueDate.format('YYYY-MM-DDTHH:mm:ss') : null;
+        const loan = { dueDate: formattedDueDate, customerId, workerId, toolIds };
+        
+        //Crear nuevo prestamo
+        loanService
+          .create(loan)
+          .then((response) => {
+            console.log("Prestamo ha sido añadido.", response.data);
+            Swal.fire({
+              title: '¡Guardado!',
+              text: 'El préstamo ha sido creado exitosamente.',
+              icon: 'success',
+              confirmButtonColor: '#3085d6'
+            });
+            navigate("/loan/list");
+          })
+          .catch((error) => {
+            console.log(
+              "Ha ocurrido un error al intentar crear nuevo prestamo.",
+              error
+            );
+            
+            // Capturar el mensaje de error del backend
+            const errorMessage = error.response?.data?.message 
+              || error.response?.data 
+              || 'Ha ocurrido un error al intentar crear el préstamo.';
+            
+            Swal.fire({
+              title: 'Error',
+              text: errorMessage,
+              icon: 'error',
+              confirmButtonColor: '#d33'
+            });
+          });
+      }
+    });
   };
 
   useEffect(() => {
@@ -115,9 +205,11 @@ const AddLoan = () => {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimePicker
               id="dueDate"
-              label="Fecha de Devolución"
+              label="Ingrese fecha de devolución"
               value={dueDate}
               onChange={(newValue) => setDueDate(newValue)}
+              minDate={dayjs()}
+              minTime={dueDate && dayjs(dueDate).isSame(dayjs(), 'day') ? dayjs() : undefined}
             />
           </LocalizationProvider>
         </FormControl>
@@ -125,7 +217,7 @@ const AddLoan = () => {
         <FormControl fullWidth>
           <TextField
             id="customerId"
-            label="Agregar Cliente"
+            label="Agregar Cliente que hará la reserva"
             value={customerId}
             select
             variant="standard"
@@ -149,7 +241,7 @@ const AddLoan = () => {
         <FormControl fullWidth>
           <TextField
             id="workerId"
-            label="Agregar Trabajador"
+            label="Agregar Trabajador que realiza la reserva"
             value={workerId}
             select
             variant="standard"
@@ -173,29 +265,51 @@ const AddLoan = () => {
         <FormControl fullWidth>
           <TextField
             id="toolId"
-            label="Agregar Herramienta"
-            value={toolIds}
+            label="Seleccionar herramientas para el préstamo"
+            value=""
             select
             variant="standard"
             onChange={(e) => {
               const value = e.target.value;
-              setToolIds(typeof value === 'string' ? value.split(',') : value);
-            }}
-            SelectProps={{
-              multiple: true,
+              if (value) {
+                handleToolSelection(Number(value));
+              }
             }}
           >
+            <MenuItem value="" disabled>
+              Seleccione una herramienta...
+            </MenuItem>
             {tools.length === 0 ? (
               <MenuItem disabled>Cargando herramientas...</MenuItem>
             ) : (
-              tools.map((tool) => (
-                <MenuItem key={tool.id} value={tool.id}>
-                  {tool.name}
-                </MenuItem>
-              ))
+              tools
+                .filter(tool => !toolIds.includes(tool.id))
+                .map((tool) => (
+                  <MenuItem key={tool.id} value={tool.id}>
+                    {"Nombre: " + tool.name + "  -  Modelo: " + tool.model}
+                  </MenuItem>
+                ))
             )}
           </TextField>
         </FormControl>
+
+        {/* Mostrar herramientas seleccionadas como Chips */}
+        {toolIds.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+            {toolIds.map((toolId) => {
+              const tool = tools.find(t => t.id === toolId);
+              return tool ? (
+                <Chip
+                  key={toolId}
+                  label={`${tool.name} - ${tool.model}`}
+                  onDelete={() => handleRemoveTool(toolId)}
+                  color="primary"
+                  variant="outlined"
+                />
+              ) : null;
+            })}
+          </Box>
+        )}
 
         <FormControl>
           <Button

@@ -29,6 +29,7 @@ public class LoanService {
     private static final String STATUS_USER_WITH_DEBT = "Con Deuda";
     private static final String STATUS_USER_ACTIVE = "Activo";
     private static final String STATUS_LOAN_ACTIVE = "Vigente";
+    private static final String STATUS_LOAN_RETURNED = "Retornado";
     private static final String STATUS_LOAN_OVERDUE = "Atrasada";
     private static final String STATUS_LOAN_FINISHED = "Finalizado";
     private static final String STATUS_PENALTY_PAID = "Pagada";
@@ -226,7 +227,7 @@ public class LoanService {
 
         // Validaciones de negocio - lanzan excepciones si no cumplen
         validateLoanBelongsToCustomer(loan, customer);
-        validateLoanIsReturnable(loan);
+        validateLoanIsReturnable(loan); // Validar que el préstamo esté en estado "Vigente" o "Atrasada"
 
         // Hacer el proceso de devolución de cada herramienta perteneciente al préstamo y calcular multas si aplica
         dto.getToolConditions().forEach((toolId, condition) -> {
@@ -299,7 +300,7 @@ public class LoanService {
         }
 
         loan.setReturnDate(LocalDateTime.now()); // Establecer la fecha de devolución
-        loan.setLoanStatus(getLoanStatusByName(STATUS_LOAN_OVERDUE)); // Cambiar estado del préstamo
+        loan.setLoanStatus(getLoanStatusByName(STATUS_LOAN_RETURNED)); // Cambiar estado del préstamo a "Entregado"
         loanRepository.save(loan); // Guardar el préstamo actualizado
         customer.setUserStatus(getUserStatusByName(STATUS_USER_WITH_DEBT));// Cliente -> "Con Deuda"
         userRepository.save(customer); // Guardar el cliente actualizado
@@ -343,10 +344,6 @@ public class LoanService {
 
     // TODO: Hacer metodo para cambiar un prestamo por otro nuevo por error del operario
 
-    // TODO: Hacer metodo para buscar prestamos que esten atrasadas y cambiar el estado automaticamente
-
-    // TODO: Evaluar implementar estado Entregado para Loan cuando cliente devuelve
-    //  herramientas y Atrasado cuando se pasa la fecha de devolucion sin pagar
 
     /* Metodos auxiliares */
 
@@ -578,26 +575,27 @@ public class LoanService {
     }
 
     /**
-     * Valida que un préstamo esté en estado retornable (Vigente).
+     * Valida que un préstamo esté en estado retornable (Vigente y/o Atrasado).
      *
      * @param loan El préstamo a validar
      * @throws BusinessException si el préstamo no está en estado retornable
      */
     private void validateLoanIsReturnable(LoanEntity loan) {
-        if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_ACTIVE)) {
+        String status = loan.getLoanStatus().getName();
+        if (!(status.equals(STATUS_LOAN_ACTIVE) || status.equals(STATUS_LOAN_OVERDUE))) {
             throw new BusinessException("El préstamo ID " + loan.getId() + " no está en estado retornable. " +
                     "Estado actual: " + loan.getLoanStatus().getName());
         }
     }
 
     /**
-     * Valida que un préstamo esté en estado pagable (Atrasada).
+     * Valida que un préstamo esté en estado pagable (Retornado).
      *
      * @param loan El préstamo a validar
      * @throws BusinessException si el préstamo no está en estado pagable
      */
     private void validateLoanIsPayable(LoanEntity loan) {
-        if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_OVERDUE)) {
+        if (!loan.getLoanStatus().getName().equals(STATUS_LOAN_RETURNED)) {
             throw new BusinessException("El préstamo ID " + loan.getId() + " no está en estado pagable. " +
                     "Estado actual: " + loan.getLoanStatus().getName());
         }

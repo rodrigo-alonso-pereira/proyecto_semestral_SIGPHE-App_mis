@@ -17,6 +17,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import BuildIcon from "@mui/icons-material/Build";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import Swal from "sweetalert2";
 
 const ToolList = () => {
   const [tools, setTools] = useState([]);
@@ -84,23 +89,71 @@ const ToolList = () => {
 
   const handleDelete = (id) => {
     console.log("Desactivando herramienta con id:", id);
-    const confirmDeactivate = window.confirm(
-      "¿Está seguro que desea retornar esta herramienta?"
-    );
-    if (confirmDeactivate) {
-      const data = {
-        workerId: 1, // ID del empleado que realiza la desactivación (debe ser dinámico en una app real)
-      };
-      toolService
-        .deactivateTool(id, data)
-        .then((response) => {
-          console.log("Herramienta desactivada:", response.data);
-          init(); // Recargar la lista de herramientas después de la desactivación
-        })
-        .catch((error) => {
-          console.log("Error al desactivar herramienta:", error);
-        });
+    
+    // Buscar la herramienta por id
+    const tool = tools.find((t) => t.id === id);
+    
+    if (!tool) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se encontró la herramienta.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+      return;
     }
+    
+    Swal.fire({
+      title: '¿Desactivar herramienta?',
+      html: `
+        <div style="text-align: left; margin-top: 15px;">
+          <p><strong>Nombre:</strong> ${tool.name}</p>
+          <p><strong>Modelo:</strong> ${tool.model}</p>
+          <p style="margin-top: 15px; font-style: italic; color: #666;">
+            ¿Está seguro que desea desactivar esta herramienta?
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const data = {
+          workerId: 1, // ID del empleado que realiza la desactivación (debe ser dinámico en una app real)
+        };
+        toolService
+          .deactivateTool(id, data)
+          .then((response) => {
+            console.log("Herramienta desactivada:", response.data);
+            Swal.fire({
+              title: '¡Desactivada!',
+              text: 'La herramienta ha sido desactivada exitosamente.',
+              icon: 'success',
+              confirmButtonColor: '#3085d6',
+              timer: 3000
+            });
+            init(); // Recargar la lista de herramientas después de la desactivación
+          })
+          .catch((error) => {
+            console.log("Error al desactivar herramienta:", error);
+            
+            const errorMessage = error.response?.data?.message 
+              || error.response?.data 
+              || 'Se ha producido un error al desactivar la herramienta.';
+            
+            Swal.fire({
+              title: 'Error',
+              text: errorMessage,
+              icon: 'error',
+              confirmButtonColor: '#d33'
+            });
+          });
+      }
+    });
   };
 
   // Función para obtener el color según el estado del préstamo
@@ -116,6 +169,22 @@ const ToolList = () => {
         return "default"; // Gris
       default:
         return "default";
+    }
+  };
+
+  // Función para obtener el icono según el estado de la herramienta
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Disponible":
+        return <CheckCircleIcon />; // Verde - disponible para préstamo
+      case "En Reparacion":
+        return <BuildIcon />; // Naranja - en reparación
+      case "Prestada":
+        return <HandshakeIcon />; // Azul - prestada
+      case "Dada de baja":
+        return <RemoveCircleIcon />; // Gris - dada de baja
+      default:
+        return null;
     }
   };
 
@@ -207,17 +276,17 @@ const ToolList = () => {
                 <Chip
                   label={tool.status}
                   color={getStatusColor(tool.status)}
-                  size="small"
+                  icon={getStatusIcon(tool.status)}
+                  sx={{ minWidth: '140px' }}
                 />
               </TableCell>
               <TableCell align="center">{tool.model}</TableCell>
-              <TableCell>
+              <TableCell style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button
                   variant="contained"
                   color="info"
                   size="small"
                   onClick={() => handleEdit(tool.id)}
-                  style={{ marginLeft: "0.5rem" }}
                   startIcon={<EditIcon />}
                   disabled={
                     tool.status === "Prestada" || tool.status === "Dada de baja"
@@ -230,7 +299,6 @@ const ToolList = () => {
                   color="error"
                   size="small"
                   onClick={() => handleDelete(tool.id)}
-                  style={{ marginLeft: "0.5rem" }}
                   startIcon={<DeleteIcon />}
                   disabled={
                     tool.status === "Prestada" || tool.status === "Dada de baja"

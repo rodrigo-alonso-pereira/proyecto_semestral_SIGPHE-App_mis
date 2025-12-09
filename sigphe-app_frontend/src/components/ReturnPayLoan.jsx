@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
 import SaveIcon from "@mui/icons-material/Save";
+import Swal from "sweetalert2";
 
 const ReturnPayLoan = () => {
   const [employees, setEmployees] = useState([]); // Lista de empleados
@@ -88,40 +89,109 @@ const ReturnPayLoan = () => {
     
     // Validar que existan los datos necesarios
     if (!loanDetail.customer?.id) {
-      alert("Error: No se pudo obtener la información del cliente. Por favor, recargue la página.");
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo obtener la información del cliente. Por favor, recargue la página.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
       console.error("Customer ID no disponible en loanDetail:", loanDetail);
       return;
     }
     
     if (!workerId) {
-      alert("Por favor, seleccione un empleado para procesar el retorno.");
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Por favor, seleccione un empleado para procesar el retorno.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
     
-    const customerIdValue = loanDetail.customer.id;
-    const workerIdValue = Number(workerId);
-    const returnData = { 
-      workerId: workerIdValue, 
-      customerId: customerIdValue, 
-      toolConditions 
-    };
+    // Crear lista HTML de herramientas y sus condiciones
+    const toolsListHTML = loanDetail.tools?.map((tool) => {
+      const condition = toolConditions[tool.id] || 'ok';
+      const conditionText = condition === 'ok' ? 'En buen estado' : 
+                           condition === 'dañada' ? 'Dañada' : 
+                           'Perdida';
+      const conditionColor = condition === 'ok' ? '#4caf50' : 
+                            condition === 'dañada' ? '#ff9800' : 
+                            '#f44336';
+      
+      return `<div style="text-align: left; padding: 5px 0; border-bottom: 1px solid #eee;">
+                <strong>${tool.name}</strong><br>
+                <span style="color: ${conditionColor}; font-weight: bold;">
+                  Estado: ${conditionText}
+                </span>
+              </div>`;
+    }).join('') || '<p>No hay herramientas</p>';
+    
+    // Confirmación antes de retornar
+    Swal.fire({
+      title: '¿Desea retornar el préstamo?',
+      html: `
+        <div style="text-align: left; margin-top: 15px;">
+          <p style="margin-bottom: 10px; font-weight: bold;">Herramientas a retornar:</p>
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+            ${toolsListHTML}
+          </div>
+          <p style="margin-top: 15px; font-style: italic; color: #666;">
+            Por favor, verifique que la información sea correcta antes de confirmar.
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, retornar',
+      cancelButtonText: 'Cancelar',
+      width: '600px'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const customerIdValue = loanDetail.customer.id;
+        const workerIdValue = Number(workerId);
+        const returnData = { 
+          workerId: workerIdValue, 
+          customerId: customerIdValue, 
+          toolConditions 
+        };
 
-    console.log("Datos a enviar:", returnData);
+        console.log("Datos a enviar:", returnData);
 
-    // Retornar préstamo
-    loanService
-      .returnLoan(id, returnData)
-      .then((response) => {
-        console.log("Préstamo ha sido retornado.", response.data);
-        navigate("/loan/list"); // Navegar de vuelta a la lista de préstamos
-      })
-      .catch((error) => {
-        alert("Error al retornar el préstamo. Por favor, inténtelo de nuevo.");
-        console.log(
-          "Ha ocurrido un error al intentar retornar el préstamo.",
-          error
-        );
-      });
+        // Retornar préstamo
+        loanService
+          .returnLoan(id, returnData)
+          .then((response) => {
+            console.log("Préstamo ha sido retornado.", response.data);
+            Swal.fire({
+              title: '¡Retornado!',
+              text: 'El préstamo ha sido retornado exitosamente.',
+              icon: 'success',
+              confirmButtonColor: '#3085d6'
+            });
+            navigate("/loan/list"); // Navegar de vuelta a la lista de préstamos
+          })
+          .catch((error) => {
+            console.log(
+              "Ha ocurrido un error al intentar retornar el préstamo.",
+              error
+            );
+            
+            const errorMessage = error.response?.data?.message 
+              || error.response?.data 
+              || 'Error al retornar el préstamo. Por favor, inténtelo de nuevo.';
+            
+            Swal.fire({
+              title: 'Error',
+              text: errorMessage,
+              icon: 'error',
+              confirmButtonColor: '#d33'
+            });
+          });
+      }
+    });
   };
 
   // Función para manejar el cambio de condición de una herramienta

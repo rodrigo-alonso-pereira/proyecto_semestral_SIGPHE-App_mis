@@ -8,6 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import SaveIcon from "@mui/icons-material/Save";
 import toolService from "../services/tool.service";
 import userService from "../services/user.service";
+import Swal from "sweetalert2";
 
 const AddEditTool = () => {
   const [toolCategories, setToolCategories] = useState([]); // Lista de categorias herramientas
@@ -96,80 +97,182 @@ const AddEditTool = () => {
       };
 
       if (!workerId) {
-        alert("Por favor, seleccione un empleado para procesar el retorno.");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, seleccione un empleado para procesar el retorno.',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
 
-      console.log("Datos de la herramienta a actualizar:", tool);
-      // Actualizar herramienta existente
-      toolService
-        .update(id, tool)
-        .then((response) => {
-          console.log("Herramienta ha sido actualizada.", response.data);
-          navigate("/tool/list");
-        })
-        .catch((error) => {
-          console.log(
-            "Ha ocurrido un error al intentar actualizar la herramienta.",
-            error
-          );
-        });
+      // Confirmación antes de actualizar
+      Swal.fire({
+        title: '¿Desea actualizar la herramienta?',
+        text: 'Se guardarán los cambios realizados',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          console.log("Datos de la herramienta a actualizar:", tool);
+          // Actualizar herramienta existente
+          toolService
+            .update(id, tool)
+            .then((response) => {
+              console.log("Herramienta ha sido actualizada.", response.data);
+              Swal.fire({
+                title: '¡Actualizada!',
+                text: 'La herramienta ha sido actualizada exitosamente.',
+                icon: 'success',
+                confirmButtonColor: '#3085d6'
+              });
+              navigate("/tool/list");
+            })
+            .catch((error) => {
+              console.log(
+                "Ha ocurrido un error al intentar actualizar la herramienta.",
+                error
+              );
+              
+              const errorMessage = error.response?.data?.message 
+                || error.response?.data 
+                || 'Ha ocurrido un error al intentar actualizar la herramienta.';
+              
+              Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonColor: '#d33'
+              });
+            });
+        }
+      });
     } else {
       // Validaciones antes de crear
       if (name.trim() === "") {
-        alert("Por favor, ingrese un nombre válido para la herramienta.");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, ingrese un nombre válido para la herramienta.',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!replacementValue || replacementValue <= 0) {
-        alert("Por favor, ingrese un valor de reemplazo válido (mayor a 0).");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, ingrese un valor de reemplazo válido (mayor a 0).',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!rentalValue || rentalValue <= 0) {
-        alert("Por favor, ingrese un valor de arriendo válido (mayor a 0).");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, ingrese un valor de arriendo válido (mayor a 0).',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!categoryId) {
-        alert("Por favor, seleccione una categoría para la herramienta.");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, seleccione una categoría para la herramienta.',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!modelId) {
-        alert("Por favor, seleccione un modelo para la herramienta.");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, seleccione un modelo para la herramienta.',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!quantity || quantity < 1) {
-        alert("Por favor, ingrese una cantidad válida (mínimo 1 herramienta).");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, ingrese una cantidad válida (mínimo 1 herramienta).',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
       if (!workerId) {
-        alert("Por favor, seleccione un trabajador responsable.");
+        Swal.fire({
+          title: 'Campo requerido',
+          text: 'Por favor, seleccione un trabajador responsable.',
+          icon: 'warning',
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
 
-      // Crear nueva herramienta
-      const tool = {
-        name,
-        replacementValue,
-        rentalValue,
-        toolCategoryId: categoryId,
-        modelId,
-        workerId,
-        quantity,
-      };
+      // Confirmación antes de crear
+      Swal.fire({
+        title: '¿Desea guardar la herramienta?',
+        text: 'Se creará un nuevo registro de herramienta',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Crear nueva herramienta
+          const tool = {
+            name,
+            replacementValue,
+            rentalValue,
+            toolCategoryId: categoryId,
+            modelId,
+            workerId,
+            quantity,
+          };
 
-      console.log("Datos de la herramienta a guardar:", tool);
+          console.log("Datos de la herramienta a guardar:", tool);
 
-      toolService
-        .create(tool)
-        .then((response) => {
-          console.log("Herramienta ha sido añadida.", response.data);
-          navigate("/tool/list");
-        })
-        .catch((error) => {
-          console.log(
-            "Ha ocurrido un error al intentar crear nueva herramienta.",
-            error
-          );
-        });
+          toolService
+            .create(tool)
+            .then((response) => {
+              console.log("Herramienta ha sido añadida.", response.data);
+              Swal.fire({
+                title: '¡Guardada!',
+                text: 'La herramienta ha sido creada exitosamente.',
+                icon: 'success',
+                confirmButtonColor: '#3085d6'
+              });
+              navigate("/tool/list");
+            })
+            .catch((error) => {
+              console.log(
+                "Ha ocurrido un error al intentar crear nueva herramienta.",
+                error
+              );
+              
+              const errorMessage = error.response?.data?.message 
+                || error.response?.data 
+                || 'Ha ocurrido un error al intentar crear la herramienta.';
+              
+              Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonColor: '#d33'
+              });
+            });
+        }
+      });
     }
   };
 
@@ -274,7 +377,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="toolName"
-            label="Nombre de la Herramienta"
+            label="Ingrese el nombre de la herramienta"
             value={name}
             variant="standard"
             onChange={(e) => setName(e.target.value)}
@@ -285,7 +388,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="toolReplacementValue"
-            label="Valor de reemplazo de la Herramienta"
+            label="Ingrese el valor de reemplazo de la herramienta"
             type="number"
             value={replacementValue}
             variant="standard"
@@ -297,7 +400,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="toolRentalValue"
-            label="Valor de arriendo diario de la Herramienta"
+            label="Ingrese el valor de arriendo diario de la herramienta"
             type="number"
             value={rentalValue}
             variant="standard"
@@ -309,7 +412,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="categoryId"
-            label="Agregar Categoria"
+            label="Ingrese la categoría de la herramienta"
             value={categoryId}
             select
             variant="standard"
@@ -317,6 +420,7 @@ const AddEditTool = () => {
               const value = e.target.value;
               setCategoryId(Number(value));
             }}
+            helperText="Ej. Eléctrica / Manual"
           >
             {toolCategories.length === 0 ? (
               <MenuItem disabled>Cargando categorias...</MenuItem>
@@ -335,7 +439,7 @@ const AddEditTool = () => {
           <FormControl fullWidth>
             <TextField
               id="statusId"
-              label="Cambiar Estado de la Herramienta"
+              label="Cambiar estado de la herramienta"
               value={statusId}
               select
               variant="standard"
@@ -343,6 +447,7 @@ const AddEditTool = () => {
                 const value = e.target.value;
                 setStatusId(Number(value));
               }}
+              helperText="Ej. Disponible / En Reparacion"
             >
               {toolStatuses.length === 0 ? (
                 <MenuItem disabled>Cargando estados...</MenuItem>
@@ -366,7 +471,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="modelId"
-            label="Agregar Modelo de la Herramienta"
+            label="Ingrese el modelo de la herramienta"
             value={modelId}
             select
             variant="standard"
@@ -374,6 +479,7 @@ const AddEditTool = () => {
               const value = e.target.value;
               setModelId(Number(value));
             }}
+            helperText="Ej. Bosch X123"
           >
             {toolModels.length === 0 ? (
               <MenuItem disabled>Cargando modelos...</MenuItem>
@@ -391,7 +497,7 @@ const AddEditTool = () => {
           <FormControl fullWidth>
             <TextField
               id="quantity"
-              label="Cantidad de Herramientas a agregar"
+              label="Ingrese la cantidad de herramientas a agregar"
               type="number"
               value={quantity}
               variant="standard"
@@ -404,7 +510,7 @@ const AddEditTool = () => {
         <FormControl fullWidth>
           <TextField
             id="workerId"
-            label="Agregar Trabajador"
+            label="Ingrese el trabajador responsable de la operación"
             value={workerId}
             select
             variant="standard"
@@ -412,6 +518,7 @@ const AddEditTool = () => {
               const value = e.target.value;
               setWorkerId(Number(value));
             }}
+            helperText="Ej. Pedro Perez"
           >
             {employees.length === 0 ? (
               <MenuItem disabled>Cargando empleados...</MenuItem>
@@ -442,7 +549,7 @@ const AddEditTool = () => {
         </FormControl>
       </Box>
       <hr style={{ width: "100%", marginTop: "2rem" }} />
-      <Link to="/tool/list">Volver a lista de herramientas</Link>
+      <Link to="/tool/list">Volver a la lista de herramientas</Link>
     </Box>
   );
 };

@@ -18,9 +18,18 @@ import Alert from "@mui/material/Alert";
 import CheckIcon from "@mui/icons-material/Check";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import InfoIcon from "@mui/icons-material/Info";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import PersonIcon from "@mui/icons-material/Person";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import Swal from "sweetalert2";
 
 {
   /* Componente de tipo funcion que muestra la lista de prestamos */
@@ -49,8 +58,9 @@ const ReportList = () => {
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
-    return `${day}/${month}/${year} ${hours}:00`;
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   {
@@ -152,12 +162,22 @@ const ReportList = () => {
   // Función para aplicar el filtro
   const handleFilter = () => {
     if (!startDate || !endDate) {
-      alert("Por favor, seleccione ambas fechas (inicio y fin).");
+      Swal.fire({
+        title: 'Fechas requeridas',
+        text: 'Por favor, seleccione ambas fechas (inicio y fin).',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (startDate.isAfter(endDate)) {
-      alert("La fecha de inicio debe ser anterior a la fecha de fin.");
+      Swal.fire({
+        title: 'Fechas inválidas',
+        text: 'La fecha de inicio debe ser anterior a la fecha de fin.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -209,6 +229,38 @@ const ReportList = () => {
     }
   };
 
+  // Función para obtener el icono según el estado del préstamo
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Vigente":
+        return <CheckCircleIcon />; // Verde - préstamo activo
+      case "Atrasada":
+        return <WarningIcon />; // Naranja - advertencia de atraso
+      case "Retornado":
+        return <InfoIcon />; // Azul - información de retorno
+      case "Finalizado":
+        return <TaskAltIcon />; // Gris - tarea completada
+      default:
+        return null;
+    }
+  };
+
+  // Función para obtener el icono según el estado del cliente
+  const getStatusClientIcon = (status) => {
+    switch (status) {
+      case "Activo":
+        return <PersonIcon />; // Verde - cliente activo
+      case "Con Deuda":
+        return <MoneyOffIcon />; // Naranja - cliente con deuda
+      case "Con Prestamos":
+        return <HandshakeIcon />; // Azul - cliente con préstamos
+      case "Inactivo":
+        return <PersonOffIcon />; // Gris - cliente inactivo
+      default:
+        return null;
+    }
+  };
+
   // Hook de efecto para cargar los prestamos al montar el componente
   useEffect(() => {
     init();
@@ -229,7 +281,7 @@ const ReportList = () => {
 
       {/* Filtro de rango de fechas */}
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
-        <h3 style={{ marginTop: 0 }}>Filtrar Reportes por Rango de Fechas</h3>
+        <h3 style={{ marginTop: 0 }}>Filtrar reportes por rango de fechas</h3>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box
             sx={{
@@ -282,7 +334,7 @@ const ReportList = () => {
 
       <TableContainer component={Paper}>
         <br />
-        <h2 style={{ textAlign: "center" }}>Listado de Préstamos Activos</h2>
+        <h2 style={{ textAlign: "center" }}>Listado de préstamos activos</h2>
         <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
@@ -346,7 +398,8 @@ const ReportList = () => {
                   <Chip
                     label={loan.loanStatus}
                     color={getStatusColor(loan.loanStatus)}
-                    size="small"
+                    icon={getStatusIcon(loan.loanStatus)}
+                    sx={{ minWidth: '120px' }}
                   />
                 </TableCell>
                 <TableCell align="center">{loan.customerName}</TableCell>
@@ -356,7 +409,7 @@ const ReportList = () => {
         </TableBody>
       </Table>
       <br />
-      <h2 style={{ textAlign: "center" }}>Listado de Clientes con atrasos</h2>
+      <h2 style={{ textAlign: "center" }}>Listado de clientes con mas atrasos</h2>
       <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
@@ -371,7 +424,7 @@ const ReportList = () => {
               Estado
             </TableCell>
             <TableCell align="center" sx={{ fontWeight: "bold" }}>
-              Cantidad de Préstamos Atrasados
+              Cantidad de préstamos atrasados
             </TableCell>
           </TableRow>
         </TableHead>
@@ -396,7 +449,8 @@ const ReportList = () => {
                   <Chip
                     label={customer.status}
                     color={getStatusClientColor(customer.status)}
-                    size="small"
+                    icon={getStatusClientIcon(customer.status)}
+                    sx={{ minWidth: '130px' }}
                   />
                 </TableCell>
                 <TableCell align="center">{customer.totalOverdueLoans}</TableCell>
@@ -406,7 +460,7 @@ const ReportList = () => {
         </TableBody>
       </Table>
       <br />
-      <h2 style={{ textAlign: "center" }}>Listado de Herramientas mas prestadas</h2>
+      <h2 style={{ textAlign: "center" }}>Listado de herramientas mas prestadas</h2>
       <br />
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
@@ -424,7 +478,7 @@ const ReportList = () => {
               Modelo
             </TableCell>
             <TableCell align="center" sx={{ fontWeight: "bold" }}>
-              Cantidad de Préstamos
+              Cantidad de préstamos
             </TableCell>
           </TableRow>
         </TableHead>

@@ -18,17 +18,22 @@ import FormControl from "@mui/material/FormControl";
 import Alert from "@mui/material/Alert";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import BuildIcon from "@mui/icons-material/Build";
+import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import Swal from "sweetalert2";
 
 const KardexList = () => {
   const [kardexs, setKardex] = useState([]);
   const [tools, setTools] = useState([]); // Lista de herramientas para el filtro
 
   // Estados para los filtros
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [dateRange, setDateRange] = useState([null, null]);
   const [selectedToolId, setSelectedToolId] = useState("");
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterType, setFilterType] = useState(""); // "date", "tool", "both"
@@ -44,8 +49,9 @@ const KardexList = () => {
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
-    return `${day}/${month}/${year} ${hours}:00`;
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   // Cargar todas las herramientas para el selector
@@ -127,17 +133,28 @@ const KardexList = () => {
 
   // Aplicar filtros
   const handleFilter = () => {
+    const [startDate, endDate] = dateRange;
     const hasDateFilter = startDate && endDate;
     const hasToolFilter = selectedToolId !== "" && selectedToolId !== null && selectedToolId !== undefined;
 
     // Validaciones
     if (!hasDateFilter && !hasToolFilter) {
-      alert("Por favor, seleccione al menos un filtro (fechas o herramienta).");
+      Swal.fire({
+        title: 'Filtro requerido',
+        text: 'Por favor, seleccione al menos un filtro (fechas o herramienta).',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (hasDateFilter && startDate.isAfter(endDate)) {
-      alert("La fecha de inicio debe ser anterior a la fecha de fin.");
+      Swal.fire({
+        title: 'Fechas inválidas',
+        text: 'La fecha de inicio debe ser anterior a la fecha de fin.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -167,8 +184,7 @@ const KardexList = () => {
 
   // Limpiar filtros
   const handleClearFilter = () => {
-    setStartDate(null);
-    setEndDate(null);
+    setDateRange([null, null]);
     setSelectedToolId("");
     setIsFiltering(false);
     setFilterType("");
@@ -198,8 +214,27 @@ const KardexList = () => {
     }
   };
 
+  // Función para obtener el icono según el tipo de movimiento
+  const getMovementIcon = (status) => {
+    switch (status) {
+      case "Ingreso":
+        return <AddCircleIcon fontSize="small" />;
+      case "Prestamo":
+        return <HandshakeIcon fontSize="small" />;
+      case "Reparacion":
+        return <BuildIcon fontSize="small" />;
+      case "Devolucion":
+        return <AssignmentReturnIcon fontSize="small" />;
+      case "Baja":
+        return <RemoveCircleIcon fontSize="small" />;
+      default:
+        return null;
+    }
+  };
+
   // Función para obtener el mensaje del filtro activo
   const getFilterMessage = () => {
+    const [startDate, endDate] = dateRange;
     if (filterType === "both") {
       const tool = tools.find(t => t.id === selectedToolId);
       return `Mostrando kardex de la herramienta "${tool?.name}" desde ${startDate?.format("DD/MM/YYYY HH:mm")} hasta ${endDate?.format("DD/MM/YYYY HH:mm")}`;
@@ -231,18 +266,30 @@ const KardexList = () => {
               marginBottom: 2,
             }}
           >
-            <DateTimePicker
-              label="Fecha de Inicio"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              sx={{ flex: 1, minWidth: 200 }}
-            />
-            <DateTimePicker
-              label="Fecha de Fin"
-              value={endDate}
-              onChange={(newValue) => setEndDate(newValue)}
-              sx={{ flex: 1, minWidth: 200 }}
-            />
+            <Box sx={{ display: "flex", gap: 1, flex: 1, minWidth: 400 }}>
+              <DateTimePicker
+                label="Fecha de Inicio"
+                value={dateRange[0]}
+                onChange={(newValue) => setDateRange([newValue, dateRange[1]])}
+                slotProps={{
+                  textField: { 
+                    size: "small",
+                    sx: { flex: 1 }
+                  }
+                }}
+              />
+              <DateTimePicker
+                label="Fecha de Fin"
+                value={dateRange[1]}
+                onChange={(newValue) => setDateRange([dateRange[0], newValue])}
+                slotProps={{
+                  textField: { 
+                    size: "small",
+                    sx: { flex: 1 }
+                  }
+                }}
+              />
+            </Box>
             <FormControl sx={{ flex: 1, minWidth: 200 }}>
               <TextField
                 id="toolFilter"
@@ -250,6 +297,7 @@ const KardexList = () => {
                 value={selectedToolId}
                 select
                 variant="outlined"
+                size="small"
                 onChange={(e) => {
                   const value = e.target.value;
                   console.log("Herramienta seleccionada:", value, "tipo:", typeof value);
@@ -261,7 +309,7 @@ const KardexList = () => {
                 </MenuItem>
                 {tools.map((tool) => (
                   <MenuItem key={tool.id} value={tool.id}>
-                    {tool.name} (SKU: {tool.id})
+                    {tool.name} (<strong>SKU: {tool.id}</strong>)
                   </MenuItem>
                 ))}
               </TextField>
@@ -347,7 +395,8 @@ const KardexList = () => {
                   <Chip
                     label={kardex.kardexTypeName}
                     color={getStatusColor(kardex.kardexTypeName)}
-                    size="small"
+                    icon={getMovementIcon(kardex.kardexTypeName)}
+                    sx={{ minWidth: '140px' }}
                   />
                 </TableCell>
                 <TableCell align="center">{kardex.workerName}</TableCell>

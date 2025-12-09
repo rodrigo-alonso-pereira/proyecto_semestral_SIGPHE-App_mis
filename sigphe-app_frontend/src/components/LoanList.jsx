@@ -16,10 +16,15 @@ import AssignmentReturnedIcon from "@mui/icons-material/AssignmentReturned";
 import PaidIcon from "@mui/icons-material/Paid";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import InfoIcon from "@mui/icons-material/Info";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import Chip from "@mui/material/Chip";
 import * as React from "react";
 import Alert from "@mui/material/Alert";
 import CheckIcon from "@mui/icons-material/Check";
+import Swal from "sweetalert2";
 
 {
   /* Componente de tipo funcion que muestra la lista de prestamos */
@@ -28,7 +33,6 @@ const LoanList = () => {
   const [loans, setLoans] = useState([]);
   const [customers, setCustomers] = useState([]);
 
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showingActiveOnly, setShowingActiveOnly] = useState(false);
 
   {
@@ -47,8 +51,9 @@ const LoanList = () => {
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
-    return `${day}/${month}/${year} ${hours}:00`;
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   {
@@ -129,57 +134,82 @@ const LoanList = () => {
     const loan = loans.find((loan) => loan.id === id);
 
     if (!loan) {
-      alert("Error: No se encontró el préstamo.");
+      Swal.fire({
+        title: 'Error',
+        text: 'No se encontró el préstamo.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
       return;
     }
 
     const totalPayment = loan.totalAmount + loan.totalPenalties;
 
-    const confirmPayment = window.confirm(
-      "¿Está seguro que desea pagar este préstamo por un monto de: " +
-        formatCurrency(totalPayment) +
-        "?"
-    );
+    Swal.fire({
+      title: '¿Confirmar pago?',
+      html: `¿Está seguro que desea pagar este préstamo por un monto de:<br><strong>${formatCurrency(totalPayment)}</strong>?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, pagar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Buscar el cliente y validar que existe
+        const customer = customers.find((c) => c.name === loan.customerName);
 
-    if (confirmPayment) {
-      // Buscar el cliente y validar que existe
-      const customer = customers.find((c) => c.name === loan.customerName);
+        if (!customer) {
+          Swal.fire({
+            title: 'Error',
+            text: `No se encontró el cliente "${loan.customerName}" en la base de datos.`,
+            icon: 'error',
+            confirmButtonColor: '#d33'
+          });
+          console.error("Cliente no encontrado.");
+          console.error("Nombre del cliente buscado:", loan.customerName);
+          console.error(
+            "Clientes disponibles:",
+            customers.map((c) => c.name)
+          );
+          return;
+        }
 
-      if (!customer) {
-        alert(
-          `Error: No se encontró el cliente "${loan.customerName}" en la base de datos.`
-        );
-        console.error("Cliente no encontrado.");
-        console.error("Nombre del cliente buscado:", loan.customerName);
-        console.error(
-          "Clientes disponibles:",
-          customers.map((c) => c.name)
-        );
-        return;
+        const paymentData = {
+          customerId: customer.id,
+          paymentAmount: totalPayment,
+        };
+        console.log("Datos de pago del préstamo:", paymentData);
+
+        loanService
+          .makePayment(id, paymentData)
+          .then((response) => {
+            console.log("Préstamo pagado con éxito:", response.data);
+            Swal.fire({
+              title: '¡Pagado!',
+              text: 'El préstamo ha sido pagado con éxito.',
+              icon: 'success',
+              confirmButtonColor: '#3085d6',
+              timer: 3000
+            });
+            init(); // Recargar la lista de préstamos
+          })
+          .catch((error) => {
+            console.log("Error al pagar el préstamo:", error);
+            
+            const errorMessage = error.response?.data?.message 
+              || error.response?.data 
+              || 'Se ha producido un error al pagar el préstamo.';
+            
+            Swal.fire({
+              title: 'Error',
+              text: errorMessage,
+              icon: 'error',
+              confirmButtonColor: '#d33'
+            });
+          });
       }
-
-      const paymentData = {
-        customerId: customer.id,
-        paymentAmount: totalPayment,
-      };
-      console.log("Datos de pago del préstamo:", paymentData);
-
-      loanService
-        .makePayment(id, paymentData)
-        .then((response) => {
-          console.log("Préstamo pagado con éxito:", response.data);
-          // alert("Préstamo pagado con éxito.");
-          setShowSuccessAlert(true);
-          setTimeout(() => {
-            setShowSuccessAlert(false);
-          }, 3000);
-          init(); // Recargar la lista de préstamos
-        })
-        .catch((error) => {
-          console.log("Error al pagar el préstamo:", error);
-          alert("Se ha producido un error al pagar el préstamo.");
-        });
-    }
+    });
   };
 
   // Función para obtener el color según el estado del préstamo
@@ -198,19 +228,25 @@ const LoanList = () => {
     }
   };
 
+  // Función para obtener el icono según el estado del préstamo
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Vigente":
+        return <CheckCircleIcon />; // Verde - préstamo activo
+      case "Atrasada":
+        return <WarningIcon />; // Naranja - advertencia de atraso
+      case "Retornado":
+        return <InfoIcon />; // Azul - información de retorno
+      case "Finalizado":
+        return <TaskAltIcon />; // Gris - tarea completada
+      default:
+        return null;
+    }
+  };
+
 
   return (
     <TableContainer component={Paper}>
-      {showSuccessAlert && (
-        <Alert
-          icon={<CheckIcon fontSize="inherit" />}
-          severity="success"
-          onClose={() => setShowSuccessAlert(false)}
-          sx={{ marginBottom: 2 }}
-        >
-          Préstamo pagado con éxito.
-        </Alert>
-      )}
       <br />
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center", marginBottom: 2 }}>
         <Link to="/loan/add" style={{ textDecoration: "none" }}>
@@ -306,7 +342,8 @@ const LoanList = () => {
                 <Chip
                   label={loan.loanStatus}
                   color={getStatusColor(loan.loanStatus)}
-                  size="small"
+                  icon={getStatusIcon(loan.loanStatus)}
+                  sx={{ minWidth: '110px' }}
                 />
               </TableCell>
               <TableCell align="center">{loan.customerName}</TableCell>

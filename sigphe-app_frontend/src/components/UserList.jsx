@@ -12,6 +12,12 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import PersonIcon from "@mui/icons-material/Person";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff";
+import HandshakeIcon from "@mui/icons-material/Handshake";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import WorkIcon from "@mui/icons-material/Work";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -63,6 +69,34 @@ const UserList = () => {
         return "secondary"; // Morado
       default:
         return "default";
+    }
+  };
+
+  // Función para obtener el icono según el estado del usuario
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Activo":
+        return <PersonIcon />; // Verde - usuario activo
+      case "Con Deuda":
+        return <MoneyOffIcon />; // Rojo - usuario con deuda
+      case "Con Prestamos":
+        return <HandshakeIcon />; // Naranja - usuario con préstamos
+      case "Inactivo":
+        return <PersonOffIcon />; // Gris - usuario inactivo
+      default:
+        return null;
+    }
+  };
+
+  // Función para obtener el icono según el tipo de usuario
+  const getUserTypeIcon = (type) => {
+    switch (type) {
+      case "Trabajador":
+        return <WorkIcon />; // Azul - trabajador
+      case "Cliente":
+        return <AccountCircleIcon />; // Morado - cliente
+      default:
+        return null;
     }
   };
 
@@ -121,14 +155,16 @@ const UserList = () => {
                   <Chip
                     label={user.userStatus}
                     color={getStatusColor(user.userStatus)}
-                    size="small"
+                    icon={getStatusIcon(user.userStatus)}
+                    sx={{ minWidth: '130px' }}
                   />
                 </TableCell>
                 <TableCell align="center">
                   <Chip
                     label={user.userType}
                     color={getUserTypeColor(user.userType)}
-                    size="small"
+                    icon={getUserTypeIcon(user.userType)}
+                    sx={{ minWidth: '120px' }}
                   />
                 </TableCell>
               </TableRow>

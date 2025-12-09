@@ -223,7 +223,7 @@ create table penalties (
     penalty_status_id bigint not null,
     constraint penalties_pk primary key (id),
     constraint penalties_penalty_amount_check check (penalty_amount > 0),
-    constraint penalties_payment_date_check check (payment_date IS NULL OR payment_date >= penalty_date),
+    --constraint penalties_payment_date_check check (payment_date IS NULL OR payment_date >= penalty_date),
     constraint penalties_loan_id_check check (loan_id > 0),
     constraint penalties_penalty_type_id_check check (penalty_type_id > 0),
     constraint penalties_penalty_status_id_check check (penalty_status_id > 0),

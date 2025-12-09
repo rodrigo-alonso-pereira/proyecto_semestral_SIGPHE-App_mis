@@ -14,6 +14,7 @@ select * from users u;
 select * from tools t;
 select * from kardex k;
 select * from loans l;
+
 select * from loan_details ld;
 select * from penalties p;
 
@@ -29,6 +30,7 @@ select
 from users u
 join user_statuses us on u.user_status_id = us.id
 join user_types ut on u.user_type_id = ut.id;
+
 
 -- Tools
 select
@@ -60,6 +62,7 @@ from loans l
 join users u on l.customer_user_id = u.id
 join loan_statuses ls on l.loan_status_id = ls.id;
 
+
 -- Loan_details
 select
     l.id as loan_id,
@@ -70,6 +73,7 @@ select
 from loans l
 join loan_details ld on l.id = ld.loan_id
 join tools t on ld.tool_id = t.id;
+
 
 -- Penalties
 select
@@ -84,6 +88,7 @@ from penalties p
 join penalty_statuses ps on p.penalty_status_id = ps.id
 join penalty_types pt on p.penalty_type_id = pt.id
 join loans l on p.loan_id = l.id;
+
 
 -- Kardex
 select

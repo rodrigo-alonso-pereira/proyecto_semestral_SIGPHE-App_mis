@@ -1,6 +1,7 @@
 package cl.usach.mis.sigpheapp_backend.repositories;
 
 import cl.usach.mis.sigpheapp_backend.entities.LoanEntity;
+import cl.usach.mis.sigpheapp_backend.entities.LoanStatusEntity;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface LoanRepository extends JpaRepository<LoanEntity, Long> {
@@ -30,4 +30,6 @@ public interface LoanRepository extends JpaRepository<LoanEntity, Long> {
 
     List<LoanEntity> findAllByLoanStatusNameInAndStartDateBetweenOrderByStartDateDesc(
             @NotEmpty @NotNull List<String> statuses, LocalDateTime localDateTime, LocalDateTime now);
+
+    List<LoanEntity> findAllByLoanStatusAndDueDateBefore(LoanStatusEntity loanStatus, LocalDateTime dueDate);
 }

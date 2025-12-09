@@ -64,25 +64,68 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO user_statuses (id, name) OVERRIDING SYSTEM VALUE VALUES
 (1, 'Activo'),
 (2, 'Con Deuda'),
-(3, 'Inactivo')
+(3, 'Inactivo'),
+(4, 'Con Prestamo')
 ON CONFLICT (id) DO NOTHING;
 
 -- loan_statuses
 INSERT INTO loan_statuses (id, name) OVERRIDING SYSTEM VALUE VALUES
 (1, 'Vigente'),
 (2, 'Atrasada'),
-(3, 'Finalizado')
+(3, 'Finalizado'),
+(4, 'Retornado')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO sigphe.loan_statuses (name) VALUES ('Retornado') ON CONFLICT (id) DO NOTHING;
+
 -- brands and models
-INSERT INTO brands (id, name) OVERRIDING SYSTEM VALUE VALUES (1, 'DeWalt'), (2, 'Bosch'), (3, 'Makita'), (4, 'Stanley') ON CONFLICT (id) DO NOTHING;
+INSERT INTO brands (id, name) OVERRIDING SYSTEM VALUE VALUES 
+(1, 'DeWalt'),
+(2, 'Bosch'),
+(3, 'Makita'),
+(4, 'Stanley'),
+(5, 'Milwaukee'),
+(6, 'Black & Decker'),
+(7, 'Truper'),
+(8, 'Karcher')
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO models (id, name, brand_id) OVERRIDING SYSTEM VALUE VALUES
-(1, 'DCD777C2', 1), (2, 'DCF887B', 1),
-(3, 'GSR 12V-300', 2), (4, 'GDS 18V-400', 2),
-(5, 'XDT131', 3), 
-(6, 'Global Plus Stanley 3m/10 pulgadas', 4),
+-- DeWalt Models
+(1, 'DCD777C2', 1),
+(2, 'DCF887B', 1),
 (7, 'SDS MAX de 19.4J', 1),
-(8, '4" Angle Grinder', 1)
+(8, 'DWE4011', 1),
+(9, 'DCS570B', 1),
+(10, 'DWP849X', 1),
+-- Bosch Models
+(3, 'GSR 12V-300', 2),
+(4, 'GDS 18V-400', 2),
+(11, 'GSB 13 RE', 2),
+(12, 'GWS 9-125', 2),
+(13, 'GTL 3', 2),
+-- Makita Models
+(5, 'XDT131', 3),
+(14, 'HR2470', 3),
+(15, '9565CVR', 3),
+(16, 'LS1040', 3),
+-- Stanley Models
+(6, 'Global Plus 3m/10 pulgadas', 4),
+(17, 'STMT82770', 4),
+(18, 'FMST1-75761', 4),
+-- Milwaukee Models
+(19, '2853-20', 5),
+(20, '2767-20', 5),
+(21, '2731-20', 5),
+-- Black & Decker Models
+(22, 'CD121K', 6),
+(23, 'BDCMTTS', 6),
+-- Truper Models
+(24, 'ROTA-6M', 7),
+(25, 'PICO-8M', 7),
+-- Karcher Models
+(26, 'K2 Basic', 8),
+(27, 'K3 Follow Me', 8)
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequences for generated IDs to avoid collisions with hardcoded values
@@ -103,15 +146,29 @@ SELECT setval(pg_get_serial_sequence('sigphe.models', 'id'), COALESCE(max(id), 1
 --------------------------------------------------------------------------------
 INSERT INTO users (id, national_id, name, email, user_status_id, user_type_id) OVERRIDING SYSTEM VALUE VALUES
 (1, '11.111.111-1', 'Rodrigo Pereira Yañez', 'rodrigo.pereira@toolrent.com', 1, 2), -- Trabajador
-(2, '22.222.222-2', 'Juan Pérez', 'juan.perez@email.com', 1, 1),             -- Cliente Activo
-(3, '33.333.333-3', 'Ana Gómez', 'ana.gomez@email.com', 1, 1),                -- Cliente Activo
-(4, '44.444.444-4', 'Carlos Soto', 'carlos.soto@email.com', 2, 1)            -- Cliente con Deuda
+(2, '22.222.222-2', 'Juan Pérez González', 'juan.perez@email.com', 1, 1),           -- Cliente Activo
+(3, '33.333.333-3', 'Ana Gómez Rojas', 'ana.gomez@email.com', 1, 1),                -- Cliente Activo
+(4, '44.444.444-4', 'Carlos Soto Muñoz', 'carlos.soto@email.com', 1, 1),            -- Cliente Activo
+(5, '55.555.555-5', 'María López Flores', 'maria.lopez@email.com', 1, 1),           -- Cliente Activo
+(6, '66.666.666-6', 'Pedro Ramírez Silva', 'pedro.ramirez@email.com', 1, 1),        -- Cliente Activo
+(7, '77.777.777-7', 'Lucía Fernández Torres', 'lucia.fernandez@email.com', 1, 1),   -- Cliente Activo
+(8, '88.888.888-8', 'Diego Martínez Castro', 'diego.martinez@email.com', 1, 1),     -- Cliente Activo
+(9, '99.999.999-9', 'Carmen Vargas Leiva', 'carmen.vargas@email.com', 1, 1),        -- Cliente Activo
+(10, '10.101.010-1', 'Roberto Silva Núñez', 'roberto.silva@email.com', 1, 1)        -- Cliente Activo
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO user_phones (user_id, phone_number) OVERRIDING SYSTEM VALUE VALUES
 (1, '+56911111111'),
+(1, '+56211111112'), -- Rodrigo tiene teléfono adicional
 (2, '+56922222222'),
-(3, '+56933333333')
+(3, '+56933333333'),
+(4, '+56944444444'),
+(5, '+56955555555'),
+(6, '+56966666666'),
+(7, '+56977777777'),
+(8, '+56988888888'),
+(9, '+56999999999'),
+(10, '+56912345678')
 ON CONFLICT (phone_number) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('sigphe.users', 'id'), COALESCE(max(id), 1)) FROM sigphe.users;
@@ -120,96 +177,176 @@ SELECT setval(pg_get_serial_sequence('sigphe.users', 'id'), COALESCE(max(id), 1)
 --------------------------------------------------------------------------------
 -- 3. Ingress Tools into Inventory and create initial Kardex entries
 --------------------------------------------------------------------------------
--- Tool 1: Taladro DeWalt
-INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (1, 'Taladro Percutor Inalámbrico 20V DeWalt', 150000, 10000, 1, 1, 1) ON CONFLICT (id) DO NOTHING;
-INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
-OVERRIDING SYSTEM VALUE VALUES (1, 1, 1, 1); -- type 1: Ingreso, user 1: Trabajador
+-- All tools are set to 'Disponible' (status 1) for initial use in the application
 
--- Tool 2: Taladro Bosch
+-- Tool 1: Taladro Percutor DeWalt
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (2, 'Taladro Atornillador 12V Bosch', 80000, 7000, 1, 1, 3) ON CONFLICT (id) DO NOTHING;
+OVERRIDING SYSTEM VALUE VALUES (1, 'Taladro Percutor Inalámbrico 20V DeWalt DCD777C2', 150000, 10000, 1, 1, 1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
-OVERRIDING SYSTEM VALUE VALUES (2, 1, 1, 1);
+VALUES (1, 1, 1, 1); -- type 1: Ingreso, user 1: Rodrigo
+
+-- Tool 2: Taladro Atornillador Bosch
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (2, 'Taladro Atornillador 12V Bosch GSR 12V-300', 80000, 7000, 1, 1, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (2, 1, 1, 1);
 
 -- Tool 3: Llave de Impacto DeWalt
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (3, 'Llave de Impacto 20V DeWalt', 250000, 15000, 1, 1, 2) ON CONFLICT (id) DO NOTHING;
+OVERRIDING SYSTEM VALUE VALUES (3, 'Llave de Impacto 20V DeWalt DCF887B', 250000, 15000, 1, 1, 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
-OVERRIDING SYSTEM VALUE VALUES (3, 1, 1, 1);
+VALUES (3, 1, 1, 1);
 
--- Tool 4: Huincha de Medir
+-- Tool 4: Huincha de Medir Stanley
 INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
-OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 8m', 10000c2000, 3, 1, 6) ON CONFLICT (id) DO NOTHING;
+OVERRIDING SYSTEM VALUE VALUES (4, 'Huincha de Medir 3m Stanley Global Plus', 10000, 2000, 3, 1, 6) ON CONFLICT (id) DO NOTHING;
 INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
-OVERRIDING SYSTEM VALUE VALUES (4, 1, 1, 1);
+VALUES (4, 1, 1, 1);
+
+-- Tool 5: Rotomartillo DeWalt
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (5, 'Rotomartillo SDS MAX 19.4J DeWalt', 320000, 20000, 1, 1, 7) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (5, 1, 1, 1);
+
+-- Tool 6: Esmeril Angular DeWalt
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (6, 'Esmeril Angular 4" DeWalt DWE4011', 95000, 8000, 1, 1, 8) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (6, 1, 1, 1);
+
+-- Tool 7: Sierra Circular DeWalt
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (7, 'Sierra Circular 20V DeWalt DCS570B', 185000, 12000, 1, 1, 9) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (7, 1, 1, 1);
+
+-- Tool 8: Pulidora DeWalt
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (8, 'Pulidora DeWalt DWP849X', 140000, 9500, 1, 1, 10) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (8, 1, 1, 1);
+
+-- Tool 9: Taladro Bosch GSB
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (9, 'Taladro Percutor 600W Bosch GSB 13 RE', 115000, 8500, 1, 1, 11) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (9, 1, 1, 1);
+
+-- Tool 10: Esmeril Angular Bosch
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (10, 'Esmeril Angular 5" Bosch GWS 9-125', 88000, 7500, 1, 1, 12) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (10, 1, 1, 1);
+
+-- Tool 11: Nivel Láser Bosch
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (11, 'Nivel Láser de 3 Líneas Bosch GTL 3', 175000, 11000, 3, 1, 13) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (11, 1, 1, 1);
+
+-- Tool 12: Llave de Impacto Makita
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (12, 'Llave de Impacto 18V Makita XDT131', 220000, 14000, 1, 1, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (12, 1, 1, 1);
+
+-- Tool 13: Rotomartillo Makita
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (13, 'Rotomartillo SDS-Plus 780W Makita HR2470', 195000, 13000, 1, 1, 14) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (13, 1, 1, 1);
+
+-- Tool 14: Esmeril Angular Makita
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (14, 'Esmeril Angular 5" Makita 9565CVR', 125000, 9000, 1, 1, 15) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (14, 1, 1, 1);
+
+-- Tool 15: Sierra Ingletadora Makita
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (15, 'Sierra Ingletadora 10" Makita LS1040', 285000, 18000, 1, 1, 16) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (15, 1, 1, 1);
+
+-- Tool 16: Set de Herramientas Stanley
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (16, 'Set de Herramientas Manuales 92 Piezas Stanley', 65000, 5000, 2, 1, 17) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (16, 1, 1, 1);
+
+-- Tool 17: Caja de Herramientas Stanley
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (17, 'Caja de Herramientas FatMax Stanley', 45000, 3500, 2, 1, 18) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (17, 1, 1, 1);
+
+-- Tool 18: Llave de Impacto Milwaukee
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (18, 'Llave de Impacto M18 Milwaukee 2853-20', 265000, 16000, 1, 1, 19) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (18, 1, 1, 1);
+
+-- Tool 19: Llave de Impacto Alta Torsión Milwaukee
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (19, 'Llave de Impacto 1/2" Milwaukee 2767-20', 340000, 21000, 1, 1, 20) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (19, 1, 1, 1);
+
+-- Tool 20: Sierra SAWZALL Milwaukee
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (20, 'Sierra Sable M18 Milwaukee 2731-20', 215000, 14500, 1, 1, 21) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (20, 1, 1, 1);
+
+-- Tool 21: Taladro Black & Decker
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (21, 'Taladro Percutor 12V Black & Decker CD121K', 58000, 5500, 1, 1, 22) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (21, 1, 1, 1);
+
+-- Tool 22: Multiherramienta Black & Decker
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (22, 'Multiherramienta Oscilante 20V Black & Decker', 92000, 7800, 1, 1, 23) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (22, 1, 1, 1);
+
+-- Tool 23: Rotomartillo Truper
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (23, 'Rotomartillo 6kg 850W Truper ROTA-6M', 78000, 6500, 1, 1, 24) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (23, 1, 1, 1);
+
+-- Tool 24: Pico Demoledor Truper
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (24, 'Martillo Demoledor 8kg 1200W Truper PICO-8M', 145000, 11500, 1, 1, 25) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (24, 1, 1, 1);
+
+-- Tool 25: Hidrolavadora Karcher K2
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (25, 'Hidrolavadora 110 Bar Karcher K2 Basic', 135000, 10000, 1, 1, 26) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (25, 1, 1, 1);
+
+-- Tool 26: Hidrolavadora Karcher K3
+INSERT INTO tools (id, name, replacement_value, rental_value, tool_category_id, tool_status_id, model_id)
+OVERRIDING SYSTEM VALUE VALUES (26, 'Hidrolavadora 120 Bar Karcher K3 Follow Me', 185000, 13500, 1, 1, 27) ON CONFLICT (id) DO NOTHING;
+INSERT INTO kardex (tool_id, kardex_type_id, worker_user_id, quantity)
+VALUES (26, 1, 1, 1);
 
 SELECT setval(pg_get_serial_sequence('sigphe.tools', 'id'), COALESCE(max(id), 1)) FROM sigphe.tools;
 
 
 --------------------------------------------------------------------------------
--- 4. Simulate Business Scenarios
+-- 4. Additional Setup
 --------------------------------------------------------------------------------
+-- All tools are available and ready for use in the application.
+-- No loans or penalties are created to allow testing from a clean state.
 
--- SCENARIO 1: A valid, current loan for Juan Pérez (Cliente 2)
--- =============================================================
--- Create the loan
-INSERT INTO loans (id, start_date, due_date, total_amount, loan_status_id, customer_user_id)
-OVERRIDING SYSTEM VALUE VALUES (101, '2025-09-18 10:00:00', '2025-09-22 10:00:00', 17000, 1, 2) ON CONFLICT (id) DO NOTHING; -- status 1: Vigente
+-- Reset loan sequence
+SELECT setval(pg_get_serial_sequence('sigphe.loans', 'id'), 100);
 
--- Add details for the loan
-INSERT INTO loan_details (loan_id, tool_id, rental_value_at_time) OVERRIDING SYSTEM VALUE VALUES
-(101, 2, 7000),  -- Taladro Bosch
-(101, 3, 15000); -- Llave de Impacto DeWalt. Total is rental_value * days, here just an example value.
-
--- Update tool statuses to 'Prestada'
-UPDATE tools SET tool_status_id = 2 WHERE id IN (2, 3); -- status 2: Prestada
-
--- Create Kardex entries for the loan
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity) OVERRIDING SYSTEM VALUE VALUES
-(2, 2, 1, -1), -- type 2: Prestamo
-(3, 2, 1, -1);
-
--- SCENARIO 1.1: A valid, current loan for Juan Pérez (Cliente 2)
--- =============================================================
--- Create the loan
-INSERT INTO loans (id, start_date, due_date, total_amount, loan_status_id, customer_user_id)
-OVERRIDING SYSTEM VALUE VALUES (103, '2025-09-19 10:00:00', '2025-09-23 10:00:00', 8000, 1, 2) ON CONFLICT (id) DO NOTHING; -- status 1: Vigente
-
--- Add details for the loan
-INSERT INTO loan_details (loan_id, tool_id, rental_value_at_time) OVERRIDING SYSTEM VALUE VALUES
-(103, 4, 2000);  -- Huincha de Medir 8m
-
-delete from loan_details ld
-where ld.loan_id = 103;
-
-delete from loans l
-where l.id = 103;
-
-update  tools
-SET tool_status_id = 1
-where id = 4;
-
-
--- SCENARIO 2: An overdue loan for Ana Gómez (Cliente 3) with a penalty
--- =====================================================================
--- Create the loan
-INSERT INTO loans (id, start_date, due_date, total_amount, loan_status_id, customer_user_id)
-OVERRIDING SYSTEM VALUE VALUES (102, '2025-09-10 15:00:00', '2025-09-15 15:00:00', 10000, 2, 3) ON CONFLICT (id) DO NOTHING; -- status 2: Atrasada
-
--- Add detail for the loan
-INSERT INTO loan_details (loan_id, tool_id, rental_value_at_time) OVERRIDING SYSTEM VALUE VALUES
-(102, 1, 10000); -- Taladro DeWalt
-
--- Update tool status to 'Prestada'
-UPDATE tools SET tool_status_id = 2 WHERE id = 1;
-
--- Create Kardex entry for the loan
-INSERT INTO kardex (tool_id, kardex_type_id, user_id, quantity) OVERRIDING SYSTEM VALUE VALUES
-(1, 2, 1, -1);
-
--- Create an active penalty for this overdue loan
-INSERT INTO penalties (loan_id, penalty_type_id, penalty_status_id, penalty_amount, description)
-OVERRIDING SYSTEM VALUE VALUES (102, 1, 1, 4600, 'Atraso de 4 días. Multa del 15% diario sobre valor arriendo.'); -- type 1: Atraso, status 1: Activo
-
-SELECT setval(pg_get_serial_sequence('sigphe.loans', 'id'), COALESCE(max(id), 1)) FROM sigphe.loans;
+-- End of DML Script
+-- All data has been loaded successfully.
+-- Database is ready for application use.
