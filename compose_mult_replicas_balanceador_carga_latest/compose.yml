@@ -23,6 +23,11 @@ services:
     image: rodrigoalonsocl/sigphe-app_backend:latest
     environment:
       - DB_HOST=192.168.1.11
+      - TZ=America/Santiago
+      - SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE=America/Santiago
+      - SPRING_JACKSON_TIME_ZONE=America/Santiago
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - backend-network
 
@@ -30,6 +35,11 @@ services:
     image: rodrigoalonsocl/sigphe-app_backend:latest
     environment:
       - DB_HOST=192.168.1.11
+      - TZ=America/Santiago
+      - SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE=America/Santiago
+      - SPRING_JACKSON_TIME_ZONE=America/Santiago
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - backend-network
 
@@ -37,6 +47,11 @@ services:
     image: rodrigoalonsocl/sigphe-app_backend:latest
     environment:
       - DB_HOST=192.168.1.11
+      - TZ=America/Santiago
+      - SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE=America/Santiago
+      - SPRING_JACKSON_TIME_ZONE=America/Santiago
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - backend-network
 
