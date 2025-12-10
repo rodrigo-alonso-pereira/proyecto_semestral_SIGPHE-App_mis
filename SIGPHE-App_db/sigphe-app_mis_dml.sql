@@ -151,7 +151,9 @@ INSERT INTO users (id, national_id, name, email, user_status_id, user_type_id) O
 (7, '77.777.777-7', 'Lucía Fernández Torres', 'lucia.fernandez@email.com', 1, 1),   -- Cliente Activo
 (8, '88.888.888-8', 'Diego Martínez Castro', 'diego.martinez@email.com', 1, 1),     -- Cliente Activo
 (9, '99.999.999-9', 'Carmen Vargas Leiva', 'carmen.vargas@email.com', 1, 1),        -- Cliente Activo
-(10, '10.101.010-1', 'Roberto Silva Núñez', 'roberto.silva@email.com', 1, 1)        -- Cliente Activo
+(10, '10.101.010-1', 'Roberto Silva Núñez', 'roberto.silva@email.com', 1, 1)     ,   -- Cliente Activo
+(11, '11.222.333-4', 'Juan Carlos Bodoque', 'juancarlos.bodoque@toolrent.com', 1, 2), -- Trabajador
+(12, '12.221.331-5', 'Guaripolo', 'guaripolo@toolrent.com', 1, 2) -- Trabajador
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO user_phones (user_id, phone_number) OVERRIDING SYSTEM VALUE VALUES
@@ -165,7 +167,9 @@ INSERT INTO user_phones (user_id, phone_number) OVERRIDING SYSTEM VALUE VALUES
 (7, '+56977777777'),
 (8, '+56988888888'),
 (9, '+56999999999'),
-(10, '+56912345678')
+(10, '+56912345678'),
+(11, '+56598745846'),
+(12, '+56987452145')
 ON CONFLICT (phone_number) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('sigphe.users', 'id'), COALESCE(max(id), 1)) FROM sigphe.users;
