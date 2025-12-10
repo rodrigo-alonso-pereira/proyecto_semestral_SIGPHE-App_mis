@@ -64,8 +64,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO user_statuses (id, name) OVERRIDING SYSTEM VALUE VALUES
 (1, 'Activo'),
 (2, 'Con Deuda'),
-(3, 'Inactivo'),
-(4, 'Con Prestamo')
+(3, 'Inactivo')
 ON CONFLICT (id) DO NOTHING;
 
 -- loan_statuses
@@ -75,8 +74,6 @@ INSERT INTO loan_statuses (id, name) OVERRIDING SYSTEM VALUE VALUES
 (3, 'Finalizado'),
 (4, 'Retornado')
 ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO sigphe.loan_statuses (name) VALUES ('Retornado') ON CONFLICT (id) DO NOTHING;
 
 -- brands and models
 INSERT INTO brands (id, name) OVERRIDING SYSTEM VALUE VALUES 
